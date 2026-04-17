@@ -4404,10 +4404,26 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	end);
 
 	local ToggleUI = function(bool)
-		local IsSame = ToggleDb:GetValue() == bool;
-
-		EventOut:Fire(bool);
-		ToggleDb:Fire(bool);
+    local IsSame = ToggleDb:GetValue() == bool;
+    
+    EventOut:Fire(bool);
+    ToggleDb:Fire(bool);
+    
+    if bool then
+        if not Compkiller.OpenDropdowns then
+            Compkiller.OpenDropdowns = {};
+        end
+        table.insert(Compkiller.OpenDropdowns, DropdownWindow);
+    else
+        if Compkiller.OpenDropdowns then
+            for i, v in ipairs(Compkiller.OpenDropdowns) do
+                if v == DropdownWindow then
+                    table.remove(Compkiller.OpenDropdowns, i);
+                    break;
+                end
+            end
+       end
+  end
 
 		local MUL = Window.AbsoluteSize.Y / 2;
 
@@ -4451,6 +4467,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	end;
 
 	ToggleUI(false)
+ DropdownWindow.ToggleUI = ToggleUI;
 
 	local SpamUpdate,_Delay = false , tick();
 	local __signals = {};
@@ -6662,11 +6679,19 @@ function Compkiller.new(Config : Window)
 	end;
 
 	WindowOpen:Connect(function(v)
-		if WindowArgs.PerformanceMode then
+   if not v then
+        for i, dropdown in ipairs(Compkiller.OpenDropdowns or {}) do
+            if dropdown.ToggleUI then
+                dropdown.ToggleUI(false);
+            end
+        end
+        Compkiller.OpenDropdowns = {};
+   end
+ 		if WindowArgs.PerformanceMode then
 			MainFrame.BackgroundTransparency = (v and 0) or 1;
 			return;	
 		end;
-
+  
 		if v then
 			Compkiller:_Animation(MainFrame,TweenInfo.new(0.2),{
 				Size = Config.Scale
