@@ -4598,7 +4598,13 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 						TextTransparency = ((MatchDefault(v,DataFrame)) and 0) or 0.5
 					});
 
-					Callback(DataFrame)
+					local ArrayResult = {}
+     for val, isSelected in pairs(DataFrame) do
+         if isSelected then
+             table.insert(ArrayResult, val)
+         end
+     end
+     Callback(ArrayResult)
 				end);
 			else
 				Compkiller:_Input(bth.DropdownItem,function()
