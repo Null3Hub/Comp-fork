@@ -2165,7 +2165,7 @@ function Compkiller:_AddLinkValue(Name , Default , GlobalBlock , LinkValues , re
 
 		Update();
 
-		local ToggleUI = function(bool)
+		local  = function(bool)
 			if bool then
 				Compkiller:_Animation(Keybind,rep.Tween,{
 					BackgroundTransparency = 0.8
@@ -7497,6 +7497,10 @@ function Compkiller.new(Config : Window)
 
 					Compkiller:_Animation(TextLabel,TweenInfo.new(0.2),{
 						TextTransparency = 0
+					})
+					
+					Compkiller:_Animation(Icon,TweenInfo.new(0.2),{
+						ImageTransparency = 0
 					})
 					
 				else
