@@ -1436,7 +1436,7 @@ function Compkiller:_SetNilP(Ins: Instance , Parent: Instance)
 	Compkiller.WindowsNil = Compkiller.WindowsNil or {};
 	Compkiller.NilFolder = Compkiller.NilFolder or Instance.new('Folder');
 
-	if not Compkiller.WindowsNil[Ins] then
+if not Compkiller.WindowsNil[Ins] then
 		local win = Compkiller:_GetWindowFromElement(Ins);
 
 		Compkiller.WindowsNil[Ins] = win;
@@ -4405,10 +4405,36 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	end);
 
 	local ToggleUI = function(bool)
-		local IsSame = ToggleDb:GetValue() == bool;
-
-		EventOut:Fire(bool);
-		ToggleDb:Fire(bool);
+    local IsSame = ToggleDb:GetValue() == bool;
+    
+    EventOut:Fire(bool);
+    ToggleDb:Fire(bool);
+    
+    if bool then
+    if not Compkiller.OpenDropdowns then
+        Compkiller.OpenDropdowns = {};
+    end
+    -- Verifica se já não está na lista
+    local alreadyExists = false;
+    for _, v in ipairs(Compkiller.OpenDropdowns) do
+        if v == DropdownWindow then
+            alreadyExists = true;
+            break;
+        end
+    end
+    if not alreadyExists then
+        table.insert(Compkiller.OpenDropdowns, DropdownWindow);
+    end
+else
+    if Compkiller.OpenDropdowns then
+        for i = #Compkiller.OpenDropdowns, 1, -1 do
+            if Compkiller.OpenDropdowns[i] == DropdownWindow then
+                table.remove(Compkiller.OpenDropdowns, i);
+                break;
+            end
+        end
+    end
+end
 
 		local MUL = Window.AbsoluteSize.Y / 2;
 
@@ -4453,14 +4479,14 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 
 	ToggleUI(false)
 
-	-- FIX: Fecha dropdown ao minimizar a janela
-	if Window and Compkiller.WindowOpenSignals and Compkiller.WindowOpenSignals[Window] then
-		Compkiller.WindowOpenSignals[Window]:Connect(function(v)
-			if not v and ToggleDb:GetValue() then
-				ToggleUI(false)
-			end
-		end)
-	end
+-- ADICIONAR:
+if Window and Compkiller.WindowOpenSignals and Compkiller.WindowOpenSignals[Window] then
+    Compkiller.WindowOpenSignals[Window]:Connect(function(v)
+        if not v and ToggleDb:GetValue() then
+            ToggleUI(false)
+        end
+    end)
+end
 
 	local SpamUpdate,_Delay = false , tick();
 	local __signals = {};
@@ -6411,8 +6437,7 @@ function Compkiller.new(Config : Window)
 	WindowArgs.Root = CompKiller;
 
 	table.insert(Compkiller.Windows , CompKiller);
-	Compkiller.WindowOpenSignals[CompKiller] = WindowOpen;
-
+ Compkiller.WindowOpenSignals[CompKiller] = WindowOpen;
 	MainFrame.Active = true;
 	MainFrame.Name = Compkiller:_RandomString()
 	MainFrame.Parent = CompKiller
@@ -6673,11 +6698,21 @@ function Compkiller.new(Config : Window)
 	end;
 
 	WindowOpen:Connect(function(v)
-		if WindowArgs.PerformanceMode then
+   if not v then
+    if Compkiller.OpenDropdowns then
+        for i = #Compkiller.OpenDropdowns, 1, -1 do
+            local dropdown = Compkiller.OpenDropdowns[i];
+            if Compkiller.Dropdowns and Compkiller.Dropdowns[dropdown] then
+                Compkiller.Dropdowns[dropdown](false);
+            end
+        end
+        Compkiller.OpenDropdowns = {};
+    end
+ 		if WindowArgs.PerformanceMode then
 			MainFrame.BackgroundTransparency = (v and 0) or 1;
 			return;	
 		end;
-
+  
 		if v then
 			Compkiller:_Animation(MainFrame,TweenInfo.new(0.2),{
 				Size = Config.Scale
@@ -7357,7 +7392,7 @@ function Compkiller.new(Config : Window)
 			local TextLabel = Instance.new("TextLabel")
 			local Icon = Instance.new("ImageLabel")   -- ADICIONAR AQUI
 			Frame.Parent = Top
-			Frame.BackgroundColor3 = Compkiller.Colors.BlockColor
+			Frame.BackgroundColor3 =Compkiller.Colors.BlockColor
 
 			table.insert(Compkiller.Elements.BlockColor , {
 				Element = Frame,
@@ -7547,7 +7582,7 @@ function Compkiller.new(Config : Window)
 			Scrolling.CanvasSize = UDim2.fromOffset(0,UilistLayout.AbsoluteContentSize.Y + 5)
 		end;
 
-		UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(upd);
+		UilistLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(upd);
 
 		return task.defer(function()
 			while true do task.wait(1)
