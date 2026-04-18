@@ -359,12 +359,12 @@ local Compkiller = {
 	Version = '2.6',
 	Logo = "rbxassetid://120245531583106",
 	Windows = {},
+	WindowOpenSignals = {},
 	Scale = {
 		Window = UDim2.new(0, 485,0, 565),
 		Mobile = UDim2.new(0, 450,0, 375),
 		TabOpen = 185,
 		TabClose = 85,
-		Compkiller.WindowOpenSignals = {},
 	},
 	PerformanceMode = false,
 	WindowsNil = {},
