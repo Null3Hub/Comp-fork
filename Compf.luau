@@ -4434,18 +4434,14 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 
 	ToggleUI(false)
 
-    -- FIX: Fecha dropdown ao minimizar janela
-    local _win = Window  -- Window já existe no escopo de _LoadDropdown
-    if _win and Compkiller.WindowOpenSignals then
-        local _signal = Compkiller.WindowOpenSignals[_win]
-        if _signal then
-            _signal:Connect(function(v)
-                if not v and ToggleDb:GetValue() then
-                    ToggleUI(false)
-                end
-            end)
-        end
-    end
+	-- FIX: Fecha dropdown ao minimizar a janela
+	if Window and Compkiller.WindowOpenSignals and Compkiller.WindowOpenSignals[Window] then
+		Compkiller.WindowOpenSignals[Window]:Connect(function(v)
+			if not v and ToggleDb:GetValue() then
+				ToggleUI(false)
+			end
+		end)
+	end
 
 	local SpamUpdate,_Delay = false , tick();
 	local __signals = {};
@@ -6390,7 +6386,6 @@ function Compkiller.new(Config : Window)
 	WindowArgs.Root = CompKiller;
 
 	table.insert(Compkiller.Windows, CompKiller);
- Compkiller.WindowOpenSignals = Compkiller.WindowOpenSignals or {};
  Compkiller.WindowOpenSignals[CompKiller] = WindowOpen;
 
 	MainFrame.Active = true;
