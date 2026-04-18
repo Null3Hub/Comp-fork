@@ -364,6 +364,7 @@ local Compkiller = {
 		Mobile = UDim2.new(0, 450,0, 375),
 		TabOpen = 185,
 		TabClose = 85,
+		Compkiller.WindowOpenSignals = {},
 	},
 	PerformanceMode = false,
 	WindowsNil = {},
@@ -4322,25 +4323,6 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	local ToggleDb = Compkiller.__SIGNAL(false);
 	local EventOut = Compkiller.__SIGNAL(0);
 
- local function CloseDropdownOnScroll()
-     if ToggleDb:GetValue() then
-         ToggleUI(false)
-     end
- end
- 
- local scrollFrame = BaseParent:FindFirstAncestorWhichIsA("ScrollingFrame")
- if scrollFrame then
-     scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(CloseDropdownOnScroll)
- end
- 
- UserInputService.InputChanged:Connect(function(input)
-     if input.UserInputType == Enum.UserInputType.MouseWheel then
-         if ToggleDb:GetValue() and Compkiller:_IsMouseOverFrame(DropdownWindow) == false then
-             ToggleUI(false)
-         end
-     end
- end)
-
 	DropdownWindow.Name = Compkiller:_RandomString()
 	DropdownWindow.Parent = Window
 	DropdownWindow.BackgroundColor3 = Compkiller.Colors.BlockBackground
@@ -4404,36 +4386,10 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	end);
 
 	local ToggleUI = function(bool)
-    local IsSame = ToggleDb:GetValue() == bool;
-    
-    EventOut:Fire(bool);
-    ToggleDb:Fire(bool);
-    
-    if bool then
-    if not Compkiller.OpenDropdowns then
-        Compkiller.OpenDropdowns = {};
-    end
-    -- Verifica se já não está na lista
-    local alreadyExists = false;
-    for _, v in ipairs(Compkiller.OpenDropdowns) do
-        if v == DropdownWindow then
-            alreadyExists = true;
-            break;
-        end
-    end
-    if not alreadyExists then
-        table.insert(Compkiller.OpenDropdowns, DropdownWindow);
-    end
-else
-    if Compkiller.OpenDropdowns then
-        for i = #Compkiller.OpenDropdowns, 1, -1 do
-            if Compkiller.OpenDropdowns[i] == DropdownWindow then
-                table.remove(Compkiller.OpenDropdowns, i);
-                break;
-            end
-        end
-    end
-end
+		local IsSame = ToggleDb:GetValue() == bool;
+
+		EventOut:Fire(bool);
+		ToggleDb:Fire(bool);
 
 		local MUL = Window.AbsoluteSize.Y / 2;
 
@@ -4477,10 +4433,19 @@ end
 	end;
 
 	ToggleUI(false)
-if not Compkiller.Dropdowns then
-    Compkiller.Dropdowns = {};
-end
-Compkiller.Dropdowns[Dropdown] = ToggleUI;
+
+    -- FIX: Fecha dropdown ao minimizar janela
+    local _win = Window  -- Window já existe no escopo de _LoadDropdown
+    if _win and Compkiller.WindowOpenSignals then
+        local _signal = Compkiller.WindowOpenSignals[_win]
+        if _signal then
+            _signal:Connect(function(v)
+                if not v and ToggleDb:GetValue() then
+                    ToggleUI(false)
+                end
+            end)
+        end
+    end
 
 	local SpamUpdate,_Delay = false , tick();
 	local __signals = {};
@@ -4628,13 +4593,7 @@ Compkiller.Dropdowns[Dropdown] = ToggleUI;
 						TextTransparency = ((MatchDefault(v,DataFrame)) and 0) or 0.5
 					});
 
-					local ArrayResult = {}
-     for val, isSelected in pairs(DataFrame) do
-         if isSelected then
-             table.insert(ArrayResult, val)
-         end
-     end
-     Callback(ArrayResult)
+					Callback(DataFrame)
 				end);
 			else
 				Compkiller:_Input(bth.DropdownItem,function()
@@ -6430,7 +6389,9 @@ function Compkiller.new(Config : Window)
 
 	WindowArgs.Root = CompKiller;
 
-	table.insert(Compkiller.Windows , CompKiller);
+	table.insert(Compkiller.Windows, CompKiller);
+ Compkiller.WindowOpenSignals = Compkiller.WindowOpenSignals or {};
+ Compkiller.WindowOpenSignals[CompKiller] = WindowOpen;
 
 	MainFrame.Active = true;
 	MainFrame.Name = Compkiller:_RandomString()
@@ -6692,21 +6653,11 @@ function Compkiller.new(Config : Window)
 	end;
 
 	WindowOpen:Connect(function(v)
-   if not v then
-    if Compkiller.OpenDropdowns then
-        for i = #Compkiller.OpenDropdowns, 1, -1 do
-            local dropdown = Compkiller.OpenDropdowns[i];
-            if Compkiller.Dropdowns and Compkiller.Dropdowns[dropdown] then
-                Compkiller.Dropdowns[dropdown](false);
-            end
-        end
-        Compkiller.OpenDropdowns = {};
-    end
- 		if WindowArgs.PerformanceMode then
+		if WindowArgs.PerformanceMode then
 			MainFrame.BackgroundTransparency = (v and 0) or 1;
 			return;	
 		end;
-  
+
 		if v then
 			Compkiller:_Animation(MainFrame,TweenInfo.new(0.2),{
 				Size = Config.Scale
