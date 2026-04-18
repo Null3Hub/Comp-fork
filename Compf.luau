@@ -4410,20 +4410,30 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
     ToggleDb:Fire(bool);
     
     if bool then
-        if not Compkiller.OpenDropdowns then
-            Compkiller.OpenDropdowns = {};
+    if not Compkiller.OpenDropdowns then
+        Compkiller.OpenDropdowns = {};
+    end
+    -- Verifica se já não está na lista
+    local alreadyExists = false;
+    for _, v in ipairs(Compkiller.OpenDropdowns) do
+        if v == DropdownWindow then
+            alreadyExists = true;
+            break;
         end
+    end
+    if not alreadyExists then
         table.insert(Compkiller.OpenDropdowns, DropdownWindow);
-    else
-        if Compkiller.OpenDropdowns then
-            for i, v in ipairs(Compkiller.OpenDropdowns) do
-                if v == DropdownWindow then
-                    table.remove(Compkiller.OpenDropdowns, i);
-                    break;
-                end
+    end
+else
+    if Compkiller.OpenDropdowns then
+        for i = #Compkiller.OpenDropdowns, 1, -1 do
+            if Compkiller.OpenDropdowns[i] == DropdownWindow then
+                table.remove(Compkiller.OpenDropdowns, i);
+                break;
             end
-       end
-  end
+        end
+    end
+end
 
 		local MUL = Window.AbsoluteSize.Y / 2;
 
@@ -4467,7 +4477,10 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	end;
 
 	ToggleUI(false)
- DropdownWindow.ToggleUI = ToggleUI;
+if not Compkiller.Dropdowns then
+    Compkiller.Dropdowns = {};
+end
+Compkiller.Dropdowns[Dropdown] = ToggleUI;
 
 	local SpamUpdate,_Delay = false , tick();
 	local __signals = {};
@@ -6680,13 +6693,15 @@ function Compkiller.new(Config : Window)
 
 	WindowOpen:Connect(function(v)
    if not v then
-        for i, dropdown in ipairs(Compkiller.OpenDropdowns or {}) do
-            if dropdown.ToggleUI then
-                dropdown.ToggleUI(false);
+    if Compkiller.OpenDropdowns then
+        for i = #Compkiller.OpenDropdowns, 1, -1 do
+            local dropdown = Compkiller.OpenDropdowns[i];
+            if Compkiller.Dropdowns and Compkiller.Dropdowns[dropdown] then
+                Compkiller.Dropdowns[dropdown](false);
             end
         end
         Compkiller.OpenDropdowns = {};
-   end
+    end
  		if WindowArgs.PerformanceMode then
 			MainFrame.BackgroundTransparency = (v and 0) or 1;
 			return;	
