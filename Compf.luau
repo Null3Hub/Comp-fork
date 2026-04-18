@@ -4633,6 +4633,14 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 			end;
 		end;
 	end);
+	
+	UserInputService.InputChanged:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseWheel then
+			if ToggleDb:GetValue() and not Compkiller:_IsMouseOverFrame(DropdownWindow) then
+				ToggleUI(false)
+			end
+		end
+	end)
 
 	local Args = {};
 
