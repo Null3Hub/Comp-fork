@@ -4323,25 +4323,6 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	local ToggleDb = Compkiller.__SIGNAL(false);
 	local EventOut = Compkiller.__SIGNAL(0);
 
- local function CloseDropdownOnScroll()
-     if ToggleDb:GetValue() then
-         ToggleUI(false)
-     end
- end
- 
- local scrollFrame = BaseParent:FindFirstAncestorWhichIsA("ScrollingFrame")
- if scrollFrame then
-     scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(CloseDropdownOnScroll)
- end
- 
- UserInputService.InputChanged:Connect(function(input)
-     if input.UserInputType == Enum.UserInputType.MouseWheel then
-         if ToggleDb:GetValue() and Compkiller:_IsMouseOverFrame(DropdownWindow) == false then
-             ToggleUI(false)
-         end
-     end
- end)
-
 	DropdownWindow.Name = Compkiller:_RandomString()
 	DropdownWindow.Parent = Window
 	DropdownWindow.BackgroundColor3 = Compkiller.Colors.BlockBackground
@@ -4478,6 +4459,25 @@ end
 	end;
 
 	ToggleUI(false)
+	
+	local function CloseDropdownOnScroll()
+     if ToggleDb:GetValue() then
+         ToggleUI(false)
+     end
+ end
+ 
+ local scrollFrame = BaseParent:FindFirstAncestorWhichIsA("ScrollingFrame")
+ if scrollFrame then
+     scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(CloseDropdownOnScroll)
+ end
+ 
+ UserInputService.InputChanged:Connect(function(input)
+     if input.UserInputType == Enum.UserInputType.MouseWheel then
+         if ToggleDb:GetValue() and Compkiller:_IsMouseOverFrame(DropdownWindow) == false then
+             ToggleUI(false)
+         end
+     end
+ end)
 
 -- ADICIONAR:
 if Window and Compkiller.WindowOpenSignals and Compkiller.WindowOpenSignals[Window] then
