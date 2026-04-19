@@ -3233,14 +3233,13 @@ end;
 
 function Compkiller:_DrawKeybinds(Window: ScreenGui)
 	if Compkiller.__KEYBINDS_CACHE then
-		-- FIX: Valida se o cache ainda é válido (Root existe e tem Parent)
-		-- Evita retornar referência a uma janela já destruída causando "attempt to call a nil value"
-		if Compkiller.__KEYBINDS_CACHE.Root and Compkiller.__KEYBINDS_CACHE.Root.Parent then
-			return Compkiller.__KEYBINDS_CACHE;
-		else
-			Compkiller.__KEYBINDS_CACHE = nil;
-		end;
-	end;
+    -- ✅ Validate cache is still valid (Root exists and has Parent)
+    if Compkiller.__KEYBINDS_CACHE.Root and Compkiller.__KEYBINDS_CACHE.Root.Parent then
+        return Compkiller.__KEYBINDS_CACHE;
+    else
+        Compkiller.__KEYBINDS_CACHE = nil;  -- Invalidate stale cache
+    end;
+end;
 
 	local Keybinds = Instance.new("Frame")
 	local UICorner = Instance.new("UICorner")
@@ -3976,7 +3975,9 @@ function Compkiller:_LoadOption(Value , TabSignal)
 
 			Keybind.SetValue(Config.Default);
 
-			Config.Callback(Config.Default);
+			if Config.Callback and type(Config.Callback) == "function" then
+    task.spawn(Config.Callback, Config.Default);  -- ✅ Safe async call
+   end
 		end;
 
 		function Args:GetValue()
@@ -4149,7 +4150,9 @@ function Compkiller:_LoadOption(Value , TabSignal)
 
 			Toggle.ChangeValue(Config.Default);
 
-			Config.Callback(Config.Default);
+			if Config.Callback and type(Config.Callback) == "function" then
+    task.spawn(Config.Callback, Config.Default);  -- ✅ Safe async call
+   end
 		end);
 
 		local Args = {};
@@ -4161,7 +4164,9 @@ function Compkiller:_LoadOption(Value , TabSignal)
 
 			Toggle.ChangeValue(Config.Default);
 
-			Config.Callback(Config.Default);
+			if Config.Callback and type(Config.Callback) == "function" then
+    task.spawn(Config.Callback, Config.Default);  -- ✅ Safe async call
+end
 		end;
 
 		function Args:GetValue()
@@ -4326,13 +4331,12 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	local UICorner = Instance.new("UICorner")
 	local ScrollingFrame = Instance.new("ScrollingFrame")
 	local UIListLayout = Instance.new("UIListLayout")
-	local ToggleDb = Compkiller.__SIGNAL(false)
-	local EventOut = Compkiller.__SIGNAL(0)
+	local ToggleDb = Compkiller.__SIGNAL(false);
+ local EventOut = Compkiller.__SIGNAL(0);
 
 	-- Forward declarations to prevent nil upvalue capture in closures
-	local ToggleUI
-	local UpdateDropdown
-	local ClearDropdown
+	local ToggleUI;
+	local UpdateDropdown;
 
 	DropdownWindow.Name = Compkiller:_RandomString()
 	DropdownWindow.Parent = Window
@@ -4384,10 +4388,10 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	end)
 
 	local function CloseDropdownOnScroll()
-		if ToggleDb:GetValue() then
-			ToggleUI(false)
-		end
-	end
+    if ToggleDb:GetValue() then
+        ToggleUI(false)
+    end
+end
 
 	local scrollFrame = BaseParent:FindFirstAncestorWhichIsA("ScrollingFrame")
 	if scrollFrame then
@@ -4404,9 +4408,9 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 
 	-- ToggleUI assignment (closures now correctly capture the reference)
 	ToggleUI = function(bool)
-		local IsSame = ToggleDb:GetValue() == bool
-		EventOut:Fire(bool)
-		ToggleDb:Fire(bool)
+    local IsSame = ToggleDb:GetValue() == bool;
+    EventOut:Fire(bool);
+    ToggleDb:Fire(bool);
 
 		local MUL = Window.AbsoluteSize.Y / 2
 		local MainPosition = UDim2.fromOffset(
@@ -4453,13 +4457,13 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	local Values = nil
 	local IsMulti = false
 
-	ClearDropdown = function()
-		for i, v in next, ScrollingFrame:GetChildren() do
-			if v:IsA('Frame') then v:Destroy(); end
-		end
-		for i, v in next, __signals do v:Disconnect(); end
-		__signals = {} -- Memory leak fix
-	end
+local ClearDropdown = function()
+    for i, v in next, ScrollingFrame:GetChildren() do
+        if v:IsA('Frame') then v:Destroy(); end;
+    end;
+    for i, v in next, __signals do v:Disconnect(); end;
+    __signals = {};
+end;
 
 	local function IsDefault(v)
 		return (typeof(Default) == 'table' and (Default[v] or table.find(Default, v))) or Default == v
@@ -4480,13 +4484,12 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 		OptionContainer.ZIndex = BaseZ_Index + 6
 
 		Indicator.Name = "Indicator"
-		Indicator.Parent = OptionContainer
-		Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
-		Indicator.BorderSizePixel = 0
-		Indicator.Size = UDim2.new(0, 0, 0, 0)
-		Indicator.ZIndex = BaseZ_Index + 7
-		Indicator.AnchorPoint = Vector2.new(0, 0.5)
-		Indicator.Position = UDim2.new(0, 0, 0.5, 0)
+Indicator.Parent = OptionContainer
+Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
+Indicator.Size = UDim2.new(0, 0, 0, 0)
+Indicator.ZIndex = BaseZ_Index + 7
+Indicator.AnchorPoint = Vector2.new(0, 0.5)
+Indicator.Position = UDim2.new(0, 0, 0.5, 0)
 
 		BlockText.Name = Compkiller:_RandomString()
 		BlockText.Parent = OptionContainer
@@ -4544,18 +4547,18 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	end
 
 	-- UpdateDropdown assignment with circular reference guard
-	UpdateDropdown = function()
-		if not Values then return end
-		ClearDropdown()
-		local SelectedValues = {}
-		for _, v in next, Values do
-			local Row = BuildOptionRow(v)
-			local IsActive = IsDefault(v)
-			if IsActive then
+UpdateDropdown = function()
+    if not Values then return end  -- ✅ Guard against nil Values
+    ClearDropdown();
+    local SelectedValues = {};
+    for i, v in next, Values do
+			 local Row = BuildOptionRow(v)
+			 local IsActive = IsDefault(v)
+			 if IsActive then
 				ActivateRow(Row)
 				table.insert(SelectedValues, v)
 			end
-
+end;
 			Compkiller:_Input(Row.Container, function()
 				if IsMulti then
 					if Row.IsActive then
@@ -4661,7 +4664,9 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 			Block:SetTransparency((Config.Default and 0.1) or 0.3);
 
-			Config.Callback(Config.Default);
+			if Config.Callback and type(Config.Callback) == "function" then
+    task.spawn(Config.Callback, Config.Default);  -- ✅ Safe async call
+   end
 		end);
 
 		local Args = {};
@@ -4675,7 +4680,9 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 			Block:SetTransparency((Config.Default and 0.1) or 0.3);
 
-			Config.Callback(Config.Default);
+			if Config.Callback and type(Config.Callback) == "function" then
+    task.spawn(Config.Callback, Config.Default);  -- ✅ Safe async call
+   end
 		end;
 
 		Args.Signal = Signal:Connect(function(bool)
@@ -4788,7 +4795,9 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 			Keybind.SetValue(Config.Default);
 
-			Config.Callback(Config.Default);
+			if Config.Callback and type(Config.Callback) == "function" then
+    task.spawn(Config.Callback, Config.Default);  -- ✅ Safe async call
+   end
 		end;
 
 		Args.Signal = Signal:Connect(function(bool)
@@ -5973,7 +5982,9 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 			ValueText.Text = DaTabarser(Config.Default);
 
-			Config.Callback(Config.Default);
+			if Config.Callback and type(Config.Callback) == "function" then
+    task.spawn(Config.Callback, Config.Default);  -- ✅ Safe async call
+   end
 		end);
 
 		repi.EventOut:Connect(function(v)
@@ -6529,11 +6540,10 @@ function Compkiller.new(Config : Window)
 		end);
 
 		Compkiller:_Input(Userinfo,function()
-			-- FIX: Verificação dupla para evitar "attempt to call a nil value" quando :Window ainda não existe
-			if WindowArgs.UserSettings.Root and type(WindowArgs.UserSettings.Window) == "function" then
-				WindowArgs.UserSettings:Window(true);
-			end;
-		end);
+    if WindowArgs.UserSettings and type(WindowArgs.UserSettings.Window) == "function" then
+        WindowArgs.UserSettings:Window(true);
+    end
+  end);
 	end;
 
 	UserProfile.Name = Compkiller:_RandomString()
@@ -8589,10 +8599,10 @@ function Compkiller.new(Config : Window)
 			ConfigButton.OnDelete = nil;
 
 			Compkiller:_Input(LoadButton,function()
-				if ConfigButton.OnLoad and type(ConfigButton.OnLoad) == "function" then
-					task.spawn(ConfigButton.OnLoad);
-				end
-			end);
+    if ConfigButton.OnLoad and type(ConfigButton.OnLoad) == "function" then
+        task.spawn(ConfigButton.OnLoad);
+    end
+   end);
 
 			Compkiller:_Input(SaveButton,function()
 				if ConfigButton.OnSave and type(ConfigButton.OnSave) == "function" then
@@ -9197,12 +9207,10 @@ function Compkiller.new(Config : Window)
 
 					task.wait();
 
-local caller = WindowArgs.THREADS[frame];
-
-					-- FIX: Verificação de tipo e pcall para evitar "attempt to call a nil value"
-					if caller and type(caller) == "function" then
-						pcall(caller, true);
-					end;
+    local caller = WindowArgs.THREADS[frame];
+    if caller and type(caller) == "function" then
+    pcall(caller, true);
+    end;
 				end;
 			end;
 
