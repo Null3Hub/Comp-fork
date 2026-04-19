@@ -4320,6 +4320,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	local Window = Compkiller:_GetWindowFromElement(BaseParent)
 	local BaseZ_Index = BaseParent.ZIndex + (math.random(1, 15) * 100)
 
+	-- Dropdown Window Setup
 	local DropdownWindow = Instance.new("Frame")
 	local UIStroke = Instance.new("UIStroke")
 	local UICorner = Instance.new("UICorner")
@@ -4328,9 +4329,10 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	local ToggleDb = Compkiller.__SIGNAL(false)
 	local EventOut = Compkiller.__SIGNAL(0)
 
-	-- ✅ FIX BUG 1 & 3: Forward declarations para evitar problemas de upvalue capture
+	-- Forward declarations to prevent nil upvalue capture in closures
 	local ToggleUI
 	local UpdateDropdown
+	local ClearDropdown
 
 	DropdownWindow.Name = Compkiller:_RandomString()
 	DropdownWindow.Parent = Window
@@ -4363,9 +4365,9 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	ScrollingFrame.Parent = DropdownWindow
 	ScrollingFrame.Active = true
 	ScrollingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-	ScrollingFrame.BackgroundTransparency = 1.000
-	ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	ScrollingFrame.BorderSizePixel = 0	ScrollingFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	ScrollingFrame.BackgroundTransparency = 1.000	ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	ScrollingFrame.BorderSizePixel = 0
+	ScrollingFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	ScrollingFrame.Size = UDim2.new(1, -5, 1, -5)
 	ScrollingFrame.ZIndex = BaseZ_Index + 5
 	ScrollingFrame.BottomImage = ""
@@ -4381,10 +4383,9 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 		ScrollingFrame.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X, UIListLayout.AbsoluteContentSize.Y)
 	end)
 
-	-- Scroll listeners
 	local function CloseDropdownOnScroll()
 		if ToggleDb:GetValue() then
-			ToggleUI(false) -- ✅ Agora seguro graças à forward declaration
+			ToggleUI(false)
 		end
 	end
 
@@ -4401,7 +4402,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 		end
 	end)
 
-	-- ✅ FIX BUG 1: Implementação real de ToggleUI
+	-- ToggleUI assignment (closures now correctly capture the reference)
 	ToggleUI = function(bool)
 		local IsSame = ToggleDb:GetValue() == bool
 		EventOut:Fire(bool)
@@ -4413,8 +4414,8 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 			BaseParent.AbsolutePosition.Y + BaseParent.AbsoluteSize.Y + 5
 		)
 		local DropPosition = UDim2.fromOffset(MainPosition.X.Offset, MainPosition.Y.Offset + 25)
-
-		if MainPosition.Y.Offset > MUL then			MainPosition = UDim2.fromOffset(BaseParent.AbsolutePosition.X + 1, BaseParent.AbsolutePosition.Y + 55)
+		if MainPosition.Y.Offset > MUL then
+			MainPosition = UDim2.fromOffset(BaseParent.AbsolutePosition.X + 1, BaseParent.AbsolutePosition.Y + 55)
 			DropPosition = UDim2.fromOffset(MainPosition.X.Offset, MainPosition.Y.Offset - 25)
 			DropdownWindow.AnchorPoint = Vector2.new(0, 1)
 		else
@@ -4452,23 +4453,21 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	local Values = nil
 	local IsMulti = false
 
-	-- ✅ FIX BUG 4: Limpeza segura da tabela de sinais
-	local function ClearDropdown()
-		for _, v in next, ScrollingFrame:GetChildren() do
-			if v:IsA('Frame') then v:Destroy() end
+	ClearDropdown = function()
+		for i, v in next, ScrollingFrame:GetChildren() do
+			if v:IsA('Frame') then v:Destroy(); end
 		end
-		for _, v in next, __signals do
-			pcall(function() v:Disconnect() end)
-		end
-		table.clear(__signals)
+		for i, v in next, __signals do v:Disconnect(); end
+		__signals = {} -- Memory leak fix
 	end
 
-	local function IsDefault(v)		return (typeof(Default) == 'table' and (Default[v] or table.find(Default, v))) or Default == v
+	local function IsDefault(v)
+		return (typeof(Default) == 'table' and (Default[v] or table.find(Default, v))) or Default == v
 	end
-
-	-- Helper: Build Row
+	-- Helper: Build Starlight Style Option Row (Absolute positioning fix)
 	local function BuildOptionRow(v)
 		local OptionContainer = Instance.new("Frame")
+		local Indicator = Instance.new("Frame")
 		local BlockText = Instance.new("TextLabel")
 		local BlockLine = Instance.new("Frame")
 
@@ -4480,26 +4479,20 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 		OptionContainer.Size = UDim2.new(1, -1, 0, 28)
 		OptionContainer.ZIndex = BaseZ_Index + 6
 
-		-- ✅ FIX BUG 2: Indicador com posicionamento absoluto, sem LayoutOrder hack
-		local Indicator = Instance.new("Frame")
 		Indicator.Name = "Indicator"
 		Indicator.Parent = OptionContainer
 		Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
-		Indicator.BackgroundTransparency = 1
-		Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Indicator.BorderSizePixel = 0
-		Indicator.Size = UDim2.new(0, 3, 0, 14)
-		Indicator.AnchorPoint = Vector2.new(0, 0.5)
-		Indicator.Position = UDim2.new(0, 8, 0.5, 0)
+		Indicator.Size = UDim2.new(0, 0, 0, 0)
 		Indicator.ZIndex = BaseZ_Index + 7
+		Indicator.AnchorPoint = Vector2.new(0, 0.5)
+		Indicator.Position = UDim2.new(0, 0, 0.5, 0)
 
 		BlockText.Name = Compkiller:_RandomString()
 		BlockText.Parent = OptionContainer
 		BlockText.BackgroundTransparency = 1.000
-		BlockText.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		BlockText.BorderSizePixel = 0
-		BlockText.Size = UDim2.new(1, -20, 0, 20)
-		BlockText.Position = UDim2.new(0, 16, 0.5, 0) -- Offset inicial para caber o indicador
+		BlockText.Size = UDim2.new(1, 0, 0, 20)
 		BlockText.ZIndex = BaseZ_Index + 6
 		BlockText.Font = Enum.Font.GothamMedium
 		BlockText.Text = tostring(v)
@@ -4507,17 +4500,19 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 		BlockText.TextSize = 13.000
 		BlockText.TextTransparency = 0.500
 		BlockText.TextXAlignment = Enum.TextXAlignment.Left
-		table.insert(Compkiller.Elements.SwitchColor, { Element = BlockText, Property = 'TextColor3' })
+		BlockText.AnchorPoint = Vector2.new(0, 0.5)
+		BlockText.Position = UDim2.new(0, 8, 0.5, 0)
 
 		BlockLine.Name = Compkiller:_RandomString()
 		BlockLine.Parent = OptionContainer
 		BlockLine.AnchorPoint = Vector2.new(0.5, 1)
-		BlockLine.BackgroundColor3 = Compkiller.Colors.LineColor		BlockLine.BackgroundTransparency = 0.500
-		BlockLine.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		BlockLine.BackgroundColor3 = Compkiller.Colors.LineColor
+		BlockLine.BackgroundTransparency = 0.500
 		BlockLine.BorderSizePixel = 0
 		BlockLine.Position = UDim2.new(0.5, 0, 1, 0)
 		BlockLine.Size = UDim2.new(1, -10, 0, 1)
 		BlockLine.ZIndex = BaseZ_Index + 7
+		table.insert(Compkiller.Elements.SwitchColor, { Element = BlockText, Property = 'TextColor3' })
 		table.insert(Compkiller.Elements.LineColor, { Element = BlockLine, Property = "BackgroundColor3" })
 
 		return {
@@ -4529,23 +4524,26 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 		}
 	end
 
+	-- Activation/Deactivation (Shifts Text.Position instead of Padding)
 	local function ActivateRow(OptionRow)
 		if OptionRow.IsActive then return end
 		OptionRow.IsActive = true
-		Compkiller:_Animation(OptionRow.Indicator, TweenInfo.new(0.2), { BackgroundTransparency = 0 })
-		Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { TextTransparency = 0, Position = UDim2.new(0, 20, 0.5, 0) })
+		Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { Position = UDim2.new(0, 12, 0.5, 0) })
+		Compkiller:_Animation(OptionRow.Indicator, TweenInfo.new(0.2), { Size = UDim2.new(0, 3, 0, 14), BackgroundTransparency = 0 })
+		Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { TextTransparency = 0 })
 		Compkiller:_Animation(OptionRow.Container, TweenInfo.new(0.2), { BackgroundTransparency = 0.8 })
 	end
 
 	local function DeactivateRow(OptionRow)
 		if not OptionRow.IsActive then return end
 		OptionRow.IsActive = false
-		Compkiller:_Animation(OptionRow.Indicator, TweenInfo.new(0.2), { BackgroundTransparency = 1 })
-		Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { TextTransparency = 0.5, Position = UDim2.new(0, 16, 0.5, 0) })
+		Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { Position = UDim2.new(0, 8, 0.5, 0) })
+		Compkiller:_Animation(OptionRow.Indicator, TweenInfo.new(0.2), { Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1 })
+		Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { TextTransparency = 0.5 })
 		Compkiller:_Animation(OptionRow.Container, TweenInfo.new(0.2), { BackgroundTransparency = 1 })
 	end
 
-	-- ✅ FIX BUG 3: Atribuição à variável forward declarada + guard clause
+	-- UpdateDropdown assignment with circular reference guard
 	UpdateDropdown = function()
 		if not Values then return end
 		ClearDropdown()
@@ -4561,9 +4559,9 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 			Compkiller:_Input(Row.Container, function()
 				if IsMulti then
 					if Row.IsActive then
-						DeactivateRow(Row)						for idx, val in ipairs(SelectedValues) do
-							if val == v then table.remove(SelectedValues, idx); break end
-						end
+						DeactivateRow(Row)
+						for idx, val in ipairs(SelectedValues) do
+							if val == v then table.remove(SelectedValues, idx); break end						end
 					else
 						ActivateRow(Row)
 						table.insert(SelectedValues, v)
@@ -4571,7 +4569,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 					Callback(SelectedValues)
 				else
 					Default = v
-					if UpdateDropdown then UpdateDropdown() end
+					UpdateDropdown()
 					Callback(v)
 					ToggleUI(false)
 				end
@@ -4610,9 +4608,9 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 	function Args:SetDefault(v) Default = v end
 	function Args:SetData(Def, Val, Multi, Vis)
 		if Vis and ((tick() - _Delay) <= 0.5 or #Val > 10) then
-			_Delay = tick()			SpamUpdate = true
-		else
-			SpamUpdate = false
+			_Delay = tick()
+			SpamUpdate = true
+		else			SpamUpdate = false
 		end
 		IsMulti = Multi
 		Default = Def
@@ -4620,6 +4618,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
 		if Vis and not SpamUpdate then UpdateDropdown() end
 	end
 	function Args:Refersh() SpamUpdate = true; UpdateDropdown() end
+	t = EventOut
 
 	return Args
 end
