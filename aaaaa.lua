@@ -4389,7 +4389,25 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
     UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
         ScrollingFrame.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X, UIListLayout.AbsoluteContentSize.Y)
     end);
-
+    -- Adicionar após a criação do ScrollingFrame da dropdown
+    local scrollFrame = BaseParent:FindFirstAncestorWhichIsA("ScrollingFrame")
+    if scrollFrame then
+        scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+            if ToggleDb:GetValue() then
+                ToggleUI(false)
+            end
+        end)
+    end
+    
+    -- Adicionar também para detectar scroll global
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseWheel then
+            if ToggleDb:GetValue() and Compkiller:_IsMouseOverFrame(DropdownWindow) == false then
+                ToggleUI(false)
+            end
+        end
+    end)
+    
     -- Toggle Animation Function
     local ToggleUI = function(bool)
         local IsSame = ToggleDb:GetValue() == bool;
@@ -4398,7 +4416,9 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
         
         -- Smart positioning (Up/Down)
         local MUL = Window.AbsoluteSize.Y / 2;
-        local MainPosition = UDim2.fromOffset(BaseParent.AbsolutePosition.X + 1, BaseParent.AbsolutePosition.Y + 80);
+        local MainPosition = UDim2.fromOffset(
+            BaseParent.AbsolutePosition.X + 1, 
+            BaseParent.AbsolutePosition.Y + BaseParent.AbsoluteSize.Y + 5);
         local DropPosition = UDim2.fromOffset(MainPosition.X.Offset, MainPosition.Y.Offset + 25);
         
         if MainPosition.Y.Offset > MUL then -- Go Up
@@ -4463,7 +4483,8 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
         UIPadding.PaddingLeft = UDim.new(0, 8) -- Default Starlight padding
         UIPadding.PaddingRight = UDim.new(0, 8)
 
-        -- Indicator (Starlight visual)        Indicator.Name = "Indicator"
+        -- Indicator (Starlight visual)        
+        Indicator.Name = "Indicator"
         Indicator.Parent = OptionContainer
         Indicator.BackgroundColor3 = Compkiller.Colors.Highlight -- Use Highlight color
         Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -4597,9 +4618,11 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
                     
                     -- Update Default and Refresh
                     Default = v;
-                    UpdateDropdown(); 
+                    if UpdateDropdown then
+                        UpdateDropdown();
+                    end
                     Callback(v);
-                    ToggleUI(false); -- Close on select
+                    ToggleUI(false);
                 end
             end);
 
@@ -4642,7 +4665,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton, Callback: (any) -> any
         if Vis and not SpamUpdate then UpdateDropdown(); end;
     end;
     function Args:Refersh() SpamUpdate = true; UpdateDropdown(); end;
-    Args.EventOut = EventOut;
+    t = EventOut;
     return Args;
 end;
 
@@ -7294,7 +7317,7 @@ function Compkiller.new(Config : Window)
 			end;
 		end);
 
-		function TabArgs:DrawTab(TabConfig : TabConfig) -- Internal Tab
+		TabArgs:DrawTab(TabConfig : TabConfig) -- Internal Tab
 			TabConfig = Compkiller.__CONFIG(TabConfig,{
 				Name = "Tab",
 				Icon = "eye",
@@ -9220,7 +9243,7 @@ function Compkiller.new(Config : Window)
 
 					task.wait();
 
-					local caller = WindowArgs.THREADS[frame];
+local caller = WindowArgs.THREADS[frame];
 
 					-- FIX: Verificação de tipo e pcall para evitar "attempt to call a nil value"
 					if caller and type(caller) == "function" then
@@ -9642,7 +9665,7 @@ function Compkiller.new(Config : Window)
 			Watermark.BackgroundTransparency = 0.025
 			Watermark.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			Watermark.BorderSizePixel = 0
-			Watermark.Position = UDim2.new(1, -10, 0, 10)
+			Watermark.Position = UDim2.new(1, -15, 0, 10)
 			Watermark.Size = UDim2.new(0, 45, 0, 23)
 			Watermark.ZIndex = 150
 
