@@ -4318,25 +4318,29 @@ end;
 
 function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	local Window = Compkiller:_GetWindowFromElement(BaseParent);
-
 	local BaseZ_Index = BaseParent.ZIndex + (math.random(1,15) * 100);
 
 	local DropdownWindow = Instance.new("Frame")
 	local UIStroke = Instance.new("UIStroke")
 	local UICorner = Instance.new("UICorner")
+	local Background = Instance.new("Frame") -- fundo interno mais escuro
+	local UICorner_bg = Instance.new("UICorner")
 	local ScrollingFrame = Instance.new("ScrollingFrame")
 	local UIListLayout = Instance.new("UIListLayout")
 	local ToggleDb = Compkiller.__SIGNAL(false);
 	local EventOut = Compkiller.__SIGNAL(0);
 
+	-- Root popup frame
 	DropdownWindow.Name = Compkiller:_RandomString()
 	DropdownWindow.Parent = Window
 	DropdownWindow.BackgroundColor3 = Compkiller.Colors.BlockBackground
 	DropdownWindow.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	DropdownWindow.BorderSizePixel = 0
+	DropdownWindow.ClipsDescendants = true
 	DropdownWindow.Position = UDim2.new(123, 0, 123, 0)
-	DropdownWindow.Size = UDim2.new(0, 190, 0, 200)
+	DropdownWindow.Size = UDim2.new(0, 190, 0, 0) -- começa fechado
 	DropdownWindow.ZIndex = BaseZ_Index
+	DropdownWindow.Visible = false
 
 	table.insert(Compkiller.Elements.BlockBackground,{
 		Element = DropdownWindow,
@@ -4344,31 +4348,37 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	});
 
 	Compkiller:_AddDragBlacklist(DropdownWindow);
-	Compkiller:_AddPropertyEvent(DropdownWindow,function(v)
+	Compkiller:_AddPropertyEvent(DropdownWindow, function(v)
 		DropdownWindow.Visible = v;
-
 		if Compkiller.PerformanceMode then
-			if DropdownWindow.Visible then
-				Compkiller:_SetNilP(DropdownWindow , Window);
-			else
-				Compkiller:_SetNilP(DropdownWindow , nil);
-			end;
+			Compkiller:_SetNilP(DropdownWindow, v and Window or nil);
 		else
-			Compkiller:_SetNilP(DropdownWindow , Window);
+			Compkiller:_SetNilP(DropdownWindow, Window);
 		end;
 	end)
 
 	UIStroke.Color = Compkiller.Colors.HighStrokeColor
 	UIStroke.Parent = DropdownWindow
-
-	table.insert(Compkiller.Elements.HighStrokeColor , {
-		Element = UIStroke,
-		Property = "Color"
-	})
+	table.insert(Compkiller.Elements.HighStrokeColor, { Element = UIStroke, Property = "Color" })
 
 	UICorner.CornerRadius = UDim.new(0, 6)
 	UICorner.Parent = DropdownWindow
 
+	-- Fundo escuro interno (equivalente ao Background do Starlight)
+	Background.Name = Compkiller:_RandomString()
+	Background.Parent = DropdownWindow
+	Background.BackgroundColor3 = Compkiller.Colors.BGDBColor
+	Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Background.BorderSizePixel = 0
+	Background.Size = UDim2.fromScale(1, 1)
+	Background.ZIndex = BaseZ_Index - 1
+	table.insert(Compkiller.Elements.BGDBColor, { Element = Background, Property = "BackgroundColor3" })
+
+	UICorner_bg.CornerRadius = UDim.new(0, 6)
+	UICorner_bg.Parent = Background
+
+	-- ScrollingFrame com barra de scroll
+	ScrollingFrame.Name = Compkiller:_RandomString()
 	ScrollingFrame.Parent = DropdownWindow
 	ScrollingFrame.Active = true
 	ScrollingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -4376,328 +4386,346 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	ScrollingFrame.BorderSizePixel = 0
 	ScrollingFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	ScrollingFrame.Size = UDim2.new(1, -5, 1, -5)
+	ScrollingFrame.Size = UDim2.new(1, 0, 0, 0) -- animado na abertura
 	ScrollingFrame.ZIndex = BaseZ_Index + 5
 	ScrollingFrame.BottomImage = ""
-	ScrollingFrame.ScrollBarThickness = 0
 	ScrollingFrame.TopImage = ""
+	ScrollingFrame.ScrollBarThickness = 3
+	ScrollingFrame.ScrollBarImageColor3 = Compkiller.Colors.HighStrokeColor
+	ScrollingFrame.ScrollBarImageTransparency = 1 -- aparece após abrir
 
 	UIListLayout.Parent = ScrollingFrame
 	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	UIListLayout.Padding = UDim.new(0, 10)
+	UIListLayout.Padding = UDim.new(0, 0)
 
 	UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-		ScrollingFrame.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X,UIListLayout.AbsoluteContentSize.Y)
+		ScrollingFrame.CanvasSize = UDim2.fromOffset(0, UIListLayout.AbsoluteContentSize.Y)
 	end);
 
-	local ToggleUI = function(bool)
-		local IsSame = ToggleDb:GetValue() == bool;
+	local MAX_HEIGHT = 175
+	local isOpen = false
 
-		EventOut:Fire(bool);
-		ToggleDb:Fire(bool);
+	local function updPos()
+		local MUL = Window.AbsoluteSize.Y / 2
+		local btnAbsY = BaseParent.AbsolutePosition.Y
+		local btnAbsX = BaseParent.AbsolutePosition.X
+		local contentH = math.min(UIListLayout.AbsoluteContentSize.Y, MAX_HEIGHT)
 
-		local MUL = Window.AbsoluteSize.Y / 2;
-
-		local MainPosition = UDim2.fromOffset(BaseParent.AbsolutePosition.X + 1,BaseParent.AbsolutePosition.Y + 80);
-		local DropPosition = UDim2.fromOffset(MainPosition.X.Offset,MainPosition.Y.Offset + 25);
-
-		if MainPosition.Y.Offset > MUL then -- go up
-			MainPosition = UDim2.fromOffset(BaseParent.AbsolutePosition.X + 1,BaseParent.AbsolutePosition.Y + 55);
-			DropPosition = UDim2.fromOffset(MainPosition.X.Offset,MainPosition.Y.Offset - 25);
-
-			DropdownWindow.AnchorPoint = Vector2.new(0,1);
+		if btnAbsY + 35 + contentH >= Window.AbsoluteSize.Y + Window.AbsolutePosition.Y - 20 then
+			DropdownWindow.AnchorPoint = Vector2.new(0, 1)
+			DropdownWindow.Position = UDim2.fromOffset(btnAbsX + 1, btnAbsY - 5)
 		else
-			DropdownWindow.AnchorPoint = Vector2.zero;
-		end;
-
-		if bool then
-			if not IsSame then
-				DropdownWindow.Position = DropPosition;
-			end;
-
-			Compkiller:_Animation(DropdownWindow,TweenInfo.new(0.2),{
-				BackgroundTransparency = 0,
-				Position = MainPosition,
-				Size = UDim2.new(0, BaseParent.AbsoluteSize.X - 1, 0, math.clamp(UIListLayout.AbsoluteContentSize.Y + 10,10 , 200))
-			})
-
-			Compkiller:_Animation(UIStroke,TweenInfo.new(0.2),{
-				Transparency = 0
-			})
-		else
-			Compkiller:_Animation(DropdownWindow,TweenInfo.new(0.2),{
-				BackgroundTransparency = 1,
-				Position = DropPosition,
-				Size = UDim2.new(0, BaseParent.AbsoluteSize.X - 1, 0, math.clamp(UIListLayout.AbsoluteContentSize.Y / 1.5, 10 , 200))
-			})
-
-			Compkiller:_Animation(UIStroke,TweenInfo.new(0.2),{
-				Transparency = 1
-			})
-		end;
-	end;
-
-	ToggleUI(false)
-
-	-- FIX: Listeners movidos para DEPOIS da declaração de ToggleUI para evitar "attempt to call a nil value"
-	local function CloseDropdownOnScroll()
-		if ToggleDb:GetValue() then
-			ToggleUI(false)
+			DropdownWindow.AnchorPoint = Vector2.new(0, 0)
+			DropdownWindow.Position = UDim2.fromOffset(btnAbsX + 1, btnAbsY + 80)
 		end
+
+		DropdownWindow.Size = UDim2.fromOffset(BaseParent.AbsoluteSize.X - 1, DropdownWindow.Size.Y.Offset)
 	end
 
-	local scrollFrame = BaseParent:FindFirstAncestorWhichIsA("ScrollingFrame")
-	if scrollFrame then
-		scrollFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(CloseDropdownOnScroll)
-	end
+	local function close()
+		if not isOpen then return end
+		isOpen = false
 
-	UserInputService.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseWheel then
-			if ToggleDb:GetValue() and not Compkiller:_IsMouseOverFrame(DropdownWindow) then
-				ToggleUI(false)
-			end
-		end
-	end)
+		EventOut:Fire(false)
+		ToggleDb:Fire(false)
 
-	-- FIX: Fecha dropdown ao minimizar a janela
-	if Window and Compkiller.WindowOpenSignals and Compkiller.WindowOpenSignals[Window] then
-		Compkiller.WindowOpenSignals[Window]:Connect(function(v)
-			if not v and ToggleDb:GetValue() then
-				ToggleUI(false)
+		Compkiller:_Animation(ScrollingFrame, TweenInfo.new(0.18, Enum.EasingStyle.Exponential), {
+			Size = UDim2.new(1, 0, 0, 0)
+		})
+		Compkiller:_Animation(DropdownWindow, TweenInfo.new(0.18, Enum.EasingStyle.Exponential), {
+			Size = UDim2.fromOffset(DropdownWindow.Size.X.Offset, 0),
+			BackgroundTransparency = 1,
+		})
+		Compkiller:_Animation(UIStroke, TweenInfo.new(0.18), { Transparency = 1 })
+
+		task.delay(0.2, function()
+			if not isOpen then
+				DropdownWindow.Visible = false
+				ScrollingFrame.ScrollBarImageTransparency = 1
 			end
 		end)
 	end
 
-	local SpamUpdate,_Delay = false , tick();
-	local __signals = {};
-	local Default = nil;
-	local Values = nil;
-	local IsMulti = false;
+	local function open()
+		if isOpen then return end
+		isOpen = true
 
-	local DrawButton = function()
+		updPos()
+		local contentH = math.min(UIListLayout.AbsoluteContentSize.Y, MAX_HEIGHT)
+
+		DropdownWindow.Visible = true
+		DropdownWindow.BackgroundTransparency = 1
+		DropdownWindow.Size = UDim2.fromOffset(BaseParent.AbsoluteSize.X - 1, 0)
+		ScrollingFrame.Size = UDim2.new(1, 0, 0, 0)
+		ScrollingFrame.ScrollBarImageTransparency = 1
+
+		EventOut:Fire(true)
+		ToggleDb:Fire(true)
+
+		Compkiller:_Animation(DropdownWindow, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {
+			Size = UDim2.fromOffset(BaseParent.AbsoluteSize.X - 1, contentH),
+			BackgroundTransparency = 0,
+		})
+		Compkiller:_Animation(ScrollingFrame, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {
+			Size = UDim2.new(1, 0, 0, contentH)
+		})
+		Compkiller:_Animation(UIStroke, TweenInfo.new(0.2), { Transparency = 0 })
+
+		task.delay(0.22, function()
+			if isOpen then
+				ScrollingFrame.ScrollBarImageTransparency = 0
+			end
+		end)
+	end
+
+	-- fecha ao mover a base (scroll do pai)
+	BaseParent:GetPropertyChangedSignal("AbsolutePosition"):Connect(close)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseWheel then
+			if isOpen and not Compkiller:_IsMouseOverFrame(DropdownWindow) then
+				close()
+			end
+		end
+	end)
+
+	UserInputService.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+			if not Compkiller:_IsMouseOverFrame(DropdownWindow) and not Compkiller:_IsMouseOverFrame(BaseParent) then
+				close()
+			end
+		end
+	end)
+
+	if Compkiller.WindowOpenSignals and Compkiller.WindowOpenSignals[Window] then
+		Compkiller.WindowOpenSignals[Window]:Connect(function(v)
+			if not v then close() end
+		end)
+	end
+
+	-- State interno
+	local SpamUpdate, _Delay = false, tick()
+	local __signals = {}
+	local Default = nil
+	local Values = nil
+	local IsMulti = false
+
+	-- Cria um item de opção no estilo Starlight (com Indicator lateral e indent animado)
+	local function DrawButton()
 		local DropdownItem = Instance.new("Frame")
+		local Indicator = Instance.new("Frame") -- barra lateral colorida
+		local UICorner_ind = Instance.new("UICorner")
+		local UIPadding_item = Instance.new("UIPadding")
 		local BlockText = Instance.new("TextLabel")
-		local BlockLine = Instance.new("Frame")
 
 		DropdownItem.Name = Compkiller:_RandomString()
-		DropdownItem.BackgroundTransparency = 1.000
+		DropdownItem.BackgroundColor3 = Compkiller.Colors.MouseEnter
+		DropdownItem.BackgroundTransparency = 1
 		DropdownItem.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		DropdownItem.BorderSizePixel = 0
-		DropdownItem.Size = UDim2.new(1, -1, 0, 20)
+		DropdownItem.Size = UDim2.new(1, 0, 0, 28)
 		DropdownItem.ZIndex = BaseZ_Index + 6
+		table.insert(Compkiller.Elements.BlockBackground, { Element = DropdownItem, Property = "BackgroundColor3" })
+
+		-- Indicator (barra lateral, aparece quando ativo)
+		Indicator.Name = Compkiller:_RandomString()
+		Indicator.Parent = DropdownItem
+		Indicator.AnchorPoint = Vector2.new(0, 0.5)
+		Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
+		Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		Indicator.BorderSizePixel = 0
+		Indicator.Position = UDim2.new(0, 0, 0.5, 0)
+		Indicator.Size = UDim2.fromOffset(4, 0) -- altura 0 = inativo
+		Indicator.ZIndex = BaseZ_Index + 8
+		table.insert(Compkiller.Elements.Highlight, { Element = Indicator, Property = "BackgroundColor3" })
+
+		UICorner_ind.CornerRadius = UDim.new(0, 2)
+		UICorner_ind.Parent = Indicator
+
+		-- Padding lateral animável (efeito indent Starlight)
+		UIPadding_item.PaddingLeft = UDim.new(0, 8)
+		UIPadding_item.Parent = DropdownItem
 
 		BlockText.Name = Compkiller:_RandomString()
 		BlockText.Parent = DropdownItem
 		BlockText.AnchorPoint = Vector2.new(0, 0.5)
-		BlockText.BackgroundTransparency = 1.000
+		BlockText.BackgroundTransparency = 1
 		BlockText.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		BlockText.BorderSizePixel = 0
-		BlockText.Position = UDim2.new(0, 5, 0.5, 0)
-		BlockText.Size = UDim2.new(1, -10, 0, 25)
-		BlockText.ZIndex = BaseZ_Index + 6
+		BlockText.Position = UDim2.new(0, 0, 0.5, 0)
+		BlockText.Size = UDim2.new(1, -8, 0, 20)
+		BlockText.ZIndex = BaseZ_Index + 7
 		BlockText.Font = Enum.Font.GothamMedium
 		BlockText.Text = ""
 		BlockText.TextColor3 = Compkiller.Colors.SwitchColor
-		BlockText.TextSize = 13.000
-		BlockText.TextTransparency = 0.500
+		BlockText.TextSize = 12
+		BlockText.TextTransparency = 0.5
 		BlockText.TextXAlignment = Enum.TextXAlignment.Left
+		table.insert(Compkiller.Elements.SwitchColor, { Element = BlockText, Property = "TextColor3" })
 
-		table.insert(Compkiller.Elements.SwitchColor , {
-			Element = BlockText,
-			Property = 'TextColor3'
-		});
-
-		BlockLine.Name = Compkiller:_RandomString()
-		BlockLine.Parent = DropdownItem
-		BlockLine.AnchorPoint = Vector2.new(0.5, 1)
-		BlockLine.BackgroundColor3 = Compkiller.Colors.LineColor
-		BlockLine.BackgroundTransparency = 0.500
-		BlockLine.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		BlockLine.BorderSizePixel = 0
-		BlockLine.Position = UDim2.new(0.5, 0, 1, 0)
-		BlockLine.Size = UDim2.new(1, -6, 0, 1)
-		BlockLine.ZIndex = BaseZ_Index + 7
-
-		table.insert(Compkiller.Elements.LineColor,{
-			Element = BlockLine,
-			Property = "BackgroundColor3"
-		});
+		DropdownItem:SetAttribute("Active", false)
 
 		return {
 			BlockText = BlockText,
 			DropdownItem = DropdownItem,
-			BlockLine = BlockLine,
-		};
-	end;
+			Indicator = Indicator,
+			UIPadding = UIPadding_item,
+		}
+	end
+
+	local function Activate(item)
+		Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 0.5 })
+		Compkiller:_Animation(item.BlockText, TweenInfo.new(0.15), { TextTransparency = 0, TextColor3 = Compkiller.Colors.SwitchColor })
+		Compkiller:_Animation(item.UIPadding, TweenInfo.new(0.15), { PaddingLeft = UDim.new(0, 12) })
+		Compkiller:_Animation(item.Indicator, TweenInfo.new(0.15), { Size = UDim2.fromOffset(4, 17) })
+		item.DropdownItem:SetAttribute("Active", true)
+	end
+
+	local function Deactivate(item)
+		Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 1 })
+		Compkiller:_Animation(item.BlockText, TweenInfo.new(0.15), { TextTransparency = 0.5, TextColor3 = Compkiller.Colors.SwitchColor })
+		Compkiller:_Animation(item.UIPadding, TweenInfo.new(0.15), { PaddingLeft = UDim.new(0, 8) })
+		Compkiller:_Animation(item.Indicator, TweenInfo.new(0.15), { Size = UDim2.fromOffset(4, 0) })
+		item.DropdownItem:SetAttribute("Active", false)
+	end
+
+	-- Guarda referências dos items criados para Activate/Deactivate
+	local ItemRefs = {} -- [valueName] = itemRef
 
 	local ClearDropdown = function()
-		for i,v in next , ScrollingFrame:GetChildren() do
-			if v:IsA('Frame') then
-				v:Destroy();
-			end;
-		end;
-
-		for i,v in next,  __signals do
-			v:Disconnect();
-		end;
-	end;
+		for i, v in next, ScrollingFrame:GetChildren() do
+			if v:IsA('Frame') then v:Destroy() end
+		end
+		for i, v in next, __signals do v:Disconnect() end
+		table.clear(__signals)
+		table.clear(ItemRefs)
+	end
 
 	local IsDefault = function(v)
-		return (typeof(Default) == 'table' and (Default[v] or table.find(Default,v))) or Default == v;
-	end;
-
-	local MatchDefault = function(v,DataFrame)
-		return (typeof(DataFrame) == 'table' and (DataFrame[v] or table.find(DataFrame,v))) or DataFrame == v;
-	end;
+		if IsMulti then
+			if typeof(Default) == 'table' then
+				return Default[v] == true or (table.find(Default, v) ~= nil)
+			end
+			return false
+		end
+		return Default == v
+	end
 
 	local UpdateDropdown = function()
-		local DataFrame;
+		for i, v in next, Values do
+			local bth = DrawButton()
+			bth.BlockText.Text = tostring(v)
+			bth.DropdownItem.Parent = ScrollingFrame
+			bth.Value = v
+			ItemRefs[tostring(v)] = bth
 
-		if IsMulti then
-			DataFrame = {};
-		end;
+			-- Aplica estado inicial
+			local initialActive = IsDefault(v)
+			if initialActive then
+				Activate(bth)
+			end
 
-		for i,v in next , Values do
-			local bth = DrawButton();
-
-			bth.BlockText.Text = tostring(v);
-
-			bth.DropdownItem.Parent = ScrollingFrame;
-
-			bth.Value = v;
-
-			table.insert(__signals , ToggleDb:Connect(function(bool)
+			-- Visibility com abertura/fechamento
+			table.insert(__signals, ToggleDb:Connect(function(bool)
 				if bool then
-					Compkiller:_Animation(bth.BlockText,TweenInfo.new(0.2),{
-						TextTransparency = ((IsDefault(v) or MatchDefault(v,DataFrame)) and 0) or 0.5
-					});
+					if bth.DropdownItem:GetAttribute("Active") then
+						Activate(bth)
+					else
+						Deactivate(bth)
+					end
+				end
+			end))
 
-					Compkiller:_Animation(bth.BlockLine,TweenInfo.new(0.2),{
-						BackgroundTransparency = 0
-					});
+			-- Hover
+			bth.DropdownItem.MouseEnter:Connect(function()
+				if not bth.DropdownItem:GetAttribute("Active") then
+					Compkiller:_Animation(bth.DropdownItem, TweenInfo.new(0.12), { BackgroundTransparency = 0.8 })
+					Compkiller:_Animation(bth.BlockText, TweenInfo.new(0.12), { TextColor3 = Compkiller.Colors.SwitchColor })
+				end
+			end)
+			bth.DropdownItem.MouseLeave:Connect(function()
+				if not bth.DropdownItem:GetAttribute("Active") then
+					Compkiller:_Animation(bth.DropdownItem, TweenInfo.new(0.12), { BackgroundTransparency = 1 })
+				end
+			end)
+
+			-- Click
+			Compkiller:_Input(bth.DropdownItem, function()
+				if IsMulti then
+					-- Multi: toggle individual
+					if bth.DropdownItem:GetAttribute("Active") then
+						Deactivate(bth)
+						if typeof(Default) == 'table' then
+							-- remove do array
+							local idx = table.find(Default, v)
+							if idx then table.remove(Default, idx) end
+						end
+					else
+						Activate(bth)
+						if typeof(Default) ~= 'table' then Default = {} end
+						table.insert(Default, v)
+					end
+					Callback(Default) -- entrega array de strings
 				else
-					Compkiller:_Animation(bth.BlockText,TweenInfo.new(0.2),{
-						TextTransparency = 1
-					});
-
-					Compkiller:_Animation(bth.BlockLine,TweenInfo.new(0.2),{
-						BackgroundTransparency = 1
-					});
-				end;
-			end));
-
-			if ToggleDb:GetValue() then
-				Compkiller:_Animation(bth.BlockText,TweenInfo.new(0.2),{
-					TextTransparency = ((IsDefault(v) or MatchDefault(v,DataFrame)) and 0) or 0.5
-				});
-			end;
-
-			if IsDefault(v) and not IsMulti then
-				DataFrame = bth;
-			end;
-
-			if IsMulti then
-				if IsDefault(v) or MatchDefault(v,DataFrame) then
-					DataFrame[v] = true;
-				else
-					DataFrame[v] = false;
-				end;
-
-				Compkiller:_Animation(bth.BlockText,TweenInfo.new(0.2),{
-					TextTransparency = ((MatchDefault(v,DataFrame)) and 0) or 0.5
-				});
-
-				Compkiller:_Input(bth.DropdownItem,function()
-					DataFrame[v] = not DataFrame[v];
-
-					Compkiller:_Animation(bth.BlockText,TweenInfo.new(0.2),{
-						TextTransparency = ((MatchDefault(v,DataFrame)) and 0) or 0.5
-					});
-
-					local ArrayResult = {}
-     for val, isSelected in pairs(DataFrame) do
-         if isSelected then
-             table.insert(ArrayResult, val)
-         end
-     end
-     Callback(ArrayResult)
-				end);
-			else
-				Compkiller:_Input(bth.DropdownItem,function()
-					if DataFrame then
-						Compkiller:_Animation(DataFrame.BlockText,TweenInfo.new(0.2),{
-							TextTransparency = ((IsDefault(v) or MatchDefault(v,DataFrame)) and 0) or 0.5
-						});
-					end;
-
-					Default = v;
-
-					DataFrame = bth;
-
-					Compkiller:_Animation(bth.BlockText,TweenInfo.new(0.2),{
-						TextTransparency = ((IsDefault(v) or MatchDefault(v,DataFrame)) and 0) or 0.5
-					});
-
-					Callback(DataFrame.Value)
-				end);
-			end;
-		end;
-	end;
+					-- Single: deseleciona todos, seleciona este
+					for _, ref in next, ItemRefs do
+						Deactivate(ref)
+					end
+					Activate(bth)
+					Default = v
+					Callback(v)
+					-- fecha após selecionar (comportamento Starlight single)
+					task.delay(0.1, close)
+				end
+			end)
+		end
+	end
 
 	BaseParent.MouseButton1Click:Connect(function()
-		if SpamUpdate then
-			ClearDropdown();
-			UpdateDropdown();
-		end;
-
-		ToggleUI(true);
-
-		if not ToggleDb:GetValue() then
-			ToggleUI(false);
+		if isOpen then
+			close()
+		else
+			if SpamUpdate then
+				ClearDropdown()
+				UpdateDropdown()
+			end
+			open()
 		end
-	end);
+	end)
 
-	UserInputService.InputBegan:Connect(function(Input)
-		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-			if not Compkiller:_IsMouseOverFrame(DropdownWindow) then
-				ToggleUI(false);
-			end;
-		end;
-	end);
-
-	local Args = {};
+	local Args = {}
 
 	function Args:SetDefault(v)
-		Default = v;
-	end;
+		Default = v
+	end
 
-	function Args:SetData(Def,Val,Multi,Vis)
-		if Vis and ((tick() - _Delay) <= 0.5 or #Val > 10) then
-			_Delay = tick();
-			SpamUpdate = true;
+	function Args:SetData(Def, Val, Multi, Vis)
+		if Vis and ((tick() - _Delay) <= 0.5 or (Val and #Val > 10)) then
+			_Delay = tick()
+			SpamUpdate = true
 		else
-			SpamUpdate = false;	
-		end;
+			SpamUpdate = false
+		end
 
-		IsMulti = Multi;
-		Default = Def;
-		Values = Val;
+		IsMulti = Multi
+		Default = Def
+		Values = Val
 
 		if Vis and not SpamUpdate then
-			ClearDropdown();
-			UpdateDropdown();
-		end;
-	end;
+			ClearDropdown()
+			UpdateDropdown()
+		end
+	end
 
 	function Args:Refersh()
-		ClearDropdown();
-		UpdateDropdown();
-	end;
+		ClearDropdown()
+		UpdateDropdown()
+	end
 
-	Args.EventOut = EventOut;
+	Args.EventOut = EventOut
 
-	return Args;
+	return Args
 end;
 
 function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal , DisableStackKeybind)
@@ -6041,17 +6069,24 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 		local repi;
 		local Button = Compkiller:_Input(ValueItems);
-
-		repi = Compkiller:_LoadDropdown(Button,function(value)
-			Config.Default = value;
-
-			repi:SetData(Config.Default,Config.Values,Config.Multi,false);
-			repi:SetDefault(Config.Default);
-
-			ValueText.Text = DaTabarser(Config.Default);
-
-			Config.Callback(Config.Default);
-		end);
+		
+-- DEPOIS:
+  repi = Compkiller:_LoadDropdown(Button,function(value)
+      Config.Default = value;
+      -- Para multi, normaliza para array se vier como table de booleans (retrocompatibilidade)
+      if Config.Multi and typeof(value) == 'table' then
+          local arr = {}
+          for _, v in next, value do
+              if typeof(v) == 'string' then
+                  table.insert(arr, v)
+              end
+          end
+          Config.Default = arr
+      end
+      repi:SetDefault(Config.Default);
+      ValueText.Text = DaTabarser(Config.Default);
+      Config.Callback(Config.Default);
+  end);
 
 		repi.EventOut:Connect(function(v)
 			if v then
