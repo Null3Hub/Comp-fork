@@ -9990,32 +9990,51 @@ function Compkiller.new(Config : Window)
 		ImageLabel.ClipsDescendants = false;
 
 		local ToggleCloseUI = function(v)
-			ImageLabel.Image = Config.Logo;
-
-			if v then
-				ImageLabel.ClipsDescendants = true;
-
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
-					Size = UDim2.new(0, 45, 0, 23),
-					BackgroundTransparency = 0.025
-				})
-
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-					ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
-				})
-			else
-				ImageLabel.ClipsDescendants = false;
-
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
-					Size = UDim2.new(0, 0, 0, 23),
-					BackgroundTransparency = 1
-				})
-
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-					ImageTransparency = 1
-				})
-			end;
-		end;
+   -- Prioritize custom logo over default
+   local logo = (WindowArgs._MobileButtonCustomConfig and WindowArgs._MobileButtonCustomConfig.Logo) or Config.Logo
+   ImageLabel.Image = logo
+   
+   if v then
+   ImageLabel.ClipsDescendants = true
+   -- Use custom dimensions when expanding
+   local cfg = WindowArgs._MobileButtonCustomConfig
+   local expandSize = cfg and cfg.Size or UDim2.new(0, 45, 0, 23)
+   Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
+   	Size = expandSize,
+   	BackgroundTransparency = 0.025
+   })
+   Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
+   	ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
+   })
+   else
+   ImageLabel.ClipsDescendants = false
+   -- When collapsing, maintain custom height but minimize width proportionally
+   local cfg = WindowArgs._MobileButtonCustomConfig
+   local collapseSize
+   if cfg then
+   	collapseSize = UDim2.new(0, math.max(0, cfg.Size.X.Offset * 0.15), cfg.Size.Y.Scale, cfg.Size.Y.Offset)
+   else
+   	collapseSize = UDim2.new(0, 0, 0, 23)
+   end
+   Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
+   	Size = collapseSize,
+   	BackgroundTransparency = 1
+   })
+   Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
+   	ImageTransparency = 1
+   })
+   end
+   end
+   
+   -- Enable drag functionality for mobile button on touch devices
+  if Compkiller:_IsMobile() and WindowArgs.MobileButton then
+  	Compkiller:Drag(WindowArgs.MobileButton, WindowArgs.MobileButton, 0.1)
+  	Compkiller:_AddDragBlacklist(WindowArgs.MobileButton)
+  	-- Also make the icon area draggable
+  	if WindowArgs.MobileButtonIcon then
+  		Compkiller:Drag(WindowArgs.MobileButtonIcon, WindowArgs.MobileButton, 0.1)
+  	end
+  end
 
 		function WindowArgs:Watermark()
 			local Signal = Compkiller.__SIGNAL(true);
@@ -10404,29 +10423,37 @@ function Compkiller.new(Config : Window)
 	end);
  
 	WindowArgs:Update();
- function WindowArgs:UpdateMobileButton(Config)
+ Button(Config)
+	function WindowArgs:UpdateMobileButton(Config)
 	Config = Compkiller.__CONFIG(Config, {
 		Position = UDim2.new(1, -10, 0, 10),
 		Size = UDim2.new(0, 45, 0, 23),
 		Logo = Compkiller.Logo,
 		Visible = true
 	})
-	
-	if self.MobileButton then
-		self.MobileButton.Position = Config.Position
-		self.MobileButton.Size = Config.Size
-		self.MobileButton.Visible = Config.Visible
+	-- Persist custom config to survive state toggles
+	WindowArgs._MobileButtonCustomConfig = Config
+
+	if WindowArgs.MobileButton then
+		-- Apply changes respecting current animation state
+		local isExpanded = WindowArgs.MobileButton.BackgroundTransparency < 0.9
+		if isExpanded then
+			Compkiller:_Animation(WindowArgs.MobileButton, TweenInfo.new(0.2), {
+				Position = Config.Position,
+				Size = Config.Size
+			})
+		else
+			-- Direct apply when hidden to avoid animation conflicts
+			WindowArgs.MobileButton.Position = Config.Position
+			WindowArgs.MobileButton.Size = Config.Size
+		end
+		WindowArgs.MobileButton.Visible = Config.Visible
 	end
-	if self.MobileButtonIcon then
-		self.MobileButtonIcon.Image = Config.Logo
+	if WindowArgs.MobileButtonIcon then
+		WindowArgs.MobileButtonIcon.Image = Config.Logo
 	end
 end
 
-function WindowArgs:SetMobileVisibility(Visible: boolean)
-	if self.MobileButton then
-		self.MobileButton.Visible = Visible
-	end
-end
 	local OldDelayThread;
 	local DurationTime = tick();
 
