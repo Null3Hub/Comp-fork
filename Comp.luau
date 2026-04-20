@@ -4535,7 +4535,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 		Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
 		Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Indicator.BorderSizePixel = 0
-		Indicator.Position = UDim2.new(0, 1, 0.5, 0) 
+		Indicator.Position = UDim2.new(0, 0.5, 0.5, 0) 
 		Indicator.Size = UDim2.fromOffset(4, 0)
 		Indicator.ZIndex = BaseZ_Index + 8
 		table.insert(Compkiller.Elements.Highlight, { Element = Indicator, Property = "BackgroundColor3" })
@@ -4550,7 +4550,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 		BlockText.BackgroundTransparency = 1
 		BlockText.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		BlockText.BorderSizePixel = 0
-		BlockText.Position = UDim2.new(0, 8, 0.5, 0) 
+		BlockText.Position = UDim2.new(0, 6, 0.5, 0) 
 		BlockText.Size = UDim2.new(1, -14, 0, 20)
 		BlockText.ZIndex = BaseZ_Index + 7
 		BlockText.Font = Enum.Font.GothamMedium
