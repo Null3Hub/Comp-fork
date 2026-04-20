@@ -1782,13 +1782,14 @@ end;
 
 -- FIXED:
 function Compkiller.__CONFIG(config , default)
-    config = config or {};
-    for i,v in next , default do
-        if config[i] == nil or (type(v) == "function" and type(config[i]) ~= "function") then
-            config[i] = v;
-        end;
-    end;
-    return config;
+	config = config or {};
+	for i,v in next , default do
+		-- FIX: Enforce function defaults even if user passed false/nil
+		if config[i] == nil or (type(v) == "function" and type(config[i]) ~= "function") then
+			config[i] = v;
+		end;
+	end;
+	return config;
 end;
 
 function Compkiller:Drag(InputFrame: Frame, MoveFrame: Frame, Speed : number)
@@ -5651,12 +5652,13 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
        local PositionX = UDim2.fromScale(SizeScale, 1);
        local Size = (Value - Config.Min) / (Config.Max - Config.Min);
        TweenService:Create(SliderInput, TweenInfo.new(0.2), {Size = UDim2.new(math.clamp(Size, 0.045, 1), 0, 1, 0)}):Play();
-       Config.Default = Value;
-     -- FIX: Safe callback execution
-     if type(Config.Callback) == "function" then
-         task.spawn(Config.Callback, Value);
-     end;
- end;
+             -- FIXED:
+      Config.Default = Value;
+      -- FIX: Safe callback execution
+      if type(Config.Callback) == "function" then
+      	task.spawn(Config.Callback, Value);
+      end;
+    end;
 do
 			SliderBar.InputBegan:Connect(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
