@@ -4528,41 +4528,44 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 		DropdownItem.ZIndex = BaseZ_Index + 6
 		table.insert(Compkiller.Elements.BlockBackground, { Element = DropdownItem, Property = "BackgroundColor3" })
 
-		-- Indicator (barra lateral, aparece quando ativo)
-		Indicator.Name = Compkiller:_RandomString()
-		Indicator.Parent = DropdownItem
-		Indicator.AnchorPoint = Vector2.new(0, 0.5)
-		Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
-		Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		Indicator.BorderSizePixel = 0
-		Indicator.Position = UDim2.new(0, 8 - 6, 0.5, 1)
-		Indicator.Size = UDim2.fromOffset(4, 0) -- altura 0 = inativo
-		Indicator.ZIndex = BaseZ_Index + 8
-		table.insert(Compkiller.Elements.Highlight, { Element = Indicator, Property = "BackgroundColor3" })
+		-- Inside DrawButton() function, replace the Indicator and UIPadding setup:
 
-		UICorner_ind.CornerRadius = UDim.new(0, 2)
-		UICorner_ind.Parent = Indicator
-
-		-- Padding lateral animável (efeito indent Starlight)
-		UIPadding_item.PaddingLeft = UDim.new(0, 8)
-		UIPadding_item.Parent = DropdownItem
-
-		BlockText.Name = Compkiller:_RandomString()
-		BlockText.Parent = DropdownItem
-		BlockText.AnchorPoint = Vector2.new(0, 0.5)
-		BlockText.BackgroundTransparency = 1
-		BlockText.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		BlockText.BorderSizePixel = 0
-		BlockText.Position = UDim2.new(0, 0, 0.5, 0)
-		BlockText.Size = UDim2.new(1, -8, 0, 20)
-		BlockText.ZIndex = BaseZ_Index + 7
-		BlockText.Font = Enum.Font.GothamMedium
-		BlockText.Text = ""
-		BlockText.TextColor3 = Compkiller.Colors.SwitchColor
-		BlockText.TextSize = 12
-		BlockText.TextTransparency = 0.5
-		BlockText.TextXAlignment = Enum.TextXAlignment.Left
-		table.insert(Compkiller.Elements.SwitchColor, { Element = BlockText, Property = "TextColor3" })
+  -- Indicator (barra lateral) - posicionado fixo à esquerda
+  Indicator.Name = Compkiller:_RandomString()
+  Indicator.Parent = DropdownItem
+  Indicator.AnchorPoint = Vector2.new(0, 0.5)
+  Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
+  Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
+  Indicator.BorderSizePixel = 0
+  Indicator.Position = UDim2.new(0, 10, 0.5, 0) -- ← Offset fixo da borda esquerda
+  Indicator.Size = UDim2.fromOffset(4, 0) -- altura 0 = inativo
+  Indicator.ZIndex = BaseZ_Index + 8
+  table.insert(Compkiller.Elements.Highlight, { Element = Indicator, Property = "BackgroundColor3" })
+  
+  UICorner_ind.CornerRadius = UDim.new(0, 2)
+  UICorner_ind.Parent = Indicator
+  
+  -- Padding do texto: compensa largura do indicator + gap visual
+  UIPadding_item.PaddingLeft = UDim.new(0, 22) -- ← 4px (indicator) + 8px (gap) + 10px (margem) = 22px
+  UIPadding_item.PaddingRight = UDim.new(0, 8)
+  UIPadding_item.Parent = DropdownItem
+  
+  BlockText.Name = Compkiller:_RandomString()
+  BlockText.Parent = DropdownItem
+  BlockText.AnchorPoint = Vector2.new(0, 0.5)
+  BlockText.BackgroundTransparency = 1
+  BlockText.BorderColor3 = Color3.fromRGB(0, 0, 0)
+  BlockText.BorderSizePixel = 0
+  BlockText.Position = UDim2.new(0, 0, 0.5, 0)
+  BlockText.Size = UDim2.new(1, 0, 0, 20) -- ← Remove o "-8", deixa o padding controlar
+  BlockText.ZIndex = BaseZ_Index + 7
+  BlockText.Font = Enum.Font.GothamMedium
+  BlockText.Text = ""
+  BlockText.TextColor3 = Compkiller.Colors.SwitchColor
+  BlockText.TextSize = 12
+  BlockText.TextTransparency = 0.5
+  BlockText.TextXAlignment = Enum.TextXAlignment.Left
+  table.insert(Compkiller.Elements.SwitchColor, { Element = BlockText, Property = "TextColor3" })
 
 		DropdownItem:SetAttribute("Active", false)
 
