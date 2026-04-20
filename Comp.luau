@@ -5641,31 +5641,23 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 			end;
 		end)	
 
-		local IsHold = false;
-
-		local Update = function(Input)
-			local SizeScale = math.clamp((((Input.Position.X) - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X), 0, 1);
-
-			local Main = ((Config.Max - Config.Min) * SizeScale) + Config.Min;
-
-			local Value = Compkiller:_Rounding(Main,Config.Round);
-
-			local PositionX = UDim2.fromScale(SizeScale, 1);
-
-			local Size = (Value - Config.Min) / (Config.Max - Config.Min);
-
-			TweenService:Create(SliderInput , TweenInfo.new(0.2),{
-				Size = UDim2.new(math.clamp(Size,0.045,1), 0, 1, 0)
-			}):Play();
-
-   			-- FIXED:
-   Config.Default = Value;
-   ValueText.Text = tostring(Config.Default)..tostring(Config.Type)
-   
-   if type(Config.Callback) == "function" then
-       task.spawn(Config.Callback, Value);
-   end;
-   end;
+		-- SAFE SLIDER UPDATE (Copy-Paste):
+  local IsHold = false;
+  local Update = function(Input)
+      local SizeScale = math.clamp((((Input.Position.X) - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X), 0, 1);
+      local Main = ((Config.Max - Config.Min) * SizeScale) + Config.Min;
+      local Value = Compkiller:_Rounding(Main,Config.Round);
+      local PositionX = UDim2.fromScale(SizeScale, 1);
+      local Size = (Value - Config.Min) / (Config.Max - Config.Min);
+      
+      TweenService:Create(SliderInput, TweenInfo.new(0.2), {Size = UDim2.new(math.clamp(Size, 0.045, 1), 0, 1, 0)}):Play();
+      Config.Default = Value;
+      
+      -- Safely invoke callback
+      if type(Config.Callback) == "function" then
+          task.spawn(Config.Callback, Value);
+      end;
+  end;
 
 		do
 			SliderBar.InputBegan:Connect(function(Input)
