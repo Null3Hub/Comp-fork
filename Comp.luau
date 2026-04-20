@@ -4535,7 +4535,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 		Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
 		Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Indicator.BorderSizePixel = 0
-		Indicator.Position = UDim2.new(0, -6, 0.5, 0)
+		Indicator.Position = UDim2.new(0, 2, 0.5, 1)
 		Indicator.Size = UDim2.fromOffset(4, 0) -- altura 0 = inativo
 		Indicator.ZIndex = BaseZ_Index + 8
 		table.insert(Compkiller.Elements.Highlight, { Element = Indicator, Property = "BackgroundColor3" })
