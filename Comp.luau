@@ -1782,13 +1782,12 @@ end;
 
 function Compkiller.__CONFIG(config , default)
 	config = config or {};
-
 	for i,v in next , default do
-		if config[i] == nil then
+		-- FIX: Only apply default if key is missing OR value is not the expected type
+		if config[i] == nil or (type(v) == "function" and type(config[i]) ~= "function") then
 			config[i] = v;
 		end;
 	end;
-
 	return config;
 end;
 
@@ -5073,14 +5072,14 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		local Toggle = Block:AddLink('Toggle' , Config.Default);
 
 		Toggle.Input.MouseButton1Click:Connect(function()
-			Config.Default = not Config.Default;
-
-			Toggle.ChangeValue(Config.Default);
-
-			Block:SetTransparency((Config.Default and 0.1) or 0.3);
-
-			Config.Callback(Config.Default);
-		end);
+ 	Config.Default = not Config.Default;
+ 	Toggle.ChangeValue(Config.Default);
+ 	Block:SetTransparency((Config.Default and 0.1) or 0.3);
+ 	-- FIX: Validate callback before calling
+ 	if type(Config.Callback) == "function" then
+ 		task.spawn(Config.Callback, Config.Default);
+ 	end;
+ end);
 
 		local Args = {};
 
@@ -5652,12 +5651,13 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 				Size = UDim2.new(math.clamp(Size,0.045,1), 0, 1, 0)
 			}):Play();
 
-			Config.Default = Value;
-
-			ValueText.Text = tostring(Config.Default)..tostring(Config.Type)
-
-			Config.Callback(Value)
-		end;
+			-- Inside Update() function:
+   Config.Default = Value;
+   ValueText.Text = tostring(Config.Default)..tostring(Config.Type)
+   -- FIX: Safe callback invocation
+   if type(Config.Callback) == "function" then
+   	task.spawn(Config.Callback, Value);
+   end;
 
 		do
 			SliderBar.InputBegan:Connect(function(Input)
@@ -7163,7 +7163,11 @@ function Compkiller.new(Config : Window)
 		end;
 	end);
 
-	WindowArgs.UserSettings = {};
+	WindowArgs.UserSettings = {
+	Root = nil,
+	Signal = nil,
+	Window = function(self, Value) end
+	};
 
 	do
 		local Signal = Compkiller.__SIGNAL(false);
@@ -7281,44 +7285,44 @@ function Compkiller.new(Config : Window)
 			end);
 
 			function WindowArgs.UserSettings:Window(Value)
-				if Value then
-					Signal:Fire(true);
-
-					Compkiller:_Animation(UserSettings,TweenInfo.new(0.2),{
-						BackgroundTransparency = 0.250,
-					});
-
-					Compkiller:_Animation(SectionFrame,TweenInfo.new(0.2),{
-						BackgroundTransparency = 0,
-					});
-
-					Compkiller:_Animation(HeaderText,TweenInfo.new(0.2),{
-						TextTransparency = 0,
-					});
-
-					Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-						ImageTransparency = 0.5,
-					});
-				else
-					Signal:Fire(false);
-
-					Compkiller:_Animation(UserSettings,TweenInfo.new(0.2),{
-						BackgroundTransparency = 1,
-					});
-
-					Compkiller:_Animation(SectionFrame,TweenInfo.new(0.2),{
-						BackgroundTransparency = 1,
-					});
-
-					Compkiller:_Animation(HeaderText,TweenInfo.new(0.2),{
-						TextTransparency = 1,
-					});
-
-					Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-						ImageTransparency = 1,
-					});
-				end;
-			end;
+    -- FIX: Guard against nil Root - prevents "attempt to call a nil value"
+    if not self.Root then 
+        warn("[Compkiller] UserSettings:Window() called before :Create()");
+        return; 
+    end;
+    
+    local Root = self.Root; -- Cache reference for safety
+    
+    if Value then
+        Signal:Fire(true);
+        Compkiller:_Animation(Root, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0.250,
+        });
+        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), {
+            BackgroundTransparency = 0,
+        });
+        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), {
+            TextTransparency = 0,
+        });
+        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
+            ImageTransparency = 0.5,
+        });
+    else
+        Signal:Fire(false);
+        Compkiller:_Animation(Root, TweenInfo.new(0.2), {
+            BackgroundTransparency = 1,
+        });
+        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), {
+            BackgroundTransparency = 1,
+        });
+        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), {
+            TextTransparency = 1,
+        });
+        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
+            ImageTransparency = 1,
+        });
+    end;
+ end;
 
 			Compkiller:_Input(ImageLabel,function()
 				WindowArgs.UserSettings:Window(false);
@@ -9007,29 +9011,21 @@ function Compkiller.new(Config : Window)
 
 			ConfigButton:Update();
 
-			-- FIX: Callbacks definidos como nil ANTES dos inputs causavam "attempt to call a nil value"
-			-- Agora inicializamos com funções vazias e adicionamos verificação de segurança
-			ConfigButton.OnLoad = nil;
-			ConfigButton.OnSave = nil;
-			ConfigButton.OnDelete = nil;
-
-			Compkiller:_Input(LoadButton,function()
-				if ConfigButton.OnLoad and type(ConfigButton.OnLoad) == "function" then
-					task.spawn(ConfigButton.OnLoad);
-				end
-			end);
-
-			Compkiller:_Input(SaveButton,function()
-				if ConfigButton.OnSave and type(ConfigButton.OnSave) == "function" then
-					task.spawn(ConfigButton.OnSave);
-				end
-			end);
-
-			DelButton.MouseButton1Click:Connect(function()
-				if ConfigButton.OnDelete and type(ConfigButton.OnDelete) == "function" then
-					task.spawn(ConfigButton.OnDelete);
-				end
-			end)
+   -- FIX: Initialize with safe empty functions + validate at call
+   ConfigButton.OnLoad = function() end;
+   ConfigButton.OnSave = function() end;
+   ConfigButton.OnDelete = function() end;
+   
+   Compkiller:_Input(LoadButton,function()
+   	-- No need for type check now - always a function
+   	task.spawn(ConfigButton.OnLoad);
+   end);
+   Compkiller:_Input(SaveButton,function()
+   	task.spawn(ConfigButton.OnSave);
+   end);
+   DelButton.MouseButton1Click:Connect(function()
+   	task.spawn(ConfigButton.OnDelete);
+   end)
 
 			return ConfigButton;
 		end;
@@ -10425,34 +10421,34 @@ function Compkiller.new(Config : Window)
 	WindowArgs:Update();
 	
 	function WindowArgs:UpdateMobileButton(Config)
-	Config = Compkiller.__CONFIG(Config, {
-		Position = UDim2.new(1, -10, 0, 10),
-		Size = UDim2.new(0, 45, 0, 23),
-		Logo = Compkiller.Logo,
-		Visible = true
-	})
-	-- Persist custom config to survive state toggles
-	WindowArgs._MobileButtonCustomConfig = Config
-
-	if WindowArgs.MobileButton then
-		-- Apply changes respecting current animation state
-		local isExpanded = WindowArgs.MobileButton.BackgroundTransparency < 0.9
-		if isExpanded then
-			Compkiller:_Animation(WindowArgs.MobileButton, TweenInfo.new(0.2), {
-				Position = Config.Position,
-				Size = Config.Size
-			})
-		else
-			-- Direct apply when hidden to avoid animation conflicts
-			WindowArgs.MobileButton.Position = Config.Position
-			WindowArgs.MobileButton.Size = Config.Size
-		end
-		WindowArgs.MobileButton.Visible = Config.Visible
-	end
-	if WindowArgs.MobileButtonIcon then
-		WindowArgs.MobileButtonIcon.Image = Config.Logo
-	end
-end
+  	Config = Compkiller.__CONFIG(Config, {
+  		Position = UDim2.new(1, -10, 0, 10),
+  		Size = UDim2.new(0, 45, 0, 23),
+  		Logo = Compkiller.Logo,
+  		Visible = true
+  	})
+  	-- Persist custom config to survive state toggles
+  	WindowArgs._MobileButtonCustomConfig = Config
+  
+  	if WindowArgs.MobileButton then
+  		-- Apply changes respecting current animation state
+  		local isExpanded = WindowArgs.MobileButton.BackgroundTransparency < 0.9
+  		f isExpanded then
+  			Compkiller:_Animation(WindowArgs.MobileButton, TweenInfo.new(0.2), {
+  				Position = Config.Position,
+  				Size = Config.Size
+  			})
+  		else
+  			-- Direct apply when hidden to avoid animation conflicts
+  			WindowArgs.MobileButton.Position = Config.Position
+  			WindowArgs.MobileButton.Size = Config.Size
+  		end
+  		WindowArgs.MobileButton.Visible = Config.Visible
+  	end
+  	if WindowArgs.MobileButtonIcon then
+  		WindowArgs.MobileButtonIcon.Image = Config.Logo
+  	end
+  end
 
 	local OldDelayThread;
 	local DurationTime = tick();
