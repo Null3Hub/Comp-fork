@@ -10417,34 +10417,31 @@ function Compkiller.new(Config : Window)
 	WindowArgs:Update();
 	
 	function WindowArgs:UpdateMobileButton(Config)
-  	Config = Compkiller.__CONFIG(Config, {
-  		Position = UDim2.new(1, -10, 0, 10),
-  		Size = UDim2.new(0, 45, 0, 23),
-  		Logo = Compkiller.Logo,
-  		Visible = true
-  	})
-  	-- Persist custom config to survive state toggles
-  	WindowArgs._MobileButtonCustomConfig = Config
-  
-  	if WindowArgs.MobileButton then
-  		-- Apply changes respecting current animation state
-  		local isExpanded = WindowArgs.MobileButton.BackgroundTransparency < 0.9
-  		f isExpanded then
-  			Compkiller:_Animation(WindowArgs.MobileButton, TweenInfo.new(0.2), {
-  				Position = Config.Position,
-  				Size = Config.Size
-  			})
-  		else
-  			-- Direct apply when hidden to avoid animation conflicts
-  			WindowArgs.MobileButton.Position = Config.Position
-  			WindowArgs.MobileButton.Size = Config.Size
-  		end
-  		WindowArgs.MobileButton.Visible = Config.Visible
-  	end
-  	if WindowArgs.MobileButtonIcon then
-  		WindowArgs.MobileButtonIcon.Image = Config.Logo
-  	end
-  end
+    Config = Compkiller.__CONFIG(Config, {
+        Position = UDim2.new(1, -10, 0, 10),
+        Size = UDim2.new(0, 45, 0, 23),
+        Logo = Compkiller.Logo,
+        Visible = true
+    })
+    WindowArgs._MobileButtonCustomConfig = Config
+
+    if WindowArgs.MobileButton then
+        local isExpanded = WindowArgs.MobileButton.BackgroundTransparency < 0.9
+        if isExpanded then   -- ← corrigido aqui
+            Compkiller:_Animation(WindowArgs.MobileButton, TweenInfo.new(0.2), {
+                Position = Config.Position,
+                Size = Config.Size
+            })
+        else
+            WindowArgs.MobileButton.Position = Config.Position
+            WindowArgs.MobileButton.Size = Config.Size
+        end
+        WindowArgs.MobileButton.Visible = Config.Visible
+    end
+    if WindowArgs.MobileButtonIcon then
+        WindowArgs.MobileButtonIcon.Image = Config.Logo
+    end
+end
 
 	local OldDelayThread;
 	local DurationTime = tick();
