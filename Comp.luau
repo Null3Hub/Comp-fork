@@ -2569,7 +2569,7 @@ function Compkiller:CacheImage(id: string) : string
 	return "";
 end;
 
-function Compkiller:PreloadIcons()
+function Compkiller:reloadIcons()
 	local RequiredAssets = {
 		"http://www.roblox.com/asset/?id=112554223509763",
 		"rbxassetid://4805639000",
@@ -2615,7 +2615,7 @@ function Compkiller:Security(directory: string,Config: SecurityConfig) -- Securi
 end;
 
 function Compkiller:_AddColorPickerPanel(Button: ImageButton , Callback: (Color: Color3) -> any?)
-	local Window = Compkiller:_GetWindowFromElement(Button);
+	 Compkiller:_GetWindowFromElement(Button);
 	local BaseZ_Index = math.random(1,15) * 100;
 
 	local ColorPickerWindow = Instance.new("Frame")
@@ -4892,20 +4892,18 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	end
 
 	local function Activate(item)
-		Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 0.5 })
-		Compkiller:_Animation(item.BlockText, TweenInfo.new(0.15), { TextTransparency = 0, TextColor3 = Compkiller.Colors.SwitchColor })
-		Compkiller:_Animation(item.UIPadding, TweenInfo.new(0.15), { PaddingLeft = UDim.new(0, 12) })
-		Compkiller:_Animation(item.Indicator, TweenInfo.new(0.15), { Size = UDim2.fromOffset(4, 17) })
-		item.DropdownItem:SetAttribute("Active", true)
-	end
+    Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 0.5 })
+    Compkiller:_Animation(item.BlockText, TweenInfo.new(0.15), { TextTransparency = 0, Position = UDim2.new(0, 14, 0.5, 0) })
+    Compkiller:_Animation(item.Indicator, TweenInfo.new(0.15), { Size = UDim2.fromOffset(4, 17) })
+    item.DropdownItem:SetAttribute("Active", true)
+end
 
-	local function Deactivate(item)
-		Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 1 })
-		Compkiller:_Animation(item.BlockText, TweenInfo.new(0.15), { TextTransparency = 0.5, TextColor3 = Compkiller.Colors.SwitchColor })
-		Compkiller:_Animation(item.UIPadding, TweenInfo.new(0.15), { PaddingLeft = UDim.new(0, 8) })
-		Compkiller:_Animation(item.Indicator, TweenInfo.new(0.15), { Size = UDim2.fromOffset(4, 0) })
-		item.DropdownItem:SetAttribute("Active", false)
-	end
+local function Deactivate(item)
+    Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 1 })
+    Compkiller:_Animation(item.BlockText, TweenInfo.new(0.15), { TextTransparency = 0.5, Position = UDim2.new(0, 6, 0.5, 0) })
+    Compkiller:_Animation(item.Indicator, TweenInfo.new(0.15), { Size = UDim2.fromOffset(4, 0) })
+    item.DropdownItem:SetAttribute("Active", false)
+end
 
 	-- Guarda referências dos items criados para Activate/Deactivate
 	local ItemRefs = {} -- [valueName] = itemRef
@@ -6378,27 +6376,26 @@ do
 				BackgroundColor3 = Compkiller.Colors.DropColor
 			});
 		end);
-
-		local repi;
-		local Button = Compkiller:_Input(ValueItems);
 		
--- DEPOIS:
-  repi = Compkiller:_LoadDropdown(Button,function(value)
-      Config.Default = value;
-      -- Para multi, normaliza para array se vier como table de booleans (retrocompatibilidade)
-      if Config.Multi and typeof(value) == 'table' then
-          local arr = {}
-          for _, v in next, value do
-              if typeof(v) == 'string' then
-                  table.insert(arr, v)
-              end
-          end
-          Config.Default = arr
-      end
-      repi:SetDefault(Config.Default);
-      ValueText.Text = DaTabarser(Config.Default);
-      Config.Callback(Config.Default);
-  end);
+ local repi;
+ local Button = Compkiller:_Input(ValueItems);
+
+ repi = Compkiller:_LoadDropdown(Button, function(value)
+     Config.Default = value;
+     if Config.Multi and typeof(value) == 'table' then
+         local arr = {}
+         for _, v in next, value do
+             if typeof(v) == 'string' then table.insert(arr, v) end
+         end
+         Config.Default = arr
+     end
+     -- ADICIONE O GUARD:
+     if repi then
+         repi:SetDefault(Config.Default);
+     end
+     ValueText.Text = DaTabarser(Config.Default);
+     Config.Callback(Config.Default);
+ end);
 
 		repi.EventOut:Connect(function(v)
 			if v then
