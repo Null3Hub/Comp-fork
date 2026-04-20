@@ -1783,7 +1783,7 @@ end;
 function Compkiller.__CONFIG(config , default)
     config = config or {};
     for i,v in next , default do
-        -- Apply default if missing, OR if user passed 'false'/'nil' expecting a callback
+        -- Enforce functions even if user passed false/nil, prevents nil-call crashes
         if config[i] == nil or (type(v) == "function" and type(config[i]) ~= "function") then
             config[i] = v;
         end;
@@ -4284,13 +4284,15 @@ function Compkiller:_LoadOption(Value , TabSignal)
 
 		Args.Flag = Config.Flag;
 
-		function Args:SetValue(value)
-			Config.Default = value;
-
-			Keybind.SetValue(Config.Default);
-
-			Config.Callback(Config.Default);
-		end;
+-- FIXED:
+  function Args:SetValue(value)
+      Config.Default = value;
+      Keybind.SetValue(Config.Default);
+      
+      if type(Config.Callback) == "function" then
+          task.spawn(Config.Callback, Config.Default);
+      end;
+  end;
 
 		function Args:GetValue()
 			return (typeof(Config.Default) == "string" and Config.Default) or Config.Default.Name;
@@ -5151,7 +5153,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 		local Keybind = Block:AddLink('Keybind' , Config.Default);
 
-		local IsBinding = false;
+		local  = false;
 
 		local IsBlacklist = function(v)
 			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
@@ -5203,13 +5205,15 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 			return Block:GetText();
 		end;
 
-		function Args:SetValue(value)
-			Config.Default = value;
 
-			Keybind.SetValue(Config.Default);
-
-			Config.Callback(Config.Default);
-		end;
+  function Args:SetValue(value)
+      Config.Default = value;
+      Keybind.SetValue(Config.Default);
+      
+      if type(Config.Callback) == "function" then
+          task.spawn(Config.Callback, Config.Default);
+      end;
+  end;
 
 		Args.Signal = Signal:Connect(function(bool)
 			Block:SetVisible(bool);
@@ -5654,14 +5658,14 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 				Size = UDim2.new(math.clamp(Size,0.045,1), 0, 1, 0)
 			}):Play();
 
-			-- Inside Update() function:
-    Config.Default = Value;
-    ValueText.Text = tostring(Config.Default)..tostring(Config.Type)
-    
-    -- Safely execute callback
-    if type(Config.Callback) == "function" then
-        task.spawn(Config.Callback, Value);
-    end;
+   			-- FIXED:
+   Config.Default = Value;
+   ValueText.Text = tostring(Config.Default)..tostring(Config.Type)
+   
+   if type(Config.Callback) == "function" then
+       task.spawn(Config.Callback, Value);
+   end;
+   end;
 
 		do
 			SliderBar.InputBegan:Connect(function(Input)
@@ -6114,15 +6118,14 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		TextBox_2:GetPropertyChangedSignal('Text'):Connect(Update);
 
 		TextBox_2:GetPropertyChangedSignal('Text'):Connect(function()
-			local value = parse(TextBox_2.Text);
-
-			if value then
-
-				TextBox_2.Text = tostring(value);
-
-				task.spawn(Config.Callback,value);
-
-				Config.Default = value;
+    local value = parse(TextBox_2.Text);
+    if value then
+        TextBox_2.Text = tostring(value);
+        
+        if type(Config.Callback) == "function" then
+            task.spawn(Config.Callback, value);
+        end;
+        Config.Default = value;
 			else
 				TextBox_2.Text = string.gsub(TextBox_2.Text, '[^0-9.]', '');
 
