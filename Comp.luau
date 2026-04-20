@@ -1780,10 +1780,10 @@ function Compkiller:_Hover(Frame: Frame , OnHover: () -> any?, Release: () -> an
 	Frame.MouseLeave:Connect(Release);
 end;
 
+-- FIXED:
 function Compkiller.__CONFIG(config , default)
     config = config or {};
     for i,v in next , default do
-        -- Enforce functions even if user passed false/nil, prevents nil-call crashes
         if config[i] == nil or (type(v) == "function" and type(config[i]) ~= "function") then
             config[i] = v;
         end;
@@ -4271,14 +4271,12 @@ function Compkiller:_LoadOption(Value , TabSignal)
 			Config.Default = KeyName;
 
     Keybind.SetValue(Selected);
-      IsBinding = false;
-      -- Safe execution using pcall
-      pcall(function() 
-          if type(Config.Callback) == "function" then
-              Config.Callback(KeyName);
-          end;
-      end);
-  end);
+   IsBinding = false;
+   -- FIX: Safe callback execution
+   if type(Config.Callback) == "function" then
+       task.spawn(Config.Callback, KeyName);
+   end;
+   end);
 
 		local Args = {};
 
@@ -4471,13 +4469,15 @@ Compkiller.Flags[Config.Flag] = Args;
 
 		Args.Flag = Config.Flag
 
-		function Args:SetValue(value)
-			Config.Default = value;
-
-			Toggle.ChangeValue(Config.Default);
-
-			Config.Callback(Config.Default);
-		end;
+  		-- FIXED:
+  function Args:SetValue(value)
+      Config.Default = value;
+      Keybind.SetValue(Config.Default);
+      
+      if type(Config.Callback) == "function" then
+          task.spawn(Config.Callback, Config.Default);
+      end;
+  end;
 
 		function Args:GetValue()
 			return Config.Default;
@@ -5186,12 +5186,14 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 			Config.Default = KeyName;
 
-			Keybind.SetValue(Selected);
-
-			IsBinding = false;
-
-			Config.Callback(KeyName);
-		end);
+   			-- FIXED:
+   Keybind.SetValue(Selected);
+   IsBinding = false;
+   -- FIX: Safe callback execution
+   if type(Config.Callback) == "function" then
+       task.spawn(Config.Callback, KeyName);
+   end;
+   end);
 
 		local Args = {};
 
@@ -5206,14 +5208,15 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		end;
 
 
-  function Args:SetValue(value)
-      Config.Default = value;
-      Keybind.SetValue(Config.Default);
-      
-      if type(Config.Callback) == "function" then
-          task.spawn(Config.Callback, Config.Default);
-      end;
-  end;
+  -- FIXED:
+ function Args:SetValue(value)
+     Config.Default = value;
+     Keybind.SetValue(Config.Default);
+     
+     if type(Config.Callback) == "function" then
+         task.spawn(Config.Callback, Config.Default);
+     end;
+ end;
 
 		Args.Signal = Signal:Connect(function(bool)
 			Block:SetVisible(bool);
@@ -5641,25 +5644,22 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 			end;
 		end)	
 
-		-- SAFE SLIDER UPDATE (Copy-Paste):
-  local IsHold = false;
-  local Update = function(Input)
-      local SizeScale = math.clamp((((Input.Position.X) - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X), 0, 1);
-      local Main = ((Config.Max - Config.Min) * SizeScale) + Config.Min;
-      local Value = Compkiller:_Rounding(Main,Config.Round);
-      local PositionX = UDim2.fromScale(SizeScale, 1);
-      local Size = (Value - Config.Min) / (Config.Max - Config.Min);
-      
-      TweenService:Create(SliderInput, TweenInfo.new(0.2), {Size = UDim2.new(math.clamp(Size, 0.045, 1), 0, 1, 0)}):Play();
-      Config.Default = Value;
-      
-      -- Safely invoke callback
-      if type(Config.Callback) == "function" then
-          task.spawn(Config.Callback, Value);
-      end;
-  end;
-
-		do
+  -- FIXED (Copy-Paste):
+   local IsHold = false;
+   local Update = function(Input)
+       local SizeScale = math.clamp((((Input.Position.X) - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X), 0, 1);
+       local Main = ((Config.Max - Config.Min) * SizeScale) + Config.Min;
+       local Value = Compkiller:_Rounding(Main,Config.Round);
+       local PositionX = UDim2.fromScale(SizeScale, 1);
+       local Size = (Value - Config.Min) / (Config.Max - Config.Min);
+       TweenService:Create(SliderInput, TweenInfo.new(0.2), {Size = UDim2.new(math.clamp(Size, 0.045, 1), 0, 1, 0)}):Play();
+       Config.Default = Value;
+     -- FIX: Safe callback execution
+     if type(Config.Callback) == "function" then
+         task.spawn(Config.Callback, Value);
+     end;
+ end;
+do
 			SliderBar.InputBegan:Connect(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
 					IsHold = true
