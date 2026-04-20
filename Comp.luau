@@ -4550,21 +4550,21 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
   UIPadding_item.PaddingRight = UDim.new(0, 8)
   UIPadding_item.Parent = DropdownItem
   
+    -- Inside BuildOptionRow function
   BlockText.Name = Compkiller:_RandomString()
-  BlockText.Parent = DropdownItem
-  BlockText.AnchorPoint = Vector2.new(0, 0.5)
-  BlockText.BackgroundTransparency = 1
-  BlockText.BorderColor3 = Color3.fromRGB(0, 0, 0)
+  BlockText.Parent = OptionContainer
+  BlockText.BackgroundTransparency = 1.000
   BlockText.BorderSizePixel = 0
-  BlockText.Position = UDim2.new(0, 0, 0.5, 0)
-  BlockText.Size = UDim2.new(1, 0, 0, 20) -- ← Remove o "-8", deixa o padding controlar
-  BlockText.ZIndex = BaseZ_Index + 7
+  BlockText.Size = UDim2.new(1, 0, 0, 20)
+  BlockText.ZIndex = BaseZ_Index + 6
   BlockText.Font = Enum.Font.GothamMedium
-  BlockText.Text = ""
+  BlockText.Text = tostring(v)
   BlockText.TextColor3 = Compkiller.Colors.SwitchColor
-  BlockText.TextSize = 12
-  BlockText.TextTransparency = 0.5
+  BlockText.TextSize = 13.000
+  BlockText.TextTransparency = 0.500
   BlockText.TextXAlignment = Enum.TextXAlignment.Left
+  BlockText.AnchorPoint = Vector2.new(0, 0.5)
+  BlockText.Position = UDim2.new(0, 14, 0.5, 0) -- Changed from 8 to 14
   table.insert(Compkiller.Elements.SwitchColor, { Element = BlockText, Property = "TextColor3" })
 
 		DropdownItem:SetAttribute("Active", false)
@@ -4577,13 +4577,15 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 		}
 	end
 
-	local function Activate(item)
-		Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 0.5 })
-		Compkiller:_Animation(item.BlockText, TweenInfo.new(0.15), { TextTransparency = 0, TextColor3 = Compkiller.Colors.SwitchColor })
-		Compkiller:_Animation(item.UIPadding, TweenInfo.new(0.15), { PaddingLeft = UDim.new(0, 12) })
-		Compkiller:_Animation(item.Indicator, TweenInfo.new(0.15), { Size = UDim2.fromOffset(4, 17) })
-		item.DropdownItem:SetAttribute("Active", true)
-	end
+	-- Inside ActivateRow function
+local function ActivateRow(OptionRow)        
+    if OptionRow.IsActive then return end
+    OptionRow.IsActive = true
+    Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { Position = UDim2.new(0, 18, 0.5, 0) }) -- Changed from 12 to 18
+    Compkiller:_Animation(OptionRow.Indicator, TweenInfo.new(0.2), { Size = UDim2.new(0, 3, 0, 14), BackgroundTransparency = 0 })
+    Compkiller:_Animation(OptionRow.Text, TweenInfo.new(0.2), { TextTransparency = 0 })
+    Compkiller:_Animation(OptionRow.Container, TweenInfo.new(0.2), { BackgroundTransparency = 0.8 })
+end
 
 	local function Deactivate(item)
 		Compkiller:_Animation(item.DropdownItem, TweenInfo.new(0.15), { BackgroundTransparency = 1 })
