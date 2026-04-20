@@ -10423,7 +10423,7 @@ function Compkiller.new(Config : Window)
 	end);
  
 	WindowArgs:Update();
- Button(Config)
+	
 	function WindowArgs:UpdateMobileButton(Config)
 	Config = Compkiller.__CONFIG(Config, {
 		Position = UDim2.new(1, -10, 0, 10),
