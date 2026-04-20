@@ -3231,7 +3231,7 @@ function Compkiller:_AddColorPickerPanel(Button: ImageButton , Callback: (Color:
 	return Args;
 end;
 
-function Compkiller:_DrawKeybinds(Window: ScreenGui)
+function Compkiller:DrawKeybinds(Window: ScreenGui)
 	if Compkiller.__KEYBINDS_CACHE then
 		-- FIX: Valida se o cache ainda é válido (Root existe e tem Parent)
 		-- Evita retornar referência a uma janela já destruída causando "attempt to call a nil value"
@@ -7040,7 +7040,7 @@ function Compkiller.new(Config : Window)
 		Category.ClipsDescendants = true
 		Category.Size = UDim2.new(1, -10, 0, 22)
 
-		if Compkiller:_Is() then
+		if Compkiller:_IsMobile() then
 			Compkiller:_AddDragBlacklist(Category);
 		end;
 
