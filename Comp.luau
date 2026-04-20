@@ -4394,10 +4394,10 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	ScrollingFrame.ScrollBarImageColor3 = Compkiller.Colors.HighStrokeColor
 	ScrollingFrame.ScrollBarImageTransparency = 1 -- aparece após abrir
 
-	UIListLayout.Parent = ScrollingFrame
-	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	UIListLayout.Padding = UDim.new(0, 0)
+ UIListLayout.Parent = ScrollingFrame
+ UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left -- ✅ Forces strict left alignment
+ UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ UIListLayout.Padding = UDim.new(0, 0)
 
 	UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
 		ScrollingFrame.CanvasSize = UDim2.fromOffset(0, UIListLayout.AbsoluteContentSize.Y)
@@ -4535,7 +4535,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 		Indicator.BackgroundColor3 = Compkiller.Colors.Highlight
 		Indicator.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Indicator.BorderSizePixel = 0
-		Indicator.Position = UDim2.new(0, 6, 0.5, 0) 
+		Indicator.Position = UDim2.new(0, 2, 0.5, 0) 
 		Indicator.Size = UDim2.fromOffset(4, 0)
 		Indicator.ZIndex = BaseZ_Index + 8
 		table.insert(Compkiller.Elements.Highlight, { Element = Indicator, Property = "BackgroundColor3" })
@@ -4550,7 +4550,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 		BlockText.BackgroundTransparency = 1
 		BlockText.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		BlockText.BorderSizePixel = 0
-		BlockText.Position = UDim2.new(0, 14, 0.5, 0) 
+		BlockText.Position = UDim2.new(0, 10, 0.5, 0) 
 		BlockText.Size = UDim2.new(1, -14, 0, 20)
 		BlockText.ZIndex = BaseZ_Index + 7
 		BlockText.Font = Enum.Font.GothamMedium
