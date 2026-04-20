@@ -9640,91 +9640,71 @@ function Compkiller.new(Config : Window)
 	end;
 
 	do
-   	local CloseWindow = Instance.new("Frame")
-   	local UICorner = Instance.new("UICorner")
-   	local ImageLabel = Instance.new("ImageLabel")
-   
-   	CloseWindow.Name = Compkiller:_RandomString()
-   	CloseWindow.Parent = CompKiller
-   	CloseWindow.AnchorPoint = Vector2.new(1, 0)
-   	CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor
-   	table.insert(Compkiller.Elements.BGDBColor, { Element = CloseWindow, Property = 'BackgroundColor3' })
-   	CloseWindow.BackgroundTransparency = 1
-   	CloseWindow.BorderColor3 = Color3.fromRGB(0, 0, 0)
-   	CloseWindow.BorderSizePixel = 0
-   	CloseWindow.Position = UDim2.new(1, -10, 0, 10)
-   	CloseWindow.Size = UDim2.new(0, 0, 0, 23)
-   	CloseWindow.ZIndex = 150
-   	CloseWindow.ClipsDescendants = true
-   	CloseWindow.Active = true -- FIX: Required for reliable mobile touch registration
-   
-   	UICorner.CornerRadius = UDim.new(0, 3)
-   	UICorner.Parent = CloseWindow
-   
-   	ImageLabel.Parent = CloseWindow
-   	ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-   	ImageLabel.BackgroundTransparency = 1
-   	ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-   	ImageLabel.BorderSizePixel = 0
-   	ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-   	ImageLabel.Size = UDim2.new(0.8, 0, 0.8, 0)
-   	ImageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
-   	ImageLabel.ZIndex = 151
-   	ImageLabel.Image = Config.Logo
-   	ImageLabel.ImageTransparency = 1
-   	ImageLabel.ClipsDescendants = false
-   
-   	local ToggleCloseUI = function(v)
-   		ImageLabel.Image = Config.Logo
-   		if v then
-   			ImageLabel.ClipsDescendants = true
-   			Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), { Size = UDim2.new(0, 45, 0, 23), BackgroundTransparency = 0.025 })
-   			Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35 })
-   		else
-   			ImageLabel.ClipsDescendants = false
-   			Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), { Size = UDim2.new(0, 0, 0, 23), BackgroundTransparency = 1 })
-   			Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 1 })
-   		end
-   	end
-   
-   	local Button = Compkiller:_Input(CloseWindow, function()
-   		WindowArgs:_ToggleUI()
-   	end)
-   
-   	if not Compkiller:_IsMobile() then
-   		Compkiller:_Hover(Button, function()
-   			ImageLabel:SetAttribute("Hover", true)
-   		end, function()
-   			ImageLabel:SetAttribute("Hover", false)
-   		end)
-   	end
-   
-   	-- OPTIMIZED: Event-driven state sync (replaces heavy 0.15s polling loop)
-   	local UpdateMobileBtn = function()
-   		local isMobile = Compkiller:_IsMobile()
-   		CloseWindow.Visible = isMobile or not WindowArgs.IsOpen
-   
-   		if isMobile then
-   			ToggleCloseUI(true)
-   			if WindowArgs.IsOpen then
-   				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 0.35 })
-   				ImageLabel:SetAttribute("Hover", false)
-   			else
-   				ImageLabel:SetAttribute("Hover", true)
-   				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 0.1 })
-   			end
-   		else
-   			ToggleCloseUI(not WindowArgs.IsOpen)
-   		end
-   	end
-   
-   	WindowOpen:Connect(UpdateMobileBtn)
-   	UpdateMobileBtn()
-   
-   	-- Expose reference for dynamic updates
-   	WindowArgs.MobileButton = CloseWindow
-   	WindowArgs.MobileButtonIcon = ImageLabel
-   end
+		local CloseWindow = Instance.new("Frame")
+		local UICorner = Instance.new("UICorner")
+		local ImageLabel = Instance.new("ImageLabel")
+
+		CloseWindow.Name = Compkiller:_RandomString()
+		CloseWindow.Parent = CompKiller
+		CloseWindow.AnchorPoint = Vector2.new(1, 0)
+		CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor
+
+		table.insert(Compkiller.Elements.BGDBColor,{
+			Element = CloseWindow,
+			Property = 'BackgroundColor3'
+		});
+
+		CloseWindow.BackgroundTransparency = 1
+		CloseWindow.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		CloseWindow.BorderSizePixel = 0
+		CloseWindow.Position = UDim2.new(1, -10, 0, 10)
+		CloseWindow.Size = UDim2.new(0, 0, 0, 23)
+		CloseWindow.ZIndex = 150
+		CloseWindow.ClipsDescendants = true;
+
+		UICorner.CornerRadius = UDim.new(0, 3)
+		UICorner.Parent = CloseWindow
+
+		ImageLabel.Parent = CloseWindow
+		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+		ImageLabel.BackgroundTransparency = 1.000
+		ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		ImageLabel.BorderSizePixel = 0
+		ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+		ImageLabel.Size = UDim2.new(0.800000012, 0, 0.800000012, 0)
+		ImageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
+		ImageLabel.ZIndex = 151
+		ImageLabel.Image = Config.Logo
+		ImageLabel.ImageTransparency = 1
+		ImageLabel.ClipsDescendants = false;
+
+		local ToggleCloseUI = function(v)
+			ImageLabel.Image = Config.Logo;
+
+			if v then
+				ImageLabel.ClipsDescendants = true;
+
+				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+					Size = UDim2.new(0, 45, 0, 23),
+					BackgroundTransparency = 0.025
+				})
+
+				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+					ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
+				})
+			else
+				ImageLabel.ClipsDescendants = false;
+
+				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+					Size = UDim2.new(0, 0, 0, 23),
+					BackgroundTransparency = 1
+				})
+
+				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+					ImageTransparency = 1
+				})
+			end;
+		end;
 
 		function WindowArgs:Watermark()
 			local Signal = Compkiller.__SIGNAL(true);
@@ -9968,33 +9948,32 @@ function Compkiller.new(Config : Window)
 			end);
 		end;
 
-		table.insert(WindowArgs.THREADS,task.spawn(function()
-			while true do task.wait(0.15)
-				if Compkiller:_IsMobile() then
-					ToggleCloseUI(true);
-
-					if WindowArgs.IsOpen then
-						Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-							ImageTransparency = 0.35
-						});
-
-						ImageLabel:GetAttribute("Hover",false);
-					else
-						ImageLabel:GetAttribute("Hover",true);
-
-						Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-							ImageTransparency = 0.1
-						});
-					end;
-				else
-					if not WindowArgs.IsOpen then
-						ToggleCloseUI(true);
-					else
-						ToggleCloseUI(false);
-					end
-				end;
-			end
-		end));
+		-- Optimized: Event-driven update (removes heavy polling loop)
+  local UpdateMobileBtn = function()
+  	local isMobile = Compkiller:_IsMobile()
+  	-- On Mobile: Always show. On PC: Show only if window is closed.
+  	CloseWindow.Visible = isMobile or not WindowArgs.IsOpen
+  
+  	if isMobile then
+  		ToggleCloseUI(true) -- Always expanded on mobile
+  		local targetTransparency = WindowArgs.IsOpen and 0.35 or 0.1
+  		-- Only tween if transparency is significantly different to save performance
+  		if math.abs(ImageLabel.ImageTransparency - targetTransparency) > 0.05 then
+  			Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = targetTransparency })
+  		end
+  	else
+  		-- PC logic: Expand only to reopen window
+  		ToggleCloseUI(not WindowArgs.IsOpen)
+  	end
+  end
+  
+  -- Hook into the WindowOpen signal instead of polling
+  WindowOpen:Connect(UpdateMobileBtn)
+  UpdateMobileBtn() -- Initial run
+  
+  -- Expose references for dynamic updates
+  WindowArgs.MobileButton = CloseWindow
+  WindowArgs.MobileButtonIcon = ImageLabel
 
 		UserInputService.InputBegan:Connect(function(Input,Typing)
 			if not Typing and (Input.KeyCode == Config.Keybind or Input.KeyCode.Name == Config.Keybind) then
@@ -10112,9 +10091,31 @@ function Compkiller.new(Config : Window)
 			end;
 		end;
 	end);
-
+ 
 	WindowArgs:Update();
+ function WindowArgs:UpdateMobileButton(Config)
+	Config = Compkiller.__CONFIG(Config, {
+		Position = UDim2.new(1, -10, 0, 10),
+		Size = UDim2.new(0, 45, 0, 23),
+		Logo = Compkiller.Logo,
+		Visible = true
+	})
+	
+	if self.MobileButton then
+		self.MobileButton.Position = Config.Position
+		self.MobileButton.Size = Config.Size
+		self.MobileButton.Visible = Config.Visible
+	end
+	if self.MobileButtonIcon then
+		self.MobileButtonIcon.Image = Config.Logo
+	end
+end
 
+function WindowArgs:SetMobileVisibility(Visible: boolean)
+	if self.MobileButton then
+		self.MobileButton.Visible = Visible
+	end
+end
 	local OldDelayThread;
 	local DurationTime = tick();
 
@@ -10150,31 +10151,6 @@ function Compkiller.new(Config : Window)
 
 	return WindowArgs;
 end;
-
---- fuck updatemobile button?
-function WindowArgs:UpdateMobileButton(Config)
-	Config = Compkiller.__CONFIG(Config, {
-		Position = UDim2.new(1, -10, 0, 10),
-		Size = UDim2.new(0, 45, 0, 23),
-		Logo = Compkiller.Logo,
-		Visible = true
-	})
-	
-	if self.MobileButton then
-		self.MobileButton.Position = Config.Position
-		self.MobileButton.Size = Config.Size
-		self.MobileButton.Visible = Config.Visible
-	end
-	if self.MobileButtonIcon then
-		self.MobileButtonIcon.Image = Config.Logo
-	end
-end
-
-function WindowArgs:SetMobileVisibility(Visible: boolean)
-	if self.MobileButton then
-		self.MobileButton.Visible = Visible
-	end
-end
 
 function Compkiller:GetDate(Time)
 	Time = Time or tick();
