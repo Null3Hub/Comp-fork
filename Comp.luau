@@ -4552,7 +4552,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
   
     -- Inside BuildOptionRow function
   BlockText.Name = Compkiller:_RandomString()
-  BlockText.Parent = OptionContainer
+  BlockText.Parent = DropdownItem
   BlockText.BackgroundTransparency = 1.000
   BlockText.BorderSizePixel = 0
   BlockText.Size = UDim2.new(1, 0, 0, 20)
