@@ -1781,14 +1781,14 @@ function Compkiller:_Hover(Frame: Frame , OnHover: () -> any?, Release: () -> an
 end;
 
 function Compkiller.__CONFIG(config , default)
-	config = config or {};
-	for i,v in next , default do
-		-- FIX: Only apply default if key is missing OR value is not the expected type
-		if config[i] == nil or (type(v) == "function" and type(config[i]) ~= "function") then
-			config[i] = v;
-		end;
-	end;
-	return config;
+    config = config or {};
+    for i,v in next , default do
+        -- Apply default if missing, OR if user passed 'false'/'nil' expecting a callback
+        if config[i] == nil or (type(v) == "function" and type(config[i]) ~= "function") then
+            config[i] = v;
+        end;
+    end;
+    return config;
 end;
 
 function Compkiller:Drag(InputFrame: Frame, MoveFrame: Frame, Speed : number)
@@ -4270,12 +4270,15 @@ function Compkiller:_LoadOption(Value , TabSignal)
 
 			Config.Default = KeyName;
 
-			Keybind.SetValue(Selected);
-
-			IsBinding = false;
-
-			Config.Callback(KeyName);
-		end);
+    Keybind.SetValue(Selected);
+      IsBinding = false;
+      -- Safe execution using pcall
+      pcall(function() 
+          if type(Config.Callback) == "function" then
+              Config.Callback(KeyName);
+          end;
+      end);
+  end);
 
 		local Args = {};
 
@@ -4294,7 +4297,7 @@ function Compkiller:_LoadOption(Value , TabSignal)
 		end;
 
 		if Config.Flag then
-			Compkiller.Flags[Config.Flag] = Args;
+Compkiller.Flags[Config.Flag] = Args;
 		end;
 
 		return Args;
@@ -5652,12 +5655,13 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 			}):Play();
 
 			-- Inside Update() function:
-   Config.Default = Value;
-   ValueText.Text = tostring(Config.Default)..tostring(Config.Type)
-   -- FIX: Safe callback invocation
-   if type(Config.Callback) == "function" then
-   	task.spawn(Config.Callback, Value);
-   end;
+    Config.Default = Value;
+    ValueText.Text = tostring(Config.Default)..tostring(Config.Type)
+    
+    -- Safely execute callback
+    if type(Config.Callback) == "function" then
+        task.spawn(Config.Callback, Value);
+    end;
 
 		do
 			SliderBar.InputBegan:Connect(function(Input)
