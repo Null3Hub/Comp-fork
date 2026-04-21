@@ -4216,167 +4216,182 @@ function Compkiller:_LoadOption(Value , TabSignal)
 	local Tween = TweenInfo.new(0.3,Enum.EasingStyle.Quint);
 
 	function Args:AddKeybind(Config: MiniKeybind)
-		Config = Compkiller.__CONFIG(Config,{
-			Name = "Keybind",
-			Default = nil,
-			Flag = nil,
-			Callback = function() end;
-			Blacklist = {}
-		});
+	Config = Compkiller.__CONFIG(Config, {
+		Name = "Keybind",
+		Default = nil,
+		Flag = nil,
+		Callback = function() end,
+		Blacklist = {}
+	})
 
-		al Keybind = Value:AddLink('Keybind' , Config.Default);
+	local Keybind = Value:AddLink('Keybind', Config.Default)
+	local IsBinding = false
 
-		local IsBinding = false;
+	local IsBlacklist = function(v)
+		return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist, v))
+	end
 
-		local IsBlacklist = function(v)
-			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
-		end;
+	Compkiller:_Input(Keybind.Root, function()
+		if IsBinding then return end
+		IsBinding = true -- ✅ Previne cliques duplos/race condition
 
-		Compkiller:_Input(Keybind.Root,function()
-			if IsBinding then
-				return;
-			end;
+		Keybind.SetValue("...")
+		local Selected = nil
 
-			Keybind.SetValue("...");
+		while not Selected do
+			local Key = UserInputService.InputBegan:Wait()
 
-			local Selected = nil;
+			if Key.KeyCode ~= Enum.KeyCode.Unknown and not IsBlacklist(Key.KeyCode) and not IsBlacklist(Key.KeyCode.Name) then
+				Selected = Key.KeyCode
+			elseif Key.UserInputType == Enum.UserInputType.MouseButton1 and not IsBlacklist(Enum.UserInputType.MouseButton1) and not IsBlacklist("MouseLeft") then
+				Selected = "MouseLeft"
+			elseif Key.UserInputType == Enum.UserInputType.MouseButton2 and not IsBlacklist(Enum.UserInputType.MouseButton2) and not IsBlacklist("MouseRight") then
+				Selected = "MouseRight"
+			end
+		end
 
-			while not Selected do
-				local Key = UserInputService.InputBegan:Wait();
+		local KeyName = (typeof(Selected) == "string" and Selected) or Selected.Name
+		Config.Default = KeyName
+		Keybind.SetValue(KeyName) -- ✅ Usa o nome formatado, evita erro de tipo
+		IsBinding = false
 
-				if Key.KeyCode ~= Enum.KeyCode.Unknown and not IsBlacklist(Key.KeyCode) and not IsBlacklist(Key.KeyCode.Name) then
-					Selected = Key.KeyCode;
-				else
-					if Key.UserInputType == Enum.UserInputType.MouseButton1 and not IsBlacklist(Enum.UserInputType.MouseButton1) and not IsBlacklist("MouseLeft") then
-						Selected = "MouseLeft";
-					elseif Key.UserInputType == Enum.UserInputType.MouseButton2 and not IsBlacklist(Enum.UserInputType.MouseButton2) and not IsBlacklist("MouseRight") then
-						Selected = "MouseRight";
-					end;
-				end;
-			end;
+		if type(Config.Callback) == "function" then
+			task.spawn(Config.Callback, KeyName)
+		end
+	end)
 
-			local KeyName = (typeof(Selected) == "string" and Selected) or Selected.Name;
+	local Args = {}
+	Args.Flag = Config.Flag
 
-			Config.Default = KeyName;
+	function Args:SetValue(value)
+		Config.Default = value		Keybind.SetValue(value) -- ✅ CORRIGIDO: era KeybindLink (variável inexistente)
+		if type(Config.Callback) == "function" then
+			task.spawn(Config.Callback, value)
+		end
+	end
 
-    Keybind.SetValue(Selected);
-   IsBinding = false;
-   -- FIX: Safe callback execution
-   if type(Config.Callback) == "function" then
-       task.spawn(Config.Callback, KeyName);
-   end;
-   end);
+	function Args:GetValue()
+		return (typeof(Config.Default) == "string" and Config.Default) or (Config.Default and Config.Default.Name)
+	end
 
-   		local Args = {};
-   Args.Flag = Config.Flag;
-   function Args:SetValue(value)
-   Config.Default = value;
-   KeybindLink.SetValue(Config.Default);  -- ✅ Use the correct variable
-   if type(Config.Callback) == "function" then
-   task.spawn(Config.Callback, Config.Default);
-   end;
-   end;
+	if Config.Flag then
+		Compkiller.Flags[Config.Flag] = Args
+	end
 
-		function Args:GetValue()
-			return (typeof(Config.Default) == "string" and Config.Default) or Config.Default.Name;
-		end;
+	return Args
+end
 
-		if Config.Flag then
-Compkiller.Flags[Config.Flag] = Args;
-		end;
+function Args:AddHelper(Config: Helper)
+	Config = Compkiller.__CONFIG(Config, {
+		Text = "Information."
+	})
 
-		return Args;
-	end;
+	local Helper = Value:AddLink("Helper", Config.Default)
+	local Button: ImageButton = Helper.InfoButton
 
-	function Args:AddHelper(Config: Helper)
-		Config = Compkiller.__CONFIG(Config,{
-			Text = "Information."
-		});
+	Helper.Text.Parent = Window
 
-		local Helper = Value:AddLink("Helper" , Config.Default);
-		local Button: ImageButton = Helper.InfoButton;
+	Helper.UIStroke:GetPropertyChangedSignal('Transparency'):Connect(function()
+		Helper.Text.Visible = Helper.UIStroke.Transparency <= 0.9
 
-		Helper.Text.Parent = Window;
+		if Compkiller.PerformanceMode then
+			Compkiller:_SetNilP(Helper.Text, Helper.Text.Visible and Window or nil)
+		else
+			Compkiller:_SetNilP(Helper.Text, Window)
+		end
+	end)
 
-		Helper.UIStroke:GetPropertyChangedSignal('Transparency'):Connect(function()
-			if Helper.UIStroke.Transparency > 0.9 then
-				Helper.Text.Visible = false;
-			else
-				Helper.Text.Visible = true;
-			end;
+	local Update = function()
+		local mainText = " " .. Config.Text
+		mainText = string.gsub(mainText, '\n', '\n ')
+		Helper.Text.Text = mainText
 
-			if Compkiller.PerformanceMode then
-				if Helper.Text.Visible then
-					Compkiller:_SetNilP(Helper.Text , Window);
-				else
-					Compkiller:_SetNilP(Helper.Text , nil);
-				end;
-			else
-				Compkiller:_SetNilP(Helper.Text , Window);
-			end;
-		end)
+		local scale = TextService:GetTextSize(Helper.Text.Text, Helper.Text.TextSize, Helper.Text.Font, Vector2.new(math.huge, math.huge))
+		Compkiller:_Animation(Helper.Text, TweenInfo.new(0.15), {
+			Size = UDim2.fromOffset(scale.X + 50, scale.Y + 5)
+		})
+		return scale
+	end
 
-		local Update = function()
-			local mainText = " "..Config.Text;
+	local Release = function()		local scale = Update()
+		Compkiller:_Animation(Helper.Text, TweenInfo.new(0.15), {
+			TextTransparency = 1,
+			BackgroundTransparency = 1,
+			Position = UDim2.fromOffset(Button.AbsolutePosition.X, Button.AbsolutePosition.Y + 45)
+		})
+		Compkiller:_Animation(Helper.UIStroke, TweenInfo.new(0.15), { Transparency = 1 })
+	end
 
-			mainText = string.gsub(mainText,'\n','\n ')
+	local Hold = function()
+		local scale = Update()
+		if not Helper.Text.Visible then
+			Helper.Text.Position = UDim2.fromOffset(Button.AbsolutePosition.X, Button.AbsolutePosition.Y + 45)
+		end
+		Compkiller:_Animation(Helper.Text, TweenInfo.new(0.15), {
+			TextTransparency = 0.35,
+			BackgroundTransparency = 0,
+			Position = UDim2.fromOffset(Button.AbsolutePosition.X, Button.AbsolutePosition.Y + (40 - (scale.Y / 2)))
+		})
+		Compkiller:_Animation(Helper.UIStroke, TweenInfo.new(0.15), { Transparency = 0 })
+	end
 
-			Helper.Text.Text = mainText;
+	Compkiller:_Hover(Button, Hold, Release)
+	Release()
 
-			local scale = TextService:GetTextSize(Helper.Text.Text,Helper.Text.TextSize,Helper.Text.Font,Vector2.new(math.huge,math.huge));
+	local Args = {}
+	function Args:SetValue(value)
+		Config.Text = value
+	end
+	return Args
+end
 
-			Compkiller:_Animation(Helper.Text , TweenInfo.new(0.15), {
-				Size = UDim2.fromOffset(scale.X + 50, scale.Y + 5)
-			})
+function Args:AddColorPicker(Config: MiniColorPicker)
+	Config = Compkiller.__CONFIG(Config, {
+		Default = Color3.fromRGB(255, 255, 255),
+		Transparency = 0,
+		Callback = function() end
+	})
 
-			return scale;
-		end;
+	-- ✅ CORRIGIDO: Renomeado para evitar shadowing (sobreposição) de variáveis
+	local ColorPickerFrame, ColorFrame = Value:AddLink('ColorPicker', Config.Default)
+	local Button = Compkiller:_Input(ColorPickerFrame)
 
-		local Release = function()
-			local scale = Update()
+	local ColorPanel = Compkiller:_AddColorPickerPanel(Button, function(color, opc)
+		Config.Default = color
+		Config.Transparency = opc
+		ColorFrame.BackgroundColor3 = color
+		ColorFrame.BackgroundTransparency = opc
+		Config.Callback(Config.Default, Config.Transparency)
+	end)
+	ColorPanel:SetColor(Config.Default, Config.Transparency)
+	ColorPanel:Update()
 
-			Compkiller:_Animation(Helper.Text,TweenInfo.new(0.15),{
-				TextTransparency = 1,
-				BackgroundTransparency = 1,
-				Position = UDim2.fromOffset(Button.AbsolutePosition.X,Button.AbsolutePosition.Y + (45))
-			});
+	local Args = {}
+	Args.Flag = Config.Flag
 
-			Compkiller:_Animation(Helper.UIStroke,TweenInfo.new(0.15),{
-				Transparency = 1
-			});
-		end;
+	function Args:SetValue(value, opc)
+		Config.Default = value
+		Config.Transparency = opc
+		ColorPanel:SetColor(value, opc)
+		ColorPanel:Update()
+		Config.Callback(value, opc)
+	end
 
-		local Hold = function()
-			local scale = Update()
+	function Args:GetValue()
+		return {
+			ColorPicker = {
+				Color = Config.Default,
+				Transparency = Config.Transparency
+			}
+		}
+	end
 
-			if not Helper.Text.Visible then
-				Helper.Text.Position = UDim2.fromOffset(Button.AbsolutePosition.X,Button.AbsolutePosition.Y + (45))
-			end;
+	if Config.Flag then
+		Compkiller.Flags[Config.Flag] = Args
+	end
 
-			Compkiller:_Animation(Helper.Text,TweenInfo.new(0.15),{
-				TextTransparency = 0.35,
-				BackgroundTransparency = 0,
-				Position = UDim2.fromOffset(Button.AbsolutePosition.X,Button.AbsolutePosition.Y + (40 - (scale.Y / 2)))
-			});
-
-			Compkiller:_Animation(Helper.UIStroke,TweenInfo.new(0.15),{
-				Transparency = 0
-			});
-
-		end;
-
-		Compkiller:_Hover(Button,  Hold, Release);
-
-		Release();
-
-		local Args = {};
-
-		function Args:SetValue(value)
-			Config.Text = value;
-		end;
-
-		return Args;
-	end;
+	return Args
+end
 
 	function Args:AddColorPicker(Config: MiniColorPicker)
 		Config = Compkiller.__CONFIG(Config,{
@@ -5118,92 +5133,90 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 	end;
 
 	function Args:AddKeybind(Config : Keybind)
-		Config = Compkiller.__CONFIG(Config,{
-			Name = "Keybind",
-			Default = nil,
-			Flag = nil,
-			Callback = function() end;
-			Blacklist = {}
-		});
+    Config = Compkiller.__CONFIG(Config,{
+        Name = "Keybind",
+        Default = nil,
+        Flag = nil,
+        Callback = function() end;
+        Blacklist = {}
+    });
 
-		local Block = Compkiller:_CreateBlock(Signal);
+    local Block = Compkiller:_CreateBlock(Signal);
+    Block:SetParent(Parent);
+    Block:SetText(Config.Name);
+    Block:SetLine(EnabledLine);
+    Block:SetVisible(Signal:GetValue());
 
-		Block:SetParent(Parent);
+    -- ✅ Nome correto da variável (usado em todo o escopo)
+    local KeybindLink = Block:AddLink('Keybind', Config.Default);
+    local IsBinding = false;
 
-		Block:SetText(Config.Name);
+    local IsBlacklist = function(v)
+        return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist, v))
+    end;
 
-		Block:SetLine(EnabledLine);
+    -- ✅ FIX 1: Usar KeybindLink.Root (evita nil index)
+    Compkiller:_Input(KeybindLink.Root, function()
+        if IsBinding then return end;
+        IsBinding = true; -- ✅ FIX 2: Ativa debounce ANTES do loop
 
-		Block:SetVisible(Signal:GetValue());
+        KeybindLink.SetValue("..."); -- ✅ Usa variável correta
 
-		local KeybindLink = Block:AddLink('Keybind' , Config.Default);
-		local IsBinding = false;
-		local IsBlacklist = tion(v)
-			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
-		end;
+        local Selected = nil;
+        while not Selected do
+            local Key = UserInputService.InputBegan:Wait();
 
-		Compkiller:_Input(Keybind.Root,function()
-			if IsBinding then
-				return;
-			end;
+            if Key.KeyCode ~= Enum.KeyCode.Unknown and not IsBlacklist(Key.KeyCode) and not IsBlacklist(Key.KeyCode.Name) then
+                Selected = Key.KeyCode;
+            else
+                if Key.UserInputType == Enum.UserInputType.MouseButton1 and not IsBlacklist(Enum.UserInputType.MouseButton1) and not IsBlacklist("MouseLeft") then
+                    Selected = "MouseLeft";
+                elseif Key.UserInputType == Enum.UserInputType.MouseButton2 and not IsBlacklist(Enum.UserInputType.MouseButton2) and not IsBlacklist("MouseRight") then
+                    Selected = "MouseRight";
+                end;
+            end;
+        end;
 
-			Keybind.SetValue("...");
+        local KeyName = typeof(Selected) == "string" and Selected or Selected.Name;
+        Config.Default = KeyName;
 
-			local Selected = nil;
+        KeybindLink.SetValue(KeyName); -- ✅ Sincroniza UI com o valor formatado
+        IsBinding = false; -- ✅ Libera para próxima interação
 
-			while not Selected do
-				local Key = UserInputService.InputBegan:Wait();
+        if type(Config.Callback) == "function" then
+            task.spawn(Config.Callback, KeyName);
+        end;
+    end);
 
-				if Key.KeyCode ~= Enum.KeyCode.Unknown and not IsBlacklist(Key.KeyCode) and not IsBlacklist(Key.KeyCode.Name) then
-					Selected = Key.KeyCode;
-				else
-					if Key.UserInputType == Enum.UserInputType.MouseButton1 and not IsBlacklist(Enum.UserInputType.MouseButton1) and not IsBlacklist("MouseLeft") then
-						Selected = "MouseLeft";
-					elseif Key.UserInputType == Enum.UserInputType.MouseButton2 and not IsBlacklist(Enum.UserInputType.MouseButton2) and not IsBlacklist("MouseRight") then
-						Selected = "MouseRight";
-					end;
-				end;
-			end;
+    local Args = {};
+    Args.Flag = Config.Flag;
 
-			local KeyName = typeof(Selected) == "string" and Selected or Selected.Name;
+    function Args:SetValue(value)
+        Config.Default = value;
+        KeybindLink.SetValue(value); -- ✅ Variável correta
+        if type(Config.Callback) == "function" then
+            task.spawn(Config.Callback, value);
+        end;
+    end;
 
-			Config.Default = KeyName;
+    Args.Signal = Signal:Connect(function(bool)
+        Block:SetVisible(bool);
+    end);
 
-   			-- FIXED:
-   Keybind.SetValue(Selected);
-   IsBinding = false;
-   -- FIX: Safe callback execution
-   if type(Config.Callback) == "function" then
-       task.spawn(Config.Callback, KeyName);
-   end;
-   end);
+    Args.Link = Compkiller:_LoadOption(Block);
 
-  		local Args = {};
-  Args.Flag = Config.Flag;
-  function Args:SetValue(value)
-  Config.Default = value;
-  KeybindLink.SetValue(Config.Default);  -- ✅ Use the correct variable
-  if type(Config.Callback) == "function" then
-  task.spawn(Config.Callback, Config.Default);
-  end;
-  end;
+    -- ✅ FIX 3: Proteção contra nil em GetValue
+    function Args:GetValue()
+        if Config.Default == nil then return nil end;
+        return typeof(Config.Default) == "string" and Config.Default or Config.Default.Name;
+    end;
 
-		Args.Signal = Signal:Connect(function(bool)
-			Block:SetVisible(bool);
-		end);
+    if Config.Flag then
+        Compkiller.Flags[Config.Flag] = Args;
+    end;
 
-		Args.Link = Compkiller:_LoadOption(Block);
-
-		function Args:GetValue()
-			return (typeof(Config.Default) == "string" and Config.Default) or Config.Default.Name;
-		end;
-
-		if Config.Flag then
-			Compkiller.Flags[Config.Flag] = Args;
-		end;
-
-		return Args;
-	end;
+    return Args;
+end;
 
 	function Args:AddColorPicker(Config: ColorPicker)
 		Config = Compkiller.__CONFIG(Config,{
@@ -5767,7 +5780,7 @@ do
 		end;
 
 		if not DisableStackKeybind then
-			local AutoKeybind = Compkiller:_KeybindHandler(Slider , "Number" , Args , Signal , Zindex , Config);
+			local AutoKeybind = Compkiller_KeybindHandler(Slider , "Number" , Args , Signal , Zindex , Config);
 
 			Args.AutoKeybind = AutoKeybind;
 		end;
