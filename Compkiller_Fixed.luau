@@ -9602,8 +9602,8 @@ function Compkiller.new(Config : Window)
 		return TabArgs;
 	end;
 
+	local CloseWindow = Instance.new("Frame")
 	do
-		local CloseWindow = Instance.new("Frame")
 		local UICorner = Instance.new("UICorner")
 		local ImageLabel = Instance.new("ImageLabel")
 
