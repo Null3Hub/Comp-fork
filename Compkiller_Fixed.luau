@@ -9898,13 +9898,16 @@ function Compkiller.new(Config : Window)
 end;
 
 local Button = Compkiller:_Input(CloseWindow, function()
-	local override = WindowArgs.__CloseButtonOverride;
-	if override and override.OnClick then
-		override.OnClick();
-	else
-		WindowArgs:_ToggleUI();
-	end;
+    local override = WindowArgs.__CloseButtonOverride;
+
+    if override and override.OnClick then
+        override.OnClick();
+    else
+        WindowArgs:_ToggleUI();
+    end;
 end);
+
+Compkiller:Drag(Button, CloseWindow, 0.1);
 
 if not Compkiller:_IsMobile() then
 	Compkiller:_Hover(Button, function()
