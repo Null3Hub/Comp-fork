@@ -7283,45 +7283,36 @@ function Compkiller.new(Config : Window)
 				end;
 			end);
 
-			function WindowArgs.UserSettings:Window(Value)
-    -- FIX: Guard against nil Root - prevents "attempt to call a nil value"
-    if not self.Root then 
-        warn("[Compkiller] UserSettings:Window() called before :Create()");
-        return; 
+			-- Replace the existing WindowArgs.UserSettings:Window function with this robust version:
+    function WindowArgs.UserSettings:Window(Value)
+    -- Auto-initialize if Create() hasn't been called yet (Fixes the "Root is nil" logic loop)
+    if not self.Root and self.Create then
+        self:Create();
+    end
+    
+    -- Safety validation
+    if not self.Root then
+        warn("[Compkiller] UserSettings: Root not found.");
+        return;
     end;
-    
-    local Root = self.Root; -- Cache reference for safety
-    
+
     if Value then
-        Signal:Fire(true);
-        Compkiller:_Animation(Root, TweenInfo.new(0.2), {
+        self.Signal:Fire(true);
+        Compkiller:_Animation(self.Root, TweenInfo.new(0.2), {
             BackgroundTransparency = 0.250,
         });
-        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), {
-            BackgroundTransparency = 0,
-        });
-        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), {
-            TextTransparency = 0,
-        });
-        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
-            ImageTransparency = 0.5,
-        });
+        -- Animations for other elements remain the same...
+        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), { BackgroundTransparency = 0 });
+        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), { TextTransparency = 0 });
+        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 0.5 });
     else
-        Signal:Fire(false);
-        Compkiller:_Animation(Root, TweenInfo.new(0.2), {
-            BackgroundTransparency = 1,
-        });
-        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), {
-            BackgroundTransparency = 1,
-        });
-        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), {
-            TextTransparency = 1,
-        });
-        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
-            ImageTransparency = 1,
-        });
+        self.Signal:Fire(false);
+        Compkiller:_Animation(self.Root, TweenInfo.new(0.2), { BackgroundTransparency = 1 });
+        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), { BackgroundTransparency = 1 });
+        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), { TextTransparency = 1 });
+        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 1 });
     end;
- end;
+  end
 
 			Compkiller:_Input(ImageLabel,function()
 				WindowArgs.UserSettings:Window(false);
