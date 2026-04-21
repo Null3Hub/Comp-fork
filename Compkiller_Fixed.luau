@@ -9998,58 +9998,47 @@ function WindowArgs:SetCloseButton(Config: {
 		OnClick = nil,
 	});
 
-	if Config.Logo then
-		ImageLabel.Image = Config.Logo;
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
+	WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
+
+	local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
+	local _corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
+
+	if Config.Logo and _img then
+		_img.Image = Config.Logo;
 		WindowArgs.__CloseButtonOverride.Logo = Config.Logo;
 	end;
 
 	if Config.Size then
-		Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
-			Size = Config.Size
-		});
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
+		Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), { Size = Config.Size });
 		WindowArgs.__CloseButtonOverride.Size = Config.Size;
 	end;
 
 	if Config.Position then
 		CloseWindow.Position = Config.Position;
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
 		WindowArgs.__CloseButtonOverride.Position = Config.Position;
 	end;
 
 	if Config.BackgroundTransparency ~= nil then
 		CloseWindow.BackgroundTransparency = Config.BackgroundTransparency;
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
 		WindowArgs.__CloseButtonOverride.BackgroundTransparency = Config.BackgroundTransparency;
 	end;
 
-	if Config.ImageTransparency ~= nil then
-		ImageLabel.ImageTransparency = Config.ImageTransparency;
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
+	if Config.ImageTransparency ~= nil and _img then
+		_img.ImageTransparency = Config.ImageTransparency;
 		WindowArgs.__CloseButtonOverride.ImageTransparency = Config.ImageTransparency;
 	end;
 
 	if Config.Color then
-		Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
-			BackgroundColor3 = Config.Color
-		});
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
+		Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), { BackgroundColor3 = Config.Color });
 		WindowArgs.__CloseButtonOverride.Color = Config.Color;
 	end;
 
-	if Config.CornerRadius then
-		-- UICorner já existe no CloseWindow, buscamos dinamicamente
-		local corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
-		if corner then
-			corner.CornerRadius = Config.CornerRadius;
-		end;
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
+	if Config.CornerRadius and _corner then
+		_corner.CornerRadius = Config.CornerRadius;
 		WindowArgs.__CloseButtonOverride.CornerRadius = Config.CornerRadius;
 	end;
 
 	if Config.OnClick then
-		WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
 		WindowArgs.__CloseButtonOverride.OnClick = Config.OnClick;
 	end;
 end;
@@ -10057,22 +10046,21 @@ end;
 function WindowArgs:ResetCloseButton()
 	WindowArgs.__CloseButtonOverride = nil;
 
-	ImageLabel.Image = Config.Logo;
+	local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
+	local _corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
+
+	if _img then
+		_img.Image = Config.Logo;
+		_img.ImageTransparency = 1;
+	end;
+
 	CloseWindow.Position = UDim2.new(1, -10, 0, 10);
+	CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor;
 
-	local corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
-	if corner then
-		corner.CornerRadius = UDim.new(0, 3);
+	if _corner then
+		_corner.CornerRadius = UDim.new(0, 3);
 	end;
-
-	local colorEntry = Compkiller.Elements.BGDBColor;
-	for _, v in next, colorEntry do
-		if v.Element == CloseWindow then
-			CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor;
-			break;
-		end;
-	end;
-end;
+ end;
 
 	function WindowArgs:Update(config: WindowUpdate)
 		config = config or {};
