@@ -373,6 +373,65 @@ local Compkiller = {
 	ProtectGui = protect_gui or protectgui or (syn and syn.protect_gui) or function(s) return s; end,
 };
 
+--- Gradient System ---
+local GradientSystem = {}
+
+function GradientSystem.Create(keypoints, props)
+    local colorKeys = {}
+    local transKeys = {}
+    
+    for strPct, data in pairs(keypoints) do
+        local pct = tonumber(strPct)
+        if pct then
+            local t = math.clamp(pct / 100, 0, 1)
+            table.insert(colorKeys, ColorSequenceKeypoint.new(t, data.Color))
+            table.insert(transKeys, NumberSequenceKeypoint.new(t, data.Transparency or 0))
+        end
+    end
+    
+    table.sort(colorKeys, function(a, b) return a.Time < b.Time end)
+    table.sort(transKeys, function(a, b) return a.Time < b.Time end)
+    
+    assert(#colorKeys >= 2, "Gradiente precisa de pelo menos 2 keypoints")
+    
+    local result = {
+        Color = ColorSequence.new(colorKeys),
+        Transparency = NumberSequence.new(transKeys),
+    }
+    
+    if props then
+        for k, v in pairs(props) do
+            result[k] = v
+        end
+    end
+    
+    return result
+end
+
+function GradientSystem.Apply(target, gradientData, clearExisting)
+    if clearExisting then
+        local old = target:FindFirstChildOfClass("UIGradient")
+        if old then old:Destroy() end
+    end
+    
+    local grad = Instance.new("UIGradient")
+    grad.Name = "ThemeGradient"
+    grad.Color = gradientData.Color
+    grad.Transparency = gradientData.Transparency
+    
+    for k, v in pairs(gradientData) do
+        if k ~= "Color" and k ~= "Transparency" and grad[k] ~= nil then
+            grad[k] = v
+        end
+    end
+    
+    grad.Parent = target
+    return grad
+end
+
+Compkiller.Gradient = GradientSystem
+
+
 Compkiller.Colors = {
 	Highlight = Color3.fromRGB(17, 238, 253),
 	Toggle = Color3.fromRGB(14, 203, 213),
