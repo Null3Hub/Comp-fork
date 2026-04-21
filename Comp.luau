@@ -221,31 +221,29 @@ end)
 getgenv = getgenv or getfenv
 
 function Compkiller.__SIGNAL(default)
-    local Bindable = Instance.new('BindableEvent')
-    Bindable.Name = string.sub(tostring({}), 7)
-    Bindable:SetAttribute('Value', default)
-    local Binds = { __signals = {} }
-    
+    local Bindable = Instance.new('BindableEvent');
+    Bindable.Name = string.sub(tostring({}), 7);
+    Bindable:SetAttribute('Value', default);
+    local Binds = {
+        __signals = {}
+    };
     function Binds:Connect(event)
-        event(Bindable:GetAttribute("Value"))
-        local signal = Bindable.Event:Connect(event)
-        table.insert(Binds.__signals, signal)
-        return signal
+        event(Bindable:GetAttribute("Value"));
+        local signal = Bindable.Event:Connect(event);
+        table.insert(Binds.__signals, signal);
+        return signal;
     end
-    
     function Binds:Fire(value)
-        local IsSame = Bindable:GetAttribute("Value") == value
-        Bindable:SetAttribute('Value', value)
+        local IsSame = Bindable:GetAttribute("Value") == value;
+        Bindable:SetAttribute('Value', value);
         if not IsSame then
-            Bindable:Fire(value)
+            Bindable:Fire(value);
         end
     end
-    
     function Binds:GetValue()
-        return Bindable:GetAttribute("Value")
+        return Bindable:GetAttribute("Value");
     end
-    
-    return Binds
+    return Binds;
 end
 
 -- Please ignore the ugly code. [Custom File System] --
