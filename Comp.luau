@@ -4224,7 +4224,7 @@ function Compkiller:_LoadOption(Value , TabSignal)
 			Blacklist = {}
 		});
 
-		local Keybind = Value:AddLink('Keybind' , Config.Default);
+		al Keybind = Value:AddLink('Keybind' , Config.Default);
 
 		local IsBinding = false;
 
@@ -4461,7 +4461,7 @@ Compkiller.Flags[Config.Flag] = Args;
   		-- FIXED:
   function Args:SetValue(value)
       Config.Default = value;
-      Keybind.SetValue(Config.Default);
+      Toggle.ChangeValue(Config.Default);
       
       if type(Config.Callback) == "function" then
           task.spawn(Config.Callback, Config.Default);
@@ -5142,7 +5142,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 		local Keybind = Block:AddLink('Keybind' , Config.Default);
 		local IsBinding = false;
-		local IsBlacklist = function(v)
+		local IsBlacklist = tion(v)
 			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
 		end;
 
@@ -5196,7 +5196,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 
   -- FIXED:
- function Args:SetValue(value)
+ (value)
      Config.Default = value;
      Keybind.SetValue(Config.Default);
      
