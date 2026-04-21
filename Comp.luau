@@ -4634,6 +4634,7 @@ end;
 
 function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	local Window = Compkiller:_GetWindowFromElement(BaseParent);
+ if not Window then return {} end  -- ← ADICIONAR
 	local BaseZ_Index = BaseParent.ZIndex + (math.random(1,15) * 100);
 
 	local DropdownWindow = Instance.new("Frame")
@@ -4929,7 +4930,8 @@ end
 	end
 
 	local UpdateDropdown = function()
-		for i, v in next, Values do
+   if not Values then return end  -- ← ADICIONAR ESTA LINHA
+   for i, v in next, Values do
 			local bth = DrawButton()
 			bth.BlockText.Text = tostring(v)
 			bth.DropdownItem.Parent = ScrollingFrame
@@ -5652,13 +5654,12 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
        local PositionX = UDim2.fromScale(SizeScale, 1);
        local Size = (Value - Config.Min) / (Config.Max - Config.Min);
        TweenService:Create(SliderInput, TweenInfo.new(0.2), {Size = UDim2.new(math.clamp(Size, 0.045, 1), 0, 1, 0)}):Play();
-             -- FIXED:
-      Config.Default = Value;
-      -- FIX: Safe callback execution
-      if type(Config.Callback) == "function" then
-      	task.spawn(Config.Callback, Value);
-      end;
-    end;
+       Config.Default = Value;
+     -- FIX: Safe callback execution
+     if type(Config.Callback) == "function" then
+         task.spawn(Config.Callback, Value);
+     end;
+ end;
 do
 			SliderBar.InputBegan:Connect(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
