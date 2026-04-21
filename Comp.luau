@@ -5154,7 +5154,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 		local Keybind = Block:AddLink('Keybind' , Config.Default);
 
-		local  = false;
+		local IsBinding = false;
 
 		local IsBlacklist = function(v)
 			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
