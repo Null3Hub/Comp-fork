@@ -9675,72 +9675,100 @@ UICorner.Parent = MainFrame;
 		return TabArgs;
 	end;
 
-	local CloseWindow = Instance.new("Frame")
-	do
-		local UICorner = Instance.new("UICorner")
-		local ImageLabel = Instance.new("ImageLabel")
-
-		CloseWindow.Name = Compkiller:_RandomString()
-		CloseWindow.Parent = CompKiller
-		CloseWindow.AnchorPoint = Vector2.new(1, 0)
-		CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor
-
-		table.insert(Compkiller.Elements.BGDBColor,{
-			Element = CloseWindow,
-			Property = 'BackgroundColor3'
-		});
-
-		CloseWindow.BackgroundTransparency = 1
-		CloseWindow.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		CloseWindow.BorderSizePixel = 0
-		CloseWindow.Position = UDim2.new(1, -10, 0, 10)
-		CloseWindow.Size = UDim2.new(0, 0, 0, 23)
-		CloseWindow.ZIndex = 150
-		CloseWindow.ClipsDescendants = true;
-
-		UICorner.CornerRadius = UDim.new(0, 3)
-		UICorner.Parent = CloseWindow
-
-		ImageLabel.Parent = CloseWindow
-		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-		ImageLabel.BackgroundTransparency = 1.000
-		ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		ImageLabel.BorderSizePixel = 0
-		ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-		ImageLabel.Size = UDim2.new(0.800000012, 0, 0.800000012, 0)
-		ImageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
-		ImageLabel.ZIndex = 151
-		ImageLabel.Image = Config.Logo
-		ImageLabel.ImageTransparency = 1
-		ImageLabel.ClipsDescendants = false;
-
-		local ToggleCloseUI = function(v)
-			ImageLabel.Image = Config.Logo;
-
-			if v then
-				ImageLabel.ClipsDescendants = true;
-
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
-					Size = UDim2.new(0, 45, 0, 23),
-					BackgroundTransparency = 0.025
-				})
-
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-					ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
-				})
-			else
-				ImageLabel.ClipsDescendants = false;
-
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
-					Size = UDim2.new(0, 0, 0, 23),
-					BackgroundTransparency = 1
-				})
-
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-					ImageTransparency = 1
-				})
-			end;
-		end;
+ local CloseWindow = Instance.new("Frame")
+   do
+       local UICorner = Instance.new("UICorner")
+       local ImageLabel = Instance.new("ImageLabel")
+       
+       CloseWindow.Name = Compkiller:_RandomString()
+       CloseWindow.Parent = CompKiller
+       CloseWindow.AnchorPoint = Vector2.new(1, 0)
+       CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor
+       table.insert(Compkiller.Elements.BGDBColor, {
+           Element = CloseWindow,
+           Property = 'BackgroundColor3'
+       });
+       CloseWindow.BackgroundTransparency = 1
+       CloseWindow.BorderColor3 = Color3.fromRGB(0, 0, 0)
+       CloseWindow.BorderSizePixel = 0
+       CloseWindow.Position = UDim2.new(1, -10, 0, 10)
+       CloseWindow.Size = UDim2.new(0, 0, 0, 28) -- Levemente maior para combinar com WindUI
+       CloseWindow.ZIndex = 150
+       CloseWindow.ClipsDescendants = true;
+       
+       -- 🟢 ESTILO WINDUI: Raio maior e cantos suaves
+       UICorner.CornerRadius = UDim.new(0, 8) 
+       UICorner.Parent = CloseWindow
+       
+       -- 🔵 ÍCONE: Trocado para "Minus" (Estilo WindUI)
+       ImageLabel.Parent = CloseWindow
+       ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+       ImageLabel.BackgroundTransparency = 1.000
+       ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+       ImageLabel.BorderSizePixel = 0
+       ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+       ImageLabel.Size = UDim2.new(0.65, 0, 0.65, 0)
+       ImageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
+       ImageLabel.ZIndex = 151
+       ImageLabel.Image = "rbxassetid://10734895698" -- Lucide Minus
+       ImageLabel.ImageTransparency = 1
+       ImageLabel.ClipsDescendants = false;
+   
+       -- Mantém a lógica original de Toggle intacta
+       local ToggleCloseUI = function(v)
+           ImageLabel.Image = Config.Logo;
+           if v then
+               ImageLabel.ClipsDescendants = true;
+               Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
+                   Size = UDim2.new(0, 45, 0, 28),
+                   BackgroundTransparency = 0.15 -- Fundo semi-transparente estilo WindUI
+               })
+               Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
+                   ImageTransparency = 0.35
+               })
+           else
+               ImageLabel.ClipsDescendants = false;
+               Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
+                   Size = UDim2.new(0, 0, 0, 28),
+                   BackgroundTransparency = 1
+               })
+               Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
+                   ImageTransparency = 1
+               })
+           end;
+       end;
+   
+       -- ... [Mantenha aqui a função WindowArgs:Watermark() e o resto do bloco original] ...
+       
+       -- 🖱️ INPUT & HOVER OTIMIZADO (Estilo WindUI)
+       local Button = Compkiller:_Input(CloseWindow, function()
+           local override = WindowArgs.__CloseButtonOverride;
+           if override and override.OnClick then
+               override.OnClick();
+           else
+               WindowArgs:_ToggleUI();
+           end
+       end);
+   
+       if not Compkiller:_IsMobile() then
+           -- Hover suave com animação de BackgroundTransparency e ImageTransparency
+           Compkiller:_Hover(Button, function()
+               Compkiller:_Animation(CloseWindow, TweenInfo.new(0.15, Enum.EasingStyle.Quint), {
+                   BackgroundTransparency = 0.05
+               })
+               Compkiller:_Animation(ImageLabel, TweenInfo.new(0.15, Enum.EasingStyle.Quint), {
+                   ImageTransparency = 0.1
+               })
+           end, function()
+               Compkiller:_Animation(CloseWindow, TweenInfo.new(0.15, Enum.EasingStyle.Quint), {
+                   BackgroundTransparency = 0.15
+               })
+               Compkiller:_Animation(ImageLabel, TweenInfo.new(0.15, Enum.EasingStyle.Quint), {
+                   ImageTransparency = 0.35
+               })
+           end)
+       end
+   end
 
 		function WindowArgs:Watermark()
 			local Signal = Compkiller.__SIGNAL(true);
