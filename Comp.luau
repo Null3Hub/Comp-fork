@@ -5153,9 +5153,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		Block:SetVisible(Signal:GetValue());
 
 		local Keybind = Block:AddLink('Keybind' , Config.Default);
-
 		local IsBinding = false;
-
 		local IsBlacklist = function(v)
 			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
 		end;
@@ -7262,67 +7260,54 @@ function Compkiller.new(Config : Window)
 		ImageLabel.ImageTransparency = 0.500
 
 		function WindowArgs.UserSettings:Create()
-
-			WindowArgs.UserSettings.Root = UserSettings;
-			WindowArgs.UserSettings.Signal = Signal;
-			WindowArgs.UserSettings.Signal = Compkiller:_Blur(UserSettings,Signal);
-
-			Compkiller:Drag(UserSettings , UserSettings, 0.15);
-
-			UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-				Compkiller:_Animation(UserSettings,TweenInfo.new(0.2),{
-					Size = UDim2.new(0, 235, 0, UIListLayout.AbsoluteContentSize.Y + 50)
-				})
-			end);
-
-			UserSettings:GetPropertyChangedSignal('BackgroundTransparency'):Connect(function()
-				if UserSettings.BackgroundTransparency < 1 then
-					UserSettings.Visible = true;
-				else
-					UserSettings.Visible = false;
-				end;
-			end);
-
-			-- Replace the existing WindowArgs.UserSettings:Window function with this robust version:
+    WindowArgs.UserSettings.Root = UserSettings;
+    WindowArgs.UserSettings.Signal = Signal;
+    -- FIX: Não substituir o Signal pela conexão do :Blur
+    Compkiller:_Blur(UserSettings, Signal);
+    Compkiller:Drag(UserSettings , UserSettings, 0.15);
+    UIListLayout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+        Compkiller:_Animation(UserSettings,TweenInfo.new(0.2),{
+            Size = UDim2.new(0, 235, 0, UIListLayout.AbsoluteContentSize.Y + 50)
+        })
+    end);
+    UserSettings:GetPropertyChangedSignal('BackgroundTransparency'):Connect(function()
+        if UserSettings.BackgroundTransparency < 1 then
+            UserSettings.Visible = true;
+        else
+            UserSettings.Visible = false;
+        end;
+    end);
+    
     function WindowArgs.UserSettings:Window(Value)
-    -- Auto-initialize if Create() hasn't been called yet (Fixes the "Root is nil" logic loop)
-    if not self.Root and self.Create then
-        self:Create();
+        if not self.Root then
+            warn("[Compkiller] UserSettings: Root not found.");
+            return;
+        end;
+        if Value then
+            self.Signal:Fire(true);
+            Compkiller:_Animation(self.Root, TweenInfo.new(0.2), {
+                BackgroundTransparency = 0.250,
+            });
+            Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), { BackgroundTransparency = 0 });
+            Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), { TextTransparency = 0 });
+            Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 0.5 });
+        else
+            self.Signal:Fire(false);
+            Compkiller:_Animation(self.Root, TweenInfo.new(0.2), { BackgroundTransparency = 1 });
+            Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), { BackgroundTransparency = 1 });
+            Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), { TextTransparency = 1 });
+            Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 1 });
+        end;
     end
     
-    -- Safety validation
-    if not self.Root then
-        warn("[Compkiller] UserSettings: Root not found.");
-        return;
-    end;
-
-    if Value then
-        self.Signal:Fire(true);
-        Compkiller:_Animation(self.Root, TweenInfo.new(0.2), {
-            BackgroundTransparency = 0.250,
-        });
-        -- Animations for other elements remain the same...
-        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), { BackgroundTransparency = 0 });
-        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), { TextTransparency = 0 });
-        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 0.5 });
-    else
-        self.Signal:Fire(false);
-        Compkiller:_Animation(self.Root, TweenInfo.new(0.2), { BackgroundTransparency = 1 });
-        Compkiller:_Animation(SectionFrame, TweenInfo.new(0.2), { BackgroundTransparency = 1 });
-        Compkiller:_Animation(HeaderText, TweenInfo.new(0.2), { TextTransparency = 1 });
-        Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), { ImageTransparency = 1 });
-    end;
-  end
-
-			Compkiller:_Input(ImageLabel,function()
-				WindowArgs.UserSettings:Window(false);
-			end);
-
-			WindowArgs.UserSettings:Window(false);
-
-			return Compkiller:_LoadElement(SectionFrame , true , Signal);
-		end;
-	end;
+    Compkiller:_Input(ImageLabel,function()
+        WindowArgs.UserSettings:Window(false);
+    end);
+    
+    WindowArgs.UserSettings:Window(false);
+    return Compkiller:_LoadElement(SectionFrame , true , Signal);
+end;
+	
 
 	function WindowArgs:SetVisible(bool: boolean)
 		CompKiller.Enabled = bool;
