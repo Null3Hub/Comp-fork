@@ -9922,10 +9922,19 @@ table.insert(WindowArgs.THREADS, task.spawn(function()
 		local override = WindowArgs.__CloseButtonOverride;
 		local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
 		local isMobile = Compkiller:_IsMobile();
-		local onlyMobile = (override and override.OnlyMobile ~= nil and override.OnlyMobile) or true;
+		local onlyMobile = not override and true or (override.OnlyMobile ~= nil and override.OnlyMobile or true);
 		local dragging = WindowArgs.__CloseButtonIsDragging;
+		local disabled = WindowArgs.__CloseButtonDisabled;
 
-		if isMobile then
+		-- esconde tudo se desativado ou se onlyMobile=true em PC
+		if disabled or (not isMobile and onlyMobile) then
+			CloseWindow.BackgroundTransparency = 1;
+			CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+			if _img then _img.ImageTransparency = 1; end;
+			continue;
+		end;
+
+		if isMobile or not onlyMobile then
 			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
 			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
 			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
@@ -9942,49 +9951,12 @@ table.insert(WindowArgs.THREADS, task.spawn(function()
 					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
 				end;
 			end;
-
-		elseif not onlyMobile then
-			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
-			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
-			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
-
-			if not dragging and override and override.Position then
-				CloseWindow.Position = override.Position;
-			end;
-
-			if _img then
-				_img.Image = (override and override.Logo) or Config.Logo;
-				if WindowArgs.IsOpen then
-					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
-				else
-					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
-				end;
-			end;
-
 		else
+			-- PC onlyMobile=false mas sem override: comportamento padrão
 			if not WindowArgs.IsOpen then
-				if override then
-					CloseWindow.BackgroundColor3 = override.Color or Compkiller.Colors.BGDBColor;
-					CloseWindow.Size = override.Size or UDim2.new(0, 45, 0, 23);
-					CloseWindow.BackgroundTransparency = override.BackgroundTransparency ~= nil and override.BackgroundTransparency or 0.025;
-					if not dragging and override.Position then
-						CloseWindow.Position = override.Position;
-					end;
-					if _img then
-						_img.Image = override.Logo or Config.Logo;
-						_img.ImageTransparency = override.ImageTransparency ~= nil and override.ImageTransparency or 0.35;
-					end;
-				else
-					ToggleCloseUI(true);
-				end;
+				ToggleCloseUI(true);
 			else
-				if override then
-					CloseWindow.BackgroundTransparency = 1;
-					CloseWindow.Size = UDim2.new(0, 0, 0, 23);
-					if _img then _img.ImageTransparency = 1; end;
-				else
-					ToggleCloseUI(false);
-				end;
+				ToggleCloseUI(false);
 			end;
 		end;
 	end;
@@ -10129,6 +10101,10 @@ function WindowArgs:ResetCloseButton()
 	if _corner then
 		_corner.CornerRadius = UDim.new(0, 3);
 	end;
+end;
+
+function WindowArgs:SetCloseButtonEnabled(value: boolean)
+	WindowArgs.__CloseButtonDisabled = not value;
 end;
 
 	function WindowArgs:Update(config: WindowUpdate)
