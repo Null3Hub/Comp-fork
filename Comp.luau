@@ -1432,7 +1432,7 @@ function Compkiller:CustomIconHighlight()
 	Compkiller.CustomHighlightMode = true;
 end;
 
-function Compkiller:_SetNilP(Ins: Instance , Parent: Instance)
+:_SetNilP(Ins: Instance , Parent: Instance)
 	Compkiller.WindowsNil = Compkiller.WindowsNil or {};
 	Compkiller.NilFolder = Compkiller.NilFolder or Instance.new('Folder');
 
@@ -1734,45 +1734,33 @@ function Compkiller:_GetWindowFromElement(Element)
 			return Window;
 		end;
 	end;
-end;
+end; 
 
 function Compkiller.__SIGNAL(default)
-	local Bindable = Instance.new('BindableEvent');
-
-	Bindable.Name = string.sub(tostring({}),7);
-
-	Bindable:SetAttribute('Value',default);
-
-	local Binds = {
-		__signals = {}	
-	};
-
-	function Binds:Connect(event)
-		event(Bindable:GetAttribute("Value"));
-
-		local signal = Bindable.Event:Connect(event);
-
-		table.insert(Binds.__signals,signal);
-
-		return signal;
-	end;
-
-	function Binds:Fire(value)
-		local IsSame = Bindable:GetAttribute("Value") == value;
-
-		Bindable:SetAttribute('Value',value);
-
-		if not IsSame then
-			Bindable:Fire(value);
-		end;
-	end;
-
-	function Binds:GetValue()
-		return Bindable:GetAttribute("Value");
-	end;
-
-	return Binds;
-end;
+ local Bindable = Instance.new('BindableEvent');
+ Bindable.Name = string.sub(tostring({}),7);
+ Bindable:SetAttribute('Value',default);
+ local Binds = {
+ __signals = {}
+ };
+ function Binds:Connect(event)
+ event(Bindable:GetAttribute("Value"));
+ local signal = Bindable.Event:Connect(event);
+ table.insert(Binds.__signals,signal);
+ return signal;
+ end
+ function Binds:Fire(value)
+ local IsSame = Bindable:GetAttribute("Value") == value;
+ Bindable:SetAttribute('Value',value);
+ if not IsSame then
+ Bindable:Fire(value);
+ end
+ end
+ function Binds:GetValue()
+ return Bindable:GetAttribute("Value");
+ end
+ return Binds;
+ end;
 
 function Compkiller:_Hover(Frame: Frame , OnHover: () -> any?, Release: () -> any?)
 	Frame.MouseEnter:Connect(OnHover);
