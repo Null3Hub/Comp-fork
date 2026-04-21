@@ -4267,19 +4267,15 @@ function Compkiller:_LoadOption(Value , TabSignal)
    end;
    end);
 
-		local Args = {};
-
-		Args.Flag = Config.Flag;
-
--- FIXED:
-  function Args:SetValue(value)
-      Config.Default = value;
-      Keybind.SetValue(Config.Default);
-      
-      if type(Config.Callback) == "function" then
-          task.spawn(Config.Callback, Config.Default);
-      end;
-  end;
+   		local Args = {};
+   Args.Flag = Config.Flag;
+   function Args:SetValue(value)
+   Config.Default = value;
+   KeybindLink.SetValue(Config.Default);  -- ✅ Use the correct variable
+   if type(Config.Callback) == "function" then
+   task.spawn(Config.Callback, Config.Default);
+   end;
+   end;
 
 		function Args:GetValue()
 			return (typeof(Config.Default) == "string" and Config.Default) or Config.Default.Name;
@@ -5140,7 +5136,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 
 		Block:SetVisible(Signal:GetValue());
 
-		local Keybind = Block:AddLink('Keybind' , Config.Default);
+		local KeybindLink = Block:AddLink('Keybind' , Config.Default);
 		local IsBinding = false;
 		local IsBlacklist = tion(v)
 			return Config.Blacklist and (Config.Blacklist[v] or table.find(Config.Blacklist,v))
@@ -5182,28 +5178,15 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
    end;
    end);
 
-		local Args = {};
-
-		Args.Flag = Config.Flag;
-
-		function Args:SetText(str : string)
-			Block:SetText(str or Config.Name);
-		end;
-
-		function Args:GetText()
-			return Block:GetText();
-		end;
-
-
-  -- FIXED:
- (value)
-     Config.Default = value;
-     Keybind.SetValue(Config.Default);
-     
-     if type(Config.Callback) == "function" then
-         task.spawn(Config.Callback, Config.Default);
-     end;
- end;
+  		local Args = {};
+  Args.Flag = Config.Flag;
+  function Args:SetValue(value)
+  Config.Default = value;
+  KeybindLink.SetValue(Config.Default);  -- ✅ Use the correct variable
+  if type(Config.Callback) == "function" then
+  task.spawn(Config.Callback, Config.Default);
+  end;
+  end;
 
 		Args.Signal = Signal:Connect(function(bool)
 			Block:SetVisible(bool);
