@@ -207,19 +207,46 @@ export type Paragraph = {
 	Content: string
 }
 
+-- ✅ Bloco de Inicialização Corrigido & Seguro
 pcall(function() -- for Luraph
-	local Constant = table.concat({"LP","H_NO"}).."_VI".."RTU".."AL".."IZE";
-	getfenv()[Constant] = getfenv()[Constant] or function(f) return f end; 
-	-- LPH_NO_VIRTUALIZE
-end);
+    local Constant = table.concat({"LP","H_NO"}).."_VI".."RTU".."AL".."IZE"
+    getfenv()[Constant] = getfenv()[Constant] or function(f) return f end
+end)
 
 pcall(function() -- for IB1
-	local Constant = "IB".."_NO_VI".."RTU".."AL".."IZE";
-	getfenv()[Constant] = getfenv()[Constant] or function(f) return f end; 
-	-- IB_NO_VIRTUALIZE
-end);
+    local Constant = "IB".."_NO_VI".."RTU".."AL".."IZE"
+    getfenv()[Constant] = getfenv()[Constant] or function(f) return f end
+end)
 
-getgenv = getgenv or getfenv;
+getgenv = getgenv or getfenv
+
+function Compkiller.__SIGNAL(default)
+    local Bindable = Instance.new('BindableEvent')
+    Bindable.Name = string.sub(tostring({}), 7)
+    Bindable:SetAttribute('Value', default)
+    local Binds = { __signals = {} }
+    
+    function Binds:Connect(event)
+        event(Bindable:GetAttribute("Value"))
+        local signal = Bindable.Event:Connect(event)
+        table.insert(Binds.__signals, signal)
+        return signal
+    end
+    
+    function Binds:Fire(value)
+        local IsSame = Bindable:GetAttribute("Value") == value
+        Bindable:SetAttribute('Value', value)
+        if not IsSame then
+            Bindable:Fire(value)
+        end
+    end
+    
+    function Binds:GetValue()
+        return Bindable:GetAttribute("Value")
+    end
+    
+    return Binds
+end
 
 -- Please ignore the ugly code. [Custom File System] --
 if game:GetService('RunService'):IsStudio() then
@@ -1734,33 +1761,7 @@ function Compkiller:_GetWindowFromElement(Element)
 			return Window;
 		end;
 	end;
-end; 
-
-function Compkiller.__SIGNAL(default)
- local Bindable = Instance.new('BindableEvent');
- Bindable.Name = string.sub(tostring({}),7);
- Bindable:SetAttribute('Value',default);
- local Binds = {
- __signals = {}
- };
- function Binds:Connect(event)
- event(Bindable:GetAttribute("Value"));
- local signal = Bindable.Event:Connect(event);
- table.insert(Binds.__signals,signal);
- return signal;
- end
- function Binds:Fire(value)
- local IsSame = Bindable:GetAttribute("Value") == value;
- Bindable:SetAttribute('Value',value);
- if not IsSame then
- Bindable:Fire(value);
- end
- end
- function Binds:GetValue()
- return Bindable:GetAttribute("Value");
- end
- return Binds;
- end;
+end;
 
 function Compkiller:_Hover(Frame: Frame , OnHover: () -> any?, Release: () -> any?)
 	Frame.MouseEnter:Connect(OnHover);
