@@ -10075,45 +10075,68 @@ end));
 		WindowArgs.__CloseButtonOverride.OnClick = Config.OnClick;
 	end;
 
-	-- Drag para touch
+-- Drag para touch e mouse
 	if not WindowArgs.__CloseButtonDragActive then
 		WindowArgs.__CloseButtonDragActive = true;
 
 		local dragStart = nil;
 		local startPos = nil;
+		local isDragging = false;
+		local DRAG_THRESHOLD = 5; -- pixels mínimos para considerar drag e não clique
 
 		CloseWindow.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
 				dragStart = input.Position;
 				startPos = CloseWindow.Position;
-
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						dragStart = nil;
-						startPos = nil;
-					end;
-				end);
+				isDragging = false;
 			end;
 		end);
 
 		UserInputService.InputChanged:Connect(function(input)
 			if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) and dragStart and startPos then
 				local delta = input.Position - dragStart;
-				CloseWindow.Position = UDim2.new(
-					startPos.X.Scale,
-					startPos.X.Offset + delta.X,
-					startPos.Y.Scale,
-					startPos.Y.Offset + delta.Y
-				);
 
-				-- salva posição no override para o loop respeitar
-				if WindowArgs.__CloseButtonOverride then
-					WindowArgs.__CloseButtonOverride.Position = CloseWindow.Position;
+				-- só começa a mover após passar o threshold
+				if not isDragging and (math.abs(delta.X) > DRAG_THRESHOLD or math.abs(delta.Y) > DRAG_THRESHOLD) then
+					isDragging = true;
+				end;
+
+				if isDragging then
+					local newPos = UDim2.new(
+						startPos.X.Scale,
+						startPos.X.Offset + delta.X,
+						startPos.Y.Scale,
+						startPos.Y.Offset + delta.Y
+					);
+
+					CloseWindow.Position = newPos;
+
+					if WindowArgs.__CloseButtonOverride then
+						WindowArgs.__CloseButtonOverride.Position = newPos;
+					end;
 				end;
 			end;
 		end);
+
+		-- InputEnded global para soltar drag corretamente no touch
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+				-- se não arrastou, foi clique: dispara OnClick
+				if not isDragging and dragStart then
+					local override = WindowArgs.__CloseButtonOverride;
+					if override and override.OnClick then
+						override.OnClick();
+					else
+						WindowArgs:_ToggleUI();
+					end;
+				end;
+
+				dragStart = nil;
+				startPos = nil;
+				isDragging = false;
+			end;
+		end);
 	end;
-end;
 
 function WindowArgs:ResetCloseButton()
 	WindowArgs.__CloseButtonOverride = nil;
