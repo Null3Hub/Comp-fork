@@ -431,6 +431,18 @@ end
 
 Compkiller.Gradient = GradientSystem
 
+--- ✨ GRADIENT MANAGEMENT ---
+Compkiller.Gradients = {} -- Tabela global para armazenar gradientes nomeados
+
+function Compkiller:ApplyGradient(target, gradientName, clearExisting)
+    local gradient = self.Gradients[gradientName]
+    if not gradient then
+        warn("[Compkiller] Gradiente '" .. tostring(gradientName) .. "' não encontrado")
+        return
+    end
+    -- Aplica e retorna a instância do UIGradient para possíveis atualizações diretas
+    return self.Gradient.Apply(target, gradient, clearExisting ~= false)
+end
 
 Compkiller.Colors = {
 	Highlight = Color3.fromRGB(17, 238, 253),
