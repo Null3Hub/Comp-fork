@@ -9893,130 +9893,113 @@ function Compkiller.new(Config : Window)
 		end;
 
 		function WindowArgs:_ToggleUI()
-			WindowArgs.IsOpen = not WindowArgs.IsOpen;
+	WindowArgs.IsOpen = not WindowArgs.IsOpen;
+	WindowArgs:Toggle(WindowArgs.IsOpen);
+end;
 
-			WindowArgs:Toggle(WindowArgs.IsOpen)
-		end;
+local Button = Compkiller:_Input(CloseWindow, function()
+	local override = WindowArgs.__CloseButtonOverride;
+	if override and override.OnClick then
+		override.OnClick();
+	else
+		WindowArgs:_ToggleUI();
+	end;
+end);
 
-  local Button = Compkiller:_Input(CloseWindow, function()
-  	local override = WindowArgs.__CloseButtonOverride;
-  
-  	if override and override.OnClick then
-  		override.OnClick();
-  	else
-  		WindowArgs:_ToggleUI();
-  	end;
-  end);
+if not Compkiller:_IsMobile() then
+	Compkiller:_Hover(Button, function()
+		ImageLabel:SetAttribute("Hover", true);
+	end, function()
+		ImageLabel:SetAttribute("Hover", false);
+	end);
+end;
 
-		if not Compkiller:_IsMobile() then
+table.insert(WindowArgs.THREADS, task.spawn(function()
+	while true do task.wait(0.15)
+		local override = WindowArgs.__CloseButtonOverride;
+		local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
+		local isMobile = Compkiller:_IsMobile();
+		local onlyMobile = (override and override.OnlyMobile ~= nil and override.OnlyMobile) or true;
+		local dragging = WindowArgs.__CloseButtonIsDragging;
 
-			Compkiller:_Hover(Button,function()
-				ImageLabel:SetAttribute("Hover",true);
-			end , function()
-				ImageLabel:SetAttribute("Hover",false);
-			end);
-		end;
+		if isMobile then
+			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
+			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
+			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
 
- table.insert(WindowArgs.THREADS,task.spawn(function()
-  	while true do task.wait(0.15)
-  		local override = WindowArgs.__CloseButtonOverride;
-  		local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
-  		local isMobile = Compkiller:_IsMobile();
-  		local onlyMobile = (override and override.OnlyMobile ~= nil and override.OnlyMobile) or true;
-  
-  		-- não interfere com posição enquanto está arrastando
-  		local dragging = WindowArgs.__CloseButtonIsDragging;
-  
-  		if isMobile then
-  			local bgColor = (override and override.Color) or Compkiller.Colors.BGDBColor;
-  			CloseWindow.BackgroundColor3 = bgColor;
-  			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
-  
-  			local targetSize = (override and override.Size) or UDim2.new(0, 45, 0, 23);
-  			CloseWindow.Size = targetSize;
-  
-  			-- só aplica Position salva se não estiver arrastando
-  			if not dragging and override and override.Position then
-  				CloseWindow.Position = override.Position;
-  			end;
-  
-  			if _img then
-  				_img.Image = (override and override.Logo) or Config.Logo;
-  
-  				if WindowArgs.IsOpen then
-  					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
-  					_img:SetAttribute("Hover", false);
-  				else
-  					_img:SetAttribute("Hover", true);
-  					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
-  				end;
-  			end;
-  
-  		elseif not onlyMobile then
-  			local bgColor = (override and override.Color) or Compkiller.Colors.BGDBColor;
-  			CloseWindow.BackgroundColor3 = bgColor;
-  			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
-  
-  			local targetSize = (override and override.Size) or UDim2.new(0, 45, 0, 23);
-  			CloseWindow.Size = targetSize;
-  
-  			if not dragging and override and override.Position then
-  				CloseWindow.Position = override.Position;
-  			end;
-  
-  			if _img then
-  				_img.Image = (override and override.Logo) or Config.Logo;
-  
-  				if WindowArgs.IsOpen then
-  					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
-  				else
-  					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
-  				end;
-  			end;
-  
-  		else
-  			if not WindowArgs.IsOpen then
-  				if override then
-  					CloseWindow.BackgroundColor3 = override.Color or Compkiller.Colors.BGDBColor;
-  					CloseWindow.Size = override.Size or UDim2.new(0, 45, 0, 23);
-  					CloseWindow.BackgroundTransparency = override.BackgroundTransparency ~= nil and override.BackgroundTransparency or 0.025;
-  
-  					if not dragging and override.Position then
-  						CloseWindow.Position = override.Position;
-  					end;
-  
-  					if _img then
-  						_img.Image = override.Logo or Config.Logo;
-  						_img.ImageTransparency = override.ImageTransparency ~= nil and override.ImageTransparency or 0.35;
-  					end;
-  				else
-  					ToggleCloseUI(true);
-  				end;
-  			else
-  				if override then
-  					CloseWindow.BackgroundTransparency = 1;
-  					CloseWindow.Size = UDim2.new(0, 0, 0, 23);
-  					if _img then _img.ImageTransparency = 1; end;
-  				else
-  					ToggleCloseUI(false);
-  				end;
-  			end;
-  		end;
-  	end;
-  end));
-
-		UserInputService.InputBegan:Connect(function(Input,Typing)
-			if not Typing and (Input.KeyCode == Config.Keybind or Input.KeyCode.Name == Config.Keybind) then
-				WindowArgs:_ToggleUI()
+			if not dragging and override and override.Position then
+				CloseWindow.Position = override.Position;
 			end;
-		end);
-	end;
 
-	function WindowArgs:SetMenuKey(new: string | Enum.KeyCode)
-		Config.Keybind = new;
-	end;
+			if _img then
+				_img.Image = (override and override.Logo) or Config.Logo;
+				if WindowArgs.IsOpen then
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
+				else
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
+				end;
+			end;
 
- function WindowArgs:SetCloseButton(Config: {
+		elseif not onlyMobile then
+			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
+			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
+			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
+
+			if not dragging and override and override.Position then
+				CloseWindow.Position = override.Position;
+			end;
+
+			if _img then
+				_img.Image = (override and override.Logo) or Config.Logo;
+				if WindowArgs.IsOpen then
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
+				else
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
+				end;
+			end;
+
+		else
+			if not WindowArgs.IsOpen then
+				if override then
+					CloseWindow.BackgroundColor3 = override.Color or Compkiller.Colors.BGDBColor;
+					CloseWindow.Size = override.Size or UDim2.new(0, 45, 0, 23);
+					CloseWindow.BackgroundTransparency = override.BackgroundTransparency ~= nil and override.BackgroundTransparency or 0.025;
+					if not dragging and override.Position then
+						CloseWindow.Position = override.Position;
+					end;
+					if _img then
+						_img.Image = override.Logo or Config.Logo;
+						_img.ImageTransparency = override.ImageTransparency ~= nil and override.ImageTransparency or 0.35;
+					end;
+				else
+					ToggleCloseUI(true);
+				end;
+			else
+				if override then
+					CloseWindow.BackgroundTransparency = 1;
+					CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+					if _img then _img.ImageTransparency = 1; end;
+				else
+					ToggleCloseUI(false);
+				end;
+			end;
+		end;
+	end;
+end));
+
+UserInputService.InputBegan:Connect(function(Input, Typing)
+	if not Typing and (Input.KeyCode == Config.Keybind or Input.KeyCode.Name == Config.Keybind) then
+		WindowArgs:_ToggleUI();
+	end;
+end);
+
+end; -- fecha o bloco do CloseWindow
+
+function WindowArgs:SetMenuKey(new: string | Enum.KeyCode)
+	Config.Keybind = new;
+end;
+
+function WindowArgs:SetCloseButton(Config: {
 	Logo: string?,
 	Size: UDim2?,
 	Position: UDim2?,
@@ -10079,83 +10062,57 @@ function Compkiller.new(Config : Window)
 		WindowArgs.__CloseButtonOverride.CornerRadius = Config.CornerRadius;
 	end;
 
-	-- OnlyMobile: false = aparece em PC também, true = só mobile (padrão)
 	WindowArgs.__CloseButtonOverride.OnlyMobile = Config.OnlyMobile;
 
 	if Config.OnClick then
 		WindowArgs.__CloseButtonOverride.OnClick = Config.OnClick;
 	end;
 
- if not WindowArgs.__CloseButtonDragActive then
+	-- usa Compkiller:Drag() que já existe na source
+	-- cria um frame invisível de input sobre o CloseWindow para o drag
+	if not WindowArgs.__CloseButtonDragActive then
 		WindowArgs.__CloseButtonDragActive = true;
 
-		local dragStart = nil;
-		local startPos = nil;
-		local isDragging = false;
-		local DRAG_THRESHOLD = 5;
+		local DragFrame = Instance.new("Frame");
+		DragFrame.Name = Compkiller:_RandomString();
+		DragFrame.Parent = CloseWindow;
+		DragFrame.BackgroundTransparency = 1;
+		DragFrame.Size = UDim2.fromScale(1, 1);
+		DragFrame.ZIndex = CloseWindow.ZIndex + 5;
 
-		CloseWindow.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-				dragStart = input.Position;
-				startPos = CloseWindow.Position;
-				isDragging = false;
-				-- sinaliza ao loop para não sobrescrever Position
-				WindowArgs.__CloseButtonIsDragging = true;
-			end;
-		end);
+		-- Compkiller:Drag(InputFrame, MoveFrame, Speed)
+		-- DragFrame captura input, CloseWindow é movido
+		Compkiller:Drag(DragFrame, CloseWindow, 0.05);
 
-		UserInputService.InputChanged:Connect(function(input)
-			if (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) and dragStart and startPos then
-				local delta = input.Position - dragStart;
-
-				if not isDragging and (math.abs(delta.X) > DRAG_THRESHOLD or math.abs(delta.Y) > DRAG_THRESHOLD) then
-					isDragging = true;
-				end;
-
-				if isDragging then
-					local newPos = UDim2.new(
-						startPos.X.Scale,
-						startPos.X.Offset + delta.X,
-						startPos.Y.Scale,
-						startPos.Y.Offset + delta.Y
-					);
-
-					CloseWindow.Position = newPos;
-				end;
-			end;
-		end);
-
+		-- após drag soltar, salva posição no override
 		UserInputService.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-				if not isDragging and dragStart then
-					local override = WindowArgs.__CloseButtonOverride;
-					if override and override.OnClick then
-						override.OnClick();
-					else
-						WindowArgs:_ToggleUI();
-					end;
-				end;
-
-				-- salva posição final no override DEPOIS de soltar
-				if isDragging and WindowArgs.__CloseButtonOverride then
+				if WindowArgs.__CloseButtonIsDragging and WindowArgs.__CloseButtonOverride then
 					WindowArgs.__CloseButtonOverride.Position = CloseWindow.Position;
 				end;
-
-				dragStart = nil;
-				startPos = nil;
-				isDragging = false;
-				-- libera o loop para voltar a gerenciar
 				WindowArgs.__CloseButtonIsDragging = false;
 			end;
 		end);
+
+		-- detecta início do drag para sinalizar ao loop
+		DragFrame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+				WindowArgs.__CloseButtonIsDragging = true;
+			end;
+		end);
 	end;
+end;
 
 function WindowArgs:ResetCloseButton()
 	WindowArgs.__CloseButtonOverride = nil;
 	WindowArgs.__CloseButtonDragActive = nil;
+	WindowArgs.__CloseButtonIsDragging = false;
 
 	local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
 	local _corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
+	local _dragFrame = CloseWindow:FindFirstChild("DragFrame");
+
+	if _dragFrame then _dragFrame:Destroy(); end;
 
 	if _img then
 		_img.Image = Config.Logo;
