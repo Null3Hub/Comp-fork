@@ -9919,48 +9919,57 @@ function Compkiller.new(Config : Window)
 
   table.insert(WindowArgs.THREADS,task.spawn(function()
   	while true do task.wait(0.15)
-  		-- Aplica overrides persistentes se existirem
   		local override = WindowArgs.__CloseButtonOverride;
+  		local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
   
   		if Compkiller:_IsMobile() then
-  			ToggleCloseUI(true);
+  			-- aplica cor de fundo
+  			local bgColor = (override and override.Color) or Compkiller.Colors.BGDBColor;
+  			CloseWindow.BackgroundColor3 = bgColor;
   
-  			-- Ícone: override ou padrão
-  			ImageLabel.Image = (override and override.Logo) or Config.Logo;
+  			-- aplica tamanho override sem animação para não conflitar
+  			local targetSize = (override and override.Size) or UDim2.new(0, 45, 0, 23);
+  			CloseWindow.Size = targetSize;
+  			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
   
-  			-- Tamanho override
-  			if override and override.Size then
-  				CloseWindow.Size = override.Size;
-  			end;
+  			if _img then
+  				_img.Image = (override and override.Logo) or Config.Logo;
   
-  			-- Cor override
-  			if override and override.Color then
-  				CloseWindow.BackgroundColor3 = override.Color;
-  			end;
-  
-  			-- Transparência de fundo override
-  			if override and override.BackgroundTransparency ~= nil then
-  				CloseWindow.BackgroundTransparency = override.BackgroundTransparency;
-  			end;
-  
-  			if WindowArgs.IsOpen then
-  				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
-  					ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35
-  				});
-  
-  				ImageLabel:GetAttribute("Hover", false);
-  			else
-  				ImageLabel:GetAttribute("Hover", true);
-  
-  				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
-  					ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1
-  				});
+  				if WindowArgs.IsOpen then
+  					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
+  					_img:SetAttribute("Hover", false);
+  				else
+  					_img:SetAttribute("Hover", true);
+  					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
+  				end;
   			end;
   		else
   			if not WindowArgs.IsOpen then
-  				ToggleCloseUI(true);
+  				-- override ativo: apenas mostra sem animar tamanho
+  				if override then
+  					local bgColor = override.Color or Compkiller.Colors.BGDBColor;
+  					CloseWindow.BackgroundColor3 = bgColor;
+  					CloseWindow.Size = override.Size or UDim2.new(0, 45, 0, 23);
+  					CloseWindow.BackgroundTransparency = override.BackgroundTransparency ~= nil and override.BackgroundTransparency or 0.025;
+  
+  					if _img then
+  						_img.Image = override.Logo or Config.Logo;
+  						_img.ImageTransparency = override.ImageTransparency ~= nil and override.ImageTransparency or 0.35;
+  					end;
+  				else
+  					ToggleCloseUI(true);
+  				end;
   			else
-  				ToggleCloseUI(false);
+  				if not override then
+  					ToggleCloseUI(false);
+  				else
+  					-- janela aberta + override: esconde normalmente
+  					CloseWindow.BackgroundTransparency = 1;
+  					if _img then
+  						_img.ImageTransparency = 1;
+  					end;
+  					CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+  				end;
   			end;
   		end;
   	end;
