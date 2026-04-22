@@ -9825,20 +9825,19 @@ function Compkiller.new(Config : Window)
       })
   end
   
-  -- 2. Cria o UIStroke com gradiente
-  local CloseStroke = Instance.new("UIStroke")
-  CloseStroke.Name = "CloseStroke"
-  CloseStroke.Parent = CloseWindow
-  CloseStroke.Thickness = 2
-  CloseStroke.Transparency = 0
-  CloseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  
-  -- 3. Aplica o gradiente diretamente no stroke usando UIGradient
-  local StrokeGradient = Instance.new("UIGradient")
-  StrokeGradient.Name = "StrokeGradient"
-  StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
-  StrokeGradient.Rotation = Compkiller.Gradients["CloseBtnStroke"].Rotation or 90
-  StrokeGradient.Parent = CloseStroke
+-- Cria o UIStroke com gradiente
+		local CloseStroke = Instance.new("UIStroke")
+		CloseStroke.Name = "CloseStroke"
+		CloseStroke.Parent = CloseWindow
+		CloseStroke.Thickness = 2
+		CloseStroke.Transparency = 1 -- começa invisível junto com o botão
+		CloseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+		local StrokeGradient = Instance.new("UIGradient")
+		StrokeGradient.Name = "StrokeGradient"
+		StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
+		StrokeGradient.Rotation = Compkiller.Gradients["CloseBtnStroke"].Rotation or 90
+		StrokeGradient.Parent = CloseStroke
   
   -- 4. Sincroniza com mudanças de tema
   table.insert(Compkiller.Elements.Highlight, {
@@ -9873,25 +9872,33 @@ function Compkiller.new(Config : Window)
 			if v then
 				ImageLabel.ClipsDescendants = true;
 
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
 					Size = UDim2.new(0, 45, 0, 23),
 					BackgroundTransparency = 0.025
-				})
+				});
 
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseStroke, TweenInfo.new(0.2), {
+					Transparency = 0
+				});
+
+				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
 					ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
-				})
+				});
 			else
 				ImageLabel.ClipsDescendants = false;
 
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
 					Size = UDim2.new(0, 0, 0, 23),
 					BackgroundTransparency = 1
-				})
+				});
 
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseStroke, TweenInfo.new(0.2), {
+					Transparency = 1
+				});
+
+				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
 					ImageTransparency = 1
-				})
+				});
 			end;
 		end;
 
@@ -10180,6 +10187,7 @@ table.insert(WindowArgs.THREADS, task.spawn(function()
 		if disabled or (not isMobile and onlyMobile) then
 			CloseWindow.BackgroundTransparency = 1;
 			CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+			CloseStroke.Transparency = 1;
 			if _img then _img.ImageTransparency = 1; end;
 			continue;
 		end;
@@ -10188,7 +10196,6 @@ table.insert(WindowArgs.THREADS, task.spawn(function()
 			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
 			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
 			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
-
 			if not dragging and override and override.Position then
 				CloseWindow.Position = override.Position;
 			end;
