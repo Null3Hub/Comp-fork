@@ -11242,8 +11242,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     titleContainer.BackgroundTransparency = 1
     titleContainer.BorderSizePixel = 0
     titleContainer.LayoutOrder = 1
-        local titleLayout = Instance.new("UIListLayout")
-    titleLayout.FillDirection = Enum.FillDirection.Horizontal
+    local titleLayout = Instance.new("UIListLayout")    titleLayout.FillDirection = Enum.FillDirection.Horizontal
     titleLayout.Padding = UDim.new(0, 5)
     titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
     titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
@@ -11291,8 +11290,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         subtitle.BackgroundTransparency = 1
         subtitle.BorderSizePixel = 0
         subtitle.FontFace = Font.new("rbxassetid://12187365364")
-        subtitle.LayoutOrder = 1        subtitle.RichText = true
-        subtitle.Size = UDim2.fromScale(1, 0)
+        subtitle.LayoutOrder = 1
+        subtitle.RichText = true        subtitle.Size = UDim2.fromScale(1, 0)
         subtitle.Text = properties.Subtitle
         subtitle.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
         subtitle.TextSize = 13
@@ -11308,7 +11307,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     contentPadding.PaddingRight = UDim.new(0, 10)
     contentPadding.Parent = content
     
-    -- Topbar (se existir App ou AppIcon) - AGORA COM EXIT BUTTON
+    -- Topbar (se existir App ou AppIcon)
     if properties.App or properties.AppIcon then
         local topbar = Instance.new("Frame")
         topbar.Name = "Topbar"
@@ -11319,7 +11318,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         
         local topbarLayout = Instance.new("UIListLayout")
         topbarLayout.FillDirection = Enum.FillDirection.Horizontal
-        topbarLayout.Padding = UDim.new(0, 5)
+        topbarLayout.Padding = UDim.new(0, 8) -- Aumentado para separar melhor
         topbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
         topbarLayout.VerticalAlignment = Enum.VerticalAlignment.Center
         topbarLayout.Parent = topbar
@@ -11340,8 +11339,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appLabel.TextTransparency = 0.5
             appLabel.TextXAlignment = Enum.TextXAlignment.Left
             appLabel.RichText = true
-            appLabel.Parent = topbar        end
-        
+            appLabel.Parent = topbar
+        end        
         if properties.AppIcon then
             local appIcon = Instance.new("ImageLabel")
             appIcon.Name = "Icon"
@@ -11350,10 +11349,11 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appIcon.Image = properties.AppIcon
             appIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
             appIcon.Size = UDim2.fromOffset(20, 20)
+            appIcon.LayoutOrder = 2
             appIcon.Parent = topbar
         end
         
-        -- Exit Button - MOVIDO PARA O TOPBAR
+        -- Exit Button - À direita
         local exitBtn = Instance.new("TextButton")
         exitBtn.Name = "Exit"
         exitBtn.AutoButtonColor = false
@@ -11387,9 +11387,9 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0,
                 Size = UDim2.fromOffset(16, 16)
-            }):Play()        end)
-        
-        exitBtn.MouseLeave:Connect(function()
+            }):Play()
+        end)
+                exitBtn.MouseLeave:Connect(function()
             tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0.2,
                 Size = UDim2.fromOffset(14, 14)
@@ -11397,8 +11397,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         end)
         
         local topbarPadding = Instance.new("UIPadding")
-        topbarPadding.PaddingLeft = UDim.new(0, 10)
-        topbarPadding.PaddingRight = UDim.new(0, 10)
+        topbarPadding.PaddingLeft = UDim.new(0, 6) -- Reduzido para aproximar da borda
+        topbarPadding.PaddingRight = UDim.new(0, 8) -- Espaço à direita
         topbarPadding.PaddingTop = UDim.new(0, 10)
         topbarPadding.Parent = topbar
         
