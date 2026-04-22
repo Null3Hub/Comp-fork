@@ -7314,8 +7314,7 @@ function Compkiller.new(Config : Window)
   
   -- HANDLERS (Mantendo padrão Compkiller)
   Compkiller:_Input(MinBtn, function()
-  	-- Ajuste conforme sua lógica de minimizar (ex: esconder Frame interno ou reduzir Size)
-  	ContainerTab.ContentFrame.Visible = not ContainerTab.ContentFrame.Visible
+  	 MainFrame.Visible = not MainFrame.Visible
   end)
   
   Compkiller:_Input(CloseBtn, function()
