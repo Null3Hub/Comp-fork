@@ -6974,7 +6974,7 @@ function Compkiller.new(Config : Window)
    CloseButton.Parent = Header
    CloseButton.AnchorPoint = Vector2.new(1, 0)
    CloseButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Cor da bolinha (Edite aqui se quiser)
-   CloseButton.BackgroundTransparency = 0.5 -- Transparência (0 = Sólido, 1 = Invisível)
+   CloseButton.BackgroundTransparency = 0 -- Transparência (0 = Sólido, 1 = Invisível)
    CloseButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
    CloseButton.BorderSizePixel = 0
    CloseButton.Position = UDim2.new(1, -5, 0, 5)
