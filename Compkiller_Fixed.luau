@@ -6916,7 +6916,7 @@ function Compkiller.new(Config : Window)
 			Property = 'BackgroundColor3'
 		});
 
-		UICorner.CornerRadius = UDim.new(0, 10)
+		UICorner.CornerRadius = UDim.new(0, 8)
 		UICorner.Parent = UserSettings
 
 		SectionFrame.Name = Compkiller:_RandomString()
@@ -6933,7 +6933,7 @@ function Compkiller.new(Config : Window)
 			Property = 'BackgroundColor3'
 		});
 
-		UICorner_2.CornerRadius = UDim.new(0, 10)
+		UICorner_2.CornerRadius = UDim.new(0, 8)
 		UICorner_2.Parent = SectionFrame
 
 		UIListLayout.Parent = SectionFrame
