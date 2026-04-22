@@ -9810,14 +9810,6 @@ function Compkiller.new(Config : Window)
       end
   end)
 
-  -- Adiciona após o código acima
-  local gradientAnim = TweenService:Create(
-      CloseStroke.UIGradient,
-      TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
-      {Rotation = 360}
-  )
-  gradientAnim:Play()
-
 		ImageLabel.Parent = CloseWindow
 		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 		ImageLabel.BackgroundTransparency = 1.000
