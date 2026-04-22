@@ -6543,9 +6543,7 @@ UICorner.Parent = MainFrame;
 	TabFrame.Position = UDim2.new(0, 25, 0, 0)
 	TabFrame.Size = UDim2.new(0, 85, 1, 0)
 
-	-- Linha ~2934
- UICorner_2.CornerRadius = UDim.new(0, 10); -- Altere aqui também
- UICorner_2.Parent = TabFrame;
+	UICorner_2.Parent = TabFrame
 
 	LineFrame1.Name = Compkiller:_RandomString()
 	LineFrame1.Parent = TabFrame
