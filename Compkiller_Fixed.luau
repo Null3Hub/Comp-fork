@@ -9812,7 +9812,7 @@ function Compkiller.new(Config : Window)
 
   -- Adiciona após o código acima
   local gradientAnim = TweenService:Create(
-      CloseStroke.StrokeGradient,
+      CloseStroke.UIGradient,
       TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
       {Rotation = 360}
   )
