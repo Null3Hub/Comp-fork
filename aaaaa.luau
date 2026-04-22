@@ -1520,39 +1520,17 @@ function Compkiller:OnDestroy(callback)
  end
 
 function Compkiller:_SetNilP(Ins: Instance , Parent: Instance)
-    if not Ins or not Ins.Parent then return end
-    
-    -- Verifica se a instância já foi destruída
-    if not Ins.Parent and not Parent then return end
-    
-    -- Previne erro de parent locked
-    local success, err = pcall(function()
-        Compkiller.WindowsNil = Compkiller.WindowsNil or {};
-        Compkiller.NilFolder = Compkiller.NilFolder or Instance.new('Folder');
-        
-        if not Compkiller.WindowsNil[Ins] then
-            local win = Compkiller:_GetWindowFromElement(Ins);
-            Compkiller.WindowsNil[Ins] = win;
-        end
-        
-        if Parent then
-            Ins.Parent = Parent;
-        else
-            -- Verifica se NilFolder ainda existe antes de usar
-            if Compkiller.NilFolder and Compkiller.NilFolder.Parent then
-                Ins.Parent = Compkiller.NilFolder;
-            else
-                -- Se NilFolder foi destruído, apenas desconecta
-                Ins.Parent = nil;
-            end
-        end
-    end)
-    
-    if not success then
-        -- Limpeza segura em caso de erro
-        pcall(function() Ins.Parent = nil end)
-    end
-end
+	Compkiller.WindowsNil = Compkiller.WindowsNil or {};
+	Compkiller.NilFolder = Compkiller.NilFolder or Instance.new('Folder');
+
+	if not Compkiller.WindowsNil[Ins] then
+		local win = Compkiller:_GetWindowFromElement(Ins);
+
+		Compkiller.WindowsNil[Ins] = win;
+	end;
+
+	Ins.Parent = Parent or Compkiller.NilFolder;
+end;
 
 function Compkiller:SetAllText(flags : {[string] : string})
 	if not flags then -- reset to default
@@ -7369,7 +7347,7 @@ function Compkiller.new(Config : Window)
 
 			if Compkiller.PerformanceMode then
 				if ContainerTab.Visible then
-					Compkiller:(ContainerTab , TabMainFrame);
+					Compkiller:_SetNilP(ContainerTab , TabMainFrame);
 				else
 					Compkiller:_SetNilP(ContainerTab , nil);
 				end;
@@ -9792,6 +9770,54 @@ function Compkiller.new(Config : Window)
 		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = CloseWindow
 
+  -- 1. Registra o gradiente no sistema do Compkiller (se ainda não existir)
+  if not Compkiller.Gradients["CloseBtnStroke"] then
+      Compkiller.Gradients["CloseBtnStroke"] = Compkiller.Gradient.Create({
+          ["0"]   = {Color = Compkiller.Colors.Highlight, Transparency = 0},
+          ["50"]  = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0},
+          ["100"] = {Color = Compkiller.Colors.Toggle, Transparency = 0}
+      }, {
+          Rotation = 90
+      })
+  end
+  
+  -- 2. Cria o UIStroke com gradiente
+  local CloseStroke = Instance.new("UIStroke")
+  CloseStroke.Name = "CloseStroke"
+  CloseStroke.Parent = CloseWindow
+  CloseStroke.Thickness = 2
+  CloseStroke.Transparency = 0
+  CloseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+  
+  -- 3. Aplica o gradiente diretamente no stroke usando UIGradient
+  local StrokeGradient = Instance.new("UIGradient")
+  StrokeGradient.Name = "StrokeGradient"
+  StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
+  StrokeGradient.Rotation = Compkiller.Gradients["CloseBtnStroke"].Rotation or 90
+  StrokeGradient.Parent = CloseStroke
+  
+  -- 4. Sincroniza com mudanças de tema
+  table.insert(Compkiller.Elements.Highlight, {
+      Element = CloseStroke,
+      Property = "Color"
+  })
+  
+  -- 5. Atualiza o gradiente quando o tema muda
+  Compkiller.ThemeUpdate = Compkiller.ThemeUpdate or {}
+  table.insert(Compkiller.ThemeUpdate, function()
+      if Compkiller.Gradients["CloseBtnStroke"] then
+          StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
+      end
+  end)
+
+  -- Adiciona após o código acima
+  local gradientAnim = TweenService:Create(
+      CloseStroke.UIGradient,
+      TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
+      {Rotation = 360}
+  )
+  gradientAnim:Play()
+
 		ImageLabel.Parent = CloseWindow
 		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 		ImageLabel.BackgroundTransparency = 1.000
@@ -10054,29 +10080,36 @@ function Compkiller.new(Config : Window)
  	end;
  end;
 
-function WindowArgs:Destroy()
-    if WindowArgs.__Destroyed then return end
-    WindowArgs.__Destroyed = true
-    
-    -- Para todas as threads de atualização do CloseButton
-    for i, thread in ipairs(WindowArgs.THREADS) do
-        pcall(function() task.cancel(thread) end)
-    end
-    WindowArgs.THREADS = {}
-    
-    -- Remove sinais de eventos
-    if WindowArgs.__CloseButtonDragActive then
-        WindowArgs.__CloseButtonDragActive = false
-    end
-    
-    -- Limpa referências
-    Compkiller.WindowOpenSignals[WindowArgs.Root] = nil
-    local winIdx = table.find(Compkiller.Windows, WindowArgs.Root)
-    if winIdx then table.remove(Compkiller.Windows, winIdx) end
-    
-    -- Destrói a GUI com proteção
-    pcall(function() WindowArgs.Root:Destroy() end)
-end
+-- 🆕 Destruição Segura da UI
+ function WindowArgs:Destroy()
+ 	if WindowArgs.__Destroyed then return end
+ 	WindowArgs.__Destroyed = true
+ 
+ 	-- 1. Executa callbacks registrados
+ 	for _, callback in ipairs(Compkiller.DestroyCallbacks) do
+ 		pcall(callback)
+ 	end
+ 	Compkiller.DestroyCallbacks = {}
+ 
+ 	-- 2. Limpa referências internas
+ 	local winIdx = table.find(Compkiller.Windows, CompKiller)
+ 	if winIdx then table.remove(Compkiller.Windows, winIdx) end
+ 	Compkiller.WindowOpenSignals[CompKiller] = nil
+ 
+ 	-- 3. Limpa rastreamento de temas e flags
+ 	Compkiller.Flags = {}
+ 	for k in pairs(Compkiller.Elements) do
+ 		Compkiller.Elements[k] = {}
+ 	end
+ 
+ 	-- 4. Destrói a ScreenGui principal
+ 	CompKiller:Destroy()
+ end
+
+		function WindowArgs:_ToggleUI()
+	WindowArgs.IsOpen = not WindowArgs.IsOpen;
+	WindowArgs:Toggle(WindowArgs.IsOpen);
+end;
 
 local Button = Compkiller:_Input(CloseWindow, function()
     local override = WindowArgs.__CloseButtonOverride;
@@ -10099,75 +10132,49 @@ if not Compkiller:_IsMobile() then
 end;
 
 table.insert(WindowArgs.THREADS, task.spawn(function()
-    local lastValidPosition = CloseWindow.Position
-    local isBeingDragged = false
-    
-    while true do 
-        local success, result = pcall(function()
-            local override = WindowArgs.__CloseButtonOverride;
-            local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
-            local isMobile = Compkiller:_IsMobile();
-            local onlyMobile = not override and true or (override.OnlyMobile ~= nil and override.OnlyMobile or true);
-            local dragging = WindowArgs.__CloseButtonIsDragging;
-            local disabled = WindowArgs.__CloseButtonDisabled;
-            
-            -- Verifica se está sendo arrastado
-            if dragging then
-                isBeingDragged = true
-                lastValidPosition = CloseWindow.Position
-                return
-            else
-                isBeingDragged = false
-            end
-            
-            -- esconde tudo se desativado ou se onlyMobile=true em PC
-            if disabled or (not isMobile and onlyMobile) then
-                CloseWindow.BackgroundTransparency = 1;
-                CloseWindow.Size = UDim2.new(0, 0, 0, 23);
-                if _img then _img.ImageTransparency = 1; end;
-                return;
-            end;
-            
-            if isMobile or not onlyMobile then
-                CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
-                CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
-                
-                -- Só atualiza tamanho se não estiver sendo arrastado
-                if not isBeingDragged then
-                    CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
-                end
-                
-                -- Só atualiza posição se não for override e não estiver arrastando
-                if not dragging and override and override.Position and not isBeingDragged then
-                    CloseWindow.Position = override.Position;
-                    lastValidPosition = override.Position
-                end;
-                
-                if _img then
-                    _img.Image = (override and override.Logo) or Config.Logo;
-                    if WindowArgs.IsOpen then
-                        _img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
-                    else
-                        _img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
-                    end;
-                end;
-            else
-                -- PC onlyMobile=false mas sem override: comportamento padrão
-                if not WindowArgs.IsOpen then
-                    ToggleCloseUI(true);
-                else
-                    ToggleCloseUI(false);
-                end;
-            end;
-        end)
-        
-        if not success then
-            warn("[CompKiller] Error in CloseButton loop:", result)
-        end
-        
-        task.wait(0.15)
-    end
-end))
+	while true do task.wait(0.15)
+		local override = WindowArgs.__CloseButtonOverride;
+		local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
+		local isMobile = Compkiller:_IsMobile();
+		local onlyMobile = not override and true or (override.OnlyMobile ~= nil and override.OnlyMobile or true);
+		local dragging = WindowArgs.__CloseButtonIsDragging;
+		local disabled = WindowArgs.__CloseButtonDisabled;
+
+		-- esconde tudo se desativado ou se onlyMobile=true em PC
+		if disabled or (not isMobile and onlyMobile) then
+			CloseWindow.BackgroundTransparency = 1;
+			CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+			if _img then _img.ImageTransparency = 1; end;
+			continue;
+		end;
+
+		if isMobile or not onlyMobile then
+			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
+			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
+			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
+
+			if not dragging and override and override.Position then
+				CloseWindow.Position = override.Position;
+			end;
+
+			if _img then
+				_img.Image = (override and override.Logo) or Config.Logo;
+				if WindowArgs.IsOpen then
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
+				else
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
+				end;
+			end;
+		else
+			-- PC onlyMobile=false mas sem override: comportamento padrão
+			if not WindowArgs.IsOpen then
+				ToggleCloseUI(true);
+			else
+				ToggleCloseUI(false);
+			end;
+		end;
+	end;
+end));
 
 UserInputService.InputBegan:Connect(function(Input, Typing)
 	if not Typing and (Input.KeyCode == Config.Keybind or Input.KeyCode.Name == Config.Keybind) then
@@ -10182,154 +10189,137 @@ function WindowArgs:SetMenuKey(new: string | Enum.KeyCode)
 end;
 
 function WindowArgs:SetCloseButton(Config: {
-    Logo: string?,
-    Size: UDim2?,
-    Position: UDim2?,
-    BackgroundTransparency: number?,
-    ImageTransparency: number?,
-    Color: Color3?,
-    CornerRadius: UDim?,
-    OnlyMobile: boolean?,
-    OnClick: (() -> any?)?,
+	Logo: string?,
+	Size: UDim2?,
+	Position: UDim2?,
+	BackgroundTransparency: number?,
+	ImageTransparency: number?,
+	Color: Color3?,
+	CornerRadius: UDim?,
+	OnlyMobile: boolean?,
+	OnClick: (() -> any?)?,
 })
-    Config = Compkiller.__CONFIG(Config, {
-        Logo = nil,
-        Size = nil,
-        Position = nil,
-        BackgroundTransparency = nil,
-        ImageTransparency = nil,
-        Color = nil,
-        CornerRadius = nil,
-        OnlyMobile = true,
-        OnClick = nil,
-    });
-    
-    WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
-    local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
-    local _corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
-    
-    if Config.Logo and _img then
-        _img.Image = Config.Logo;
-        WindowArgs.__CloseButtonOverride.Logo = Config.Logo;
-    end;
-    
-    if Config.Size then
-        CloseWindow.Size = Config.Size;
-        WindowArgs.__CloseButtonOverride.Size = Config.Size;
-    end;
-    
-    -- CORREÇÃO: AnchorPoint para posicionar corretamente à direita
-    if Config.Position then
-        CloseWindow.Position = Config.Position;
-        CloseWindow.AnchorPoint = Vector2.new(1, 0); -- Anchor no canto superior direito
-        WindowArgs.__CloseButtonOverride.Position = Config.Position;
-    end;
-    
-    if Config.BackgroundTransparency ~= nil then
-        CloseWindow.BackgroundTransparency = Config.BackgroundTransparency;
-        WindowArgs.__CloseButtonOverride.BackgroundTransparency = Config.BackgroundTransparency;
-    end;
-    
-    if Config.ImageTransparency ~= nil and _img then        _img.ImageTransparency = Config.ImageTransparency;
-        WindowArgs.__CloseButtonOverride.ImageTransparency = Config.ImageTransparency;
-    end;
-    
-    if Config.Color then
-        CloseWindow.BackgroundColor3 = Config.Color;
-        WindowArgs.__CloseButtonOverride.Color = Config.Color;
-    end;
-    
-    if Config.CornerRadius and _corner then
-        _corner.CornerRadius = Config.CornerRadius;
-        WindowArgs.__CloseButtonOverride.CornerRadius = Config.CornerRadius;
-    end;
-    
-    WindowArgs.__CloseButtonOverride.OnlyMobile = Config.OnlyMobile;
-    if Config.OnClick then
-        WindowArgs.__CloseButtonOverride.OnClick = Config.OnClick;
-    end;
-    
-    -- Sistema de Drag melhorado
-    if not WindowArgs.__CloseButtonDragActive then
-        WindowArgs.__CloseButtonDragActive = true;
-        
-        local DragFrame = Instance.new("Frame");
-        DragFrame.Name = Compkiller:_RandomString();
-        DragFrame.Parent = CloseWindow;
-        DragFrame.BackgroundTransparency = 1;
-        DragFrame.Size = UDim2.fromScale(1, 1);
-        DragFrame.ZIndex = CloseWindow.ZIndex + 5;
-        
-        -- Variáveis do drag
-        local dragToggle = false
-        local dragStart = nil
-        local startPos = nil
-        
-        DragFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-               input.UserInputType == Enum.UserInputType.Touch then
-                dragToggle = true
-                dragStart = input.Position
-                startPos = CloseWindow.Position
-                WindowArgs.__CloseButtonIsDragging = true
-            end
-        end)
-        
-        UserInputService.InputChanged:Connect(function(input)
-            if dragToggle and (input.UserInputType == Enum.UserInputType.MouseMovement or 
-               input.UserInputType == Enum.UserInputType.Touch) then
-                local delta = input.Position - dragStart
-                local newPosition = UDim2.new(                    startPos.X.Scale, 
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale, 
-                    startPos.Y.Offset + delta.Y
-                )
-                CloseWindow.Position = newPosition
-                -- Atualiza o override com a nova posição
-                WindowArgs.__CloseButtonOverride.Position = newPosition
-            end
-        end)
-        
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-               input.UserInputType == Enum.UserInputType.Touch then
-                dragToggle = false
-                WindowArgs.__CloseButtonIsDragging = false
-            end
-        end)
-    end;
-end
+	Config = Compkiller.__CONFIG(Config, {
+		Logo = nil,
+		Size = nil,
+		Position = nil,
+		BackgroundTransparency = nil,
+		ImageTransparency = nil,
+		Color = nil,
+		CornerRadius = nil,
+		OnlyMobile = true,
+		OnClick = nil,
+	});
+
+	WindowArgs.__CloseButtonOverride = WindowArgs.__CloseButtonOverride or {};
+
+	local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
+	local _corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
+
+	if Config.Logo and _img then
+		_img.Image = Config.Logo;
+		WindowArgs.__CloseButtonOverride.Logo = Config.Logo;
+	end;
+
+	if Config.Size then
+		CloseWindow.Size = Config.Size;
+		WindowArgs.__CloseButtonOverride.Size = Config.Size;
+	end;
+
+	if Config.Position then
+		CloseWindow.Position = Config.Position;
+		WindowArgs.__CloseButtonOverride.Position = Config.Position;
+	end;
+
+	if Config.BackgroundTransparency ~= nil then
+		CloseWindow.BackgroundTransparency = Config.BackgroundTransparency;
+		WindowArgs.__CloseButtonOverride.BackgroundTransparency = Config.BackgroundTransparency;
+	end;
+
+	if Config.ImageTransparency ~= nil and _img then
+		_img.ImageTransparency = Config.ImageTransparency;
+		WindowArgs.__CloseButtonOverride.ImageTransparency = Config.ImageTransparency;
+	end;
+
+	if Config.Color then
+		CloseWindow.BackgroundColor3 = Config.Color;
+		WindowArgs.__CloseButtonOverride.Color = Config.Color;
+	end;
+
+	if Config.CornerRadius and _corner then
+		_corner.CornerRadius = Config.CornerRadius;
+		WindowArgs.__CloseButtonOverride.CornerRadius = Config.CornerRadius;
+	end;
+
+	WindowArgs.__CloseButtonOverride.OnlyMobile = Config.OnlyMobile;
+
+	if Config.OnClick then
+		WindowArgs.__CloseButtonOverride.OnClick = Config.OnClick;
+	end;
+
+	-- usa Compkiller:Drag() que já existe na source
+	-- cria um frame invisível de input sobre o CloseWindow para o drag
+	if not WindowArgs.__CloseButtonDragActive then
+		WindowArgs.__CloseButtonDragActive = true;
+
+		local DragFrame = Instance.new("Frame");
+		DragFrame.Name = Compkiller:_RandomString();
+		DragFrame.Parent = CloseWindow;
+		DragFrame.BackgroundTransparency = 1;
+		DragFrame.Size = UDim2.fromScale(1, 1);
+		DragFrame.ZIndex = CloseWindow.ZIndex + 5;
+
+		-- Compkiller:Drag(InputFrame, MoveFrame, Speed)
+		-- DragFrame captura input, CloseWindow é movido
+		Compkiller:Drag(DragFrame, CloseWindow, 0.05);
+
+		-- após drag soltar, salva posição no override
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if WindowArgs.__CloseButtonIsDragging and WindowArgs.__CloseButtonOverride then
+					WindowArgs.__CloseButtonOverride.Position = CloseWindow.Position;
+				end;
+				WindowArgs.__CloseButtonIsDragging = false;
+			end;
+		end);
+
+		-- detecta início do drag para sinalizar ao loop
+		DragFrame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+				WindowArgs.__CloseButtonIsDragging = true;
+			end;
+		end);
+	end;
+end;
 
 function WindowArgs:ResetCloseButton()
-    WindowArgs.__CloseButtonOverride = nil;
-    WindowArgs.__CloseButtonDragActive = nil;
-    WindowArgs.__CloseButtonIsDragging = false;
-    
-    local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
-    local _corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
-    
-    -- Remove drag frame se existir
-    for _, child in ipairs(CloseWindow:GetChildren()) do
-        if child.Name:find("CK=") then
-            child:Destroy()
-        end
-    end
-    
-    if _img then
-        _img.Image = Config.Logo;
-        _img.ImageTransparency = 1;
-    end;
-    
-    -- Reseta para posição padrão à direita
-    CloseWindow.AnchorPoint = Vector2.new(1, 0);
-    CloseWindow.Position = UDim2.new(1, -10, 0, 10);
-    CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor;
-    CloseWindow.Size = UDim2.new(0, 0, 0, 23);
-    
-    if _corner then
-        _corner.CornerRadius = UDim.new(0, 3);
-    end;
-end
+	WindowArgs.__CloseButtonOverride = nil;
+	WindowArgs.__CloseButtonDragActive = nil;
+	WindowArgs.__CloseButtonIsDragging = false;
+
+	local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
+	local _corner = CloseWindow:FindFirstChildWhichIsA("UICorner");
+	local _dragFrame = CloseWindow:FindFirstChild("DragFrame");
+
+	if _dragFrame then _dragFrame:Destroy(); end;
+
+	if _img then
+		_img.Image = Config.Logo;
+		_img.ImageTransparency = 1;
+	end;
+
+	CloseWindow.Position = UDim2.new(1, -10, 0, 10);
+	CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor;
+	CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+
+	if _corner then
+		_corner.CornerRadius = UDim.new(0, 3);
+	end;
+end;
+
+function WindowArgs:SetCloseButtonEnabled(value: boolean)
+	WindowArgs.__CloseButtonDisabled = not value;
+end;
 
 	function WindowArgs:Update(config: WindowUpdate)
 		config = config or {};
@@ -10538,7 +10528,7 @@ function Compkiller:GetConfig(Type: string)
 	return ConfigFlags;
 end;
 
-_Path(...)
+function Compkiller:_Path(...)
 	local args = {...};
 
 	return table.concat(args, "/");
