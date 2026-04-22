@@ -7327,7 +7327,7 @@ function Compkiller.new(Config : Window)
 		CloseBtn.BorderSizePixel = 0
 		CloseBtn.Size = UDim2.new(0, 12, 0, 12)
 		CloseBtn.ZIndex = RightControls.ZIndex + 1
-		CloseBtn.LayoutOrder = 1
+		CloseBtn.LayoutOrder = 2
 
 		local CloseBtnCorner = Instance.new("UICorner")
 		CloseBtnCorner.CornerRadius = UDim.new(1, 0)
@@ -7342,7 +7342,7 @@ function Compkiller.new(Config : Window)
 		MinBtn.BorderSizePixel = 0
 		MinBtn.Size = UDim2.new(0, 12, 0, 12)
 		MinBtn.ZIndex = RightControls.ZIndex + 1
-		MinBtn.LayoutOrder = 2
+		MinBtn.LayoutOrder = 1
 
 		local MinCorner = Instance.new("UICorner")
 		MinCorner.CornerRadius = UDim.new(1, 0)
