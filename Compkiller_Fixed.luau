@@ -11356,15 +11356,13 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         -- Exit Button - MOVIDO PARA O TOPBAR
         local exitBtn = Instance.new("TextButton")
         exitBtn.Name = "Exit"
-        exitBtn.AnchorPoint = Vector2.new(1, 0)
         exitBtn.AutoButtonColor = false
         exitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         exitBtn.BackgroundTransparency = 0.2
         exitBtn.BorderSizePixel = 0
         exitBtn.FontFace = Font.new("rbxassetid://12187365364")
         exitBtn.LayoutOrder = 999 -- Sempre à direita
-        exitBtn.Position = UDim2.new(1, -8, 0, 8)
-        exitBtn.Size = UDim2.fromOffset(14, 14)
+        exitBtn.Size = UDim2.fromOffset(16, 16)
         exitBtn.Text = ""
         exitBtn.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
         exitBtn.TextSize = 14
