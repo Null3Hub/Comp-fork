@@ -7330,7 +7330,7 @@ function Compkiller.new(Config : Window)
   
   -- HANDLERS (Mantendo padrão Compkiller)
   Compkiller:_Input(MinBtn, function()
-  	 MainFrame.Visible = not MainFrame.Visible
+  	 WindowArgs:_ToggleUI();
   end)
   
   Compkiller:_Input(CloseBtn, function()
