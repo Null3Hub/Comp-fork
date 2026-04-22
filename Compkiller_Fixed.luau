@@ -9693,7 +9693,7 @@ function Compkiller.new(Config : Window)
 		CloseWindow.BorderSizePixel = 0
 		CloseWindow.Position = UDim2.new(1, -10, 0, 10)
 		CloseWindow.Size = UDim2.new(0, 0, 0, 23)
-		CloseWindow.ZIndex = 150
+		CloseWindow.ZIndex = 170
 		CloseWindow.ClipsDescendants = true;
 
 		UICorner.CornerRadius = UDim.new(0, 3)
@@ -9767,7 +9767,7 @@ function Compkiller.new(Config : Window)
 			Watermark.BackgroundTransparency = 0.025
 			Watermark.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			Watermark.BorderSizePixel = 0
-			Watermark.Position = UDim2.new(1, -100, 0, 10)
+			Watermark.Position = UDim2.new(1, -30, 0, 10)
 			Watermark.Size = UDim2.new(0, 45, 0, 23)
 			Watermark.ZIndex = 150
 
