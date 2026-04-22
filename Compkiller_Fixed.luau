@@ -11318,7 +11318,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         
         local topbarLayout = Instance.new("UIListLayout")
         topbarLayout.FillDirection = Enum.FillDirection.Horizontal
-        topbarLayout.Padding = UDim.new(0, 8) -- Aumentado para separar melhor
+        topbarLayout.Padding = UDim.new(0, 15) -- Aumentado para separar melhor
         topbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
         topbarLayout.VerticalAlignment = Enum.VerticalAlignment.Center
         topbarLayout.Parent = topbar
@@ -11330,7 +11330,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appLabel.BackgroundTransparency = 1
             appLabel.BorderSizePixel = 0
             appLabel.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-            appLabel.LayoutOrder = 1
+            appLabel.LayoutOrder = 2
             appLabel.LineHeight = 0
             appLabel.Size = UDim2.fromOffset(0, 14)
             appLabel.Text = string.upper(properties.App)
@@ -11349,7 +11349,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appIcon.Image = properties.AppIcon
             appIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
             appIcon.Size = UDim2.fromOffset(20, 20)
-            appIcon.LayoutOrder = 2
+            appIcon.LayoutOrder = 1
             appIcon.Parent = topbar
         end
         
@@ -11398,7 +11398,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         
         local topbarPadding = Instance.new("UIPadding")
         topbarPadding.PaddingLeft = UDim.new(0, 6) -- Reduzido para aproximar da borda
-        topbarPadding.PaddingRight = UDim.new(0, 8) -- Espaço à direita
+        topbarPadding.PaddingRight = UDim.new(0, 5) -- Espaço à direita
         topbarPadding.PaddingTop = UDim.new(0, 10)
         topbarPadding.Parent = topbar
         
