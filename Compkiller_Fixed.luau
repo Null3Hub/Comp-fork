@@ -7323,7 +7323,7 @@ function Compkiller.new(Config : Window)
 		CloseBtn.Name = "CloseBtn"
 		CloseBtn.Parent = RightControls
 		CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		CloseBtn.BackgroundTransparency = 0.65
+		CloseBtn.BackgroundTransparency = 1
 		CloseBtn.BorderSizePixel = 0
 		CloseBtn.Size = UDim2.new(0, 12, 0, 12)
 		CloseBtn.ZIndex = RightControls.ZIndex + 1
@@ -7338,7 +7338,7 @@ function Compkiller.new(Config : Window)
 		MinBtn.Name = "MinimizeBtn"
 		MinBtn.Parent = RightControls
 		MinBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		MinBtn.BackgroundTransparency = 0.2
+		MinBtn.BackgroundTransparency = 0.5
 		MinBtn.BorderSizePixel = 0
 		MinBtn.Size = UDim2.new(0, 12, 0, 12)
 		MinBtn.ZIndex = RightControls.ZIndex + 1
