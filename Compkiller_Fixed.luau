@@ -6520,8 +6520,7 @@ function Compkiller.new(Config : Window)
 		Size = Config.Scale
 	});
 
-UICorner.CornerRadius = UDim.new(0, 10);
-UICorner.Parent = MainFrame;
+	UICorner.Parent = MainFrame
 
 	local TabFrameBaseTrans = 0.25;
 
@@ -6618,7 +6617,7 @@ UICorner.Parent = MainFrame;
 		Property = "BackgroundColor3"
 	});
 
-	UICorner_3.CornerRadius = UDim.new(0, 10)
+	UICorner_3.CornerRadius = UDim.new(1, 0)
 	UICorner_3.Parent = SelectionFrame
 
 	TabButtonScrollingFrame.Name = Compkiller:_RandomString()
