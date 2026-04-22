@@ -9830,7 +9830,7 @@ function Compkiller.new(Config : Window)
 		CloseStroke.Name = "CloseStroke"
 		CloseStroke.Parent = CloseWindow
 		CloseStroke.Thickness = 2
-		CloseStroke.Transparency = 1 -- começa invisível junto com o botão
+		CloseStroke.Transparency = 0
 		CloseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 		local StrokeGradient = Instance.new("UIGradient")
