@@ -11138,11 +11138,9 @@ function Compkiller:AdvancedNotify(properties: {
     Callback: (() -> ())?,
 })
     properties = properties or {}
+   
+    local tweenService = game:GetService("TweenService")
     
-    local services = require("@modules/services") -- Ou usar game:GetService diretamente
-    local tweenService = services and services.TweenService or game:GetService("TweenService")
-    
-    -- Criar container se não existir
     local notificationContainer = self.NotificationContainer
     if not notificationContainer then
         notificationContainer = Instance.new("ScreenGui")
