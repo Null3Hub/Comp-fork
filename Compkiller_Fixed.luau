@@ -6933,7 +6933,7 @@ function Compkiller.new(Config : Window)
 			Property = 'BackgroundColor3'
 		});
 
-		UICorner_2.CornerRadius = UDim.new(0, 8)
+		UICorner_2.CornerRadius = UDim.new(0, 10)
 		UICorner_2.Parent = SectionFrame
 
 		UIListLayout.Parent = SectionFrame
@@ -9767,7 +9767,7 @@ function Compkiller.new(Config : Window)
 			Watermark.BackgroundTransparency = 0.025
 			Watermark.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			Watermark.BorderSizePixel = 0
-			Watermark.Position = UDim2.new(1, -15, 0, 10)
+			Watermark.Position = UDim2.new(1, -10, 0, 10)
 			Watermark.Size = UDim2.new(0, 45, 0, 23)
 			Watermark.ZIndex = 150
 
