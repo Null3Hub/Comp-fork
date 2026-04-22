@@ -9767,7 +9767,7 @@ function Compkiller.new(Config : Window)
 			Watermark.BackgroundTransparency = 0.025
 			Watermark.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			Watermark.BorderSizePixel = 0
-			Watermark.Position = UDim2.new(1, -20, 0, 10)
+			Watermark.Position = UDim2.new(1, -100, 0, 10)
 			Watermark.Size = UDim2.new(0, 45, 0, 23)
 			Watermark.ZIndex = 150
 
