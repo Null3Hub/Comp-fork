@@ -7289,11 +7289,11 @@ function Compkiller.new(Config : Window)
   local CloseBtn = Instance.new("Frame")
   CloseBtn.Name = "CloseBtn"
   CloseBtn.Parent = Top
-  CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
-  CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+  CloseBtn.AnchorPoint = Vector2.new(0, 0.5)
+  CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255) 
   CloseBtn.BackgroundTransparency = 0
   CloseBtn.BorderSizePixel = 0
-  CloseBtn.Position = UDim2.new(-1, -25, 0.5, 0)
+  CloseBtn.Position = UDim2.new(1, -25, 0.5, 0) 
   CloseBtn.Size = UDim2.new(0, 14, 0, 14)
   CloseBtn.ZIndex = Top.ZIndex + 5
   local CloseCorner = Instance.new("UICorner")
