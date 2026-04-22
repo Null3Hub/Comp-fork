@@ -6881,7 +6881,7 @@ function Compkiller.new(Config : Window)
 
 			Compkiller:_Animation(ExpireText , Style , {
 				Position = UDim2.new(0, 55 + 25,0, 25),
-				TextTransparency = 1
+				TextTransparency = 
 			});
 		end;
 	end);
@@ -9693,7 +9693,7 @@ function Compkiller.new(Config : Window)
 		CloseWindow.BorderSizePixel = 0
 		CloseWindow.Position = UDim2.new(1, -10, 0, 10)
 		CloseWindow.Size = UDim2.new(0, 0, 0, 23)
-		CloseWindow.ZIndex = 170
+		CloseWindow.ZIndex = 147
 		CloseWindow.ClipsDescendants = true;
 
 		UICorner.CornerRadius = UDim.new(0, 3)
@@ -9707,7 +9707,7 @@ function Compkiller.new(Config : Window)
 		ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 		ImageLabel.Size = UDim2.new(0.800000012, 0, 0.800000012, 0)
 		ImageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
-		ImageLabel.ZIndex = 151
+		ImageLabel.ZIndex = 148
 		ImageLabel.Image = Config.Logo
 		ImageLabel.ImageTransparency = 1
 		ImageLabel.ClipsDescendants = false;
