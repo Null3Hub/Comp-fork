@@ -9775,9 +9775,9 @@ function Compkiller.new(Config : Window)
       Compkiller.Gradients["CloseBtnStroke"] = Compkiller.Gradient.Create({
           ["0"]   = {Color = Compkiller.Colors.Highlight, Transparency = 0},
           ["50"]  = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0},
-          ["100"] = {Color = Compkiller.Colors.Toggle, Transparency = 0}
+          ["100"] = {Color = Compkiller.Colors.Highlight, Transparency = 0}
       }, {
-          Rotation = 90
+          Rotation = 45
       })
   end
   
