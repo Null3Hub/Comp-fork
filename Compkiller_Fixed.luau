@@ -11242,7 +11242,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     titleContainer.BackgroundTransparency = 1
     titleContainer.BorderSizePixel = 0
     titleContainer.LayoutOrder = 1
-    local titleLayout = Instance.new("UIListLayout")    titleLayout.FillDirection = Enum.FillDirection.Horizontal
+    local titleLayout = Instance.new("UIListLayout")    
+    titleLayout.FillDirection = Enum.FillDirection.Horizontal
     titleLayout.Padding = UDim.new(0, 5)
     titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
     titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
@@ -11397,8 +11398,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         end)
         
         local topbarPadding = Instance.new("UIPadding")
-        topbarPadding.PaddingLeft = UDim.new(0, 6) -- Reduzido para aproximar da borda
-        topbarPadding.PaddingRight = UDim.new(0, 5) -- Espaço à direita
+        topbarPadding.PaddingLeft = UDim.new(0, 4) -- Reduzido para aproximar da borda
+        topbarPadding.PaddingRight = UDim.new(0, 3.5) -- Espaço à direita
         topbarPadding.PaddingTop = UDim.new(0, 10)
         topbarPadding.Parent = topbar
         
