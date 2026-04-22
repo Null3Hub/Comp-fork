@@ -477,6 +477,7 @@ Compkiller.DragBlacklist = {};
 Compkiller.IaDrag = false;
 Compkiller.LastDrag = tick();
 Compkiller.Flags = {};
+Compkiller.DestroyCallbacks = {}; -- 🆕 Registro para OnDestroy
 
 Compkiller.Lucide = {
 	['lucide-mouse-2'] = "rbxassetid://10088146939",
@@ -1502,6 +1503,21 @@ end;
 function Compkiller:CustomIconHighlight()
 	Compkiller.CustomHighlightMode = true;
 end;
+
+-- 🆕 Sistema de Callbacks de Destruição
+function Compkiller:OnDestroy(callback)
+ 	if type(callback) == "function" then
+ 		table.insert(Compkiller.DestroyCallbacks, callback)
+ 		return function() -- Retorna função de desconexão
+ 			for i, v in next, Compkiller.DestroyCallbacks do
+ 				if v == callback then
+ 					table.remove(Compkiller.DestroyCallbacks, i)
+ 					break
+ 				end
+ 			end
+ 		end
+ 	end
+ end
 
 function Compkiller:_SetNilP(Ins: Instance , Parent: Instance)
 	Compkiller.WindowsNil = Compkiller.WindowsNil or {};
@@ -7318,7 +7334,7 @@ function Compkiller.new(Config : Window)
   end)
   
   Compkiller:_Input(CloseBtn, function()
-  	WindowArgs:Toggle(false) -- ou a função que fecha a janela principal na sua fork
+  	WindowArgs:Destroy()
   end)
   
 		-- Functions --
@@ -9998,25 +10014,49 @@ function Compkiller.new(Config : Window)
 			return Args;
 		end;
 
-		function WindowArgs:Toggle(Value: boolean)
-			if WindowArgs.PerformanceMode then
-				MainFrame.Visible = Value;
-			end;
+ 	function WindowArgs:Toggle(Value: boolean)
+ 	if WindowArgs.PerformanceMode then
+ 		MainFrame.Visible = Value;
+ 	end;
+ 	WindowOpen:Fire(Value);
+ 	if Value then
+ 		for i,v in next , WindowArgs.Tabs do
+ 			if v.Root == WindowArgs.SelectedTab then
+ 				v.Remote:Fire(true);
+ 			end;
+ 		end;
+ 	else
+ 		for i,v in next , WindowArgs.Tabs do
+ 			v.Remote:Fire(false);
+ 		end;
+ 	end;
+ end;
 
-			WindowOpen:Fire(Value);
-
-			if Value then
-				for i,v in next , WindowArgs.Tabs do
-					if v.Root == WindowArgs.SelectedTab then
-						v.Remote:Fire(true);
-					end;
-				end;
-			else
-				for i,v in next , WindowArgs.Tabs do
-					v.Remote:Fire(false);
-				end;
-			end;
-		end;
+-- 🆕 Destruição Segura da UI
+ function WindowArgs:Destroy()
+ 	if WindowArgs.__Destroyed then return end
+ 	WindowArgs.__Destroyed = true
+ 
+ 	-- 1. Executa callbacks registrados
+ 	for _, callback in ipairs(Compkiller.DestroyCallbacks) do
+ 		pcall(callback)
+ 	end
+ 	Compkiller.DestroyCallbacks = {}
+ 
+ 	-- 2. Limpa referências internas
+ 	local winIdx = table.find(Compkiller.Windows, CompKiller)
+ 	if winIdx then table.remove(Compkiller.Windows, winIdx) end
+ 	Compkiller.WindowOpenSignals[CompKiller] = nil
+ 
+ 	-- 3. Limpa rastreamento de temas e flags
+ 	Compkiller.Flags = {}
+ 	for k in pairs(Compkiller.Elements) do
+ 		Compkiller.Elements[k] = {}
+ 	end
+ 
+ 	-- 4. Destrói a ScreenGui principal
+ 	CompKiller:Destroy()
+ end
 
 		function WindowArgs:_ToggleUI()
 	WindowArgs.IsOpen = not WindowArgs.IsOpen;
