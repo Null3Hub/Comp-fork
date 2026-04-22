@@ -9769,6 +9769,54 @@ function Compkiller.new(Config : Window)
 
 		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = CloseWindow
+		
+  -- 1. Registra o gradiente no sistema do Compkiller (se ainda não existir)
+  if not Compkiller.Gradients["CloseBtnGradient"] then
+      Compkiller.Gradients["CloseBtnGradient"] = Compkiller.Gradient.Create({
+          ["0"]   = {Color = Compkiller.Colors.Highlight, Transparency = 0},   -- Cor principal
+          ["50"]  = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}, -- Branco no meio
+          ["100"] = {Color = Compkiller.Colors.Toggle, Transparency = 0}       -- Cor secundária
+      }, {
+          Rotation = 90
+      })
+  end
+  
+  -- 2. Cria um frame de borda (stroke) levemente maior que o CloseWindow
+  local GradientBorder = Instance.new("Frame")
+  GradientBorder.Name = "GradientBorder"
+  GradientBorder.Parent = CloseWindow.Parent
+  GradientBorder.AnchorPoint = CloseWindow.AnchorPoint
+  GradientBorder.Position = CloseWindow.Position
+  GradientBorder.Size = UDim2.new(0, 49, 0, 27)          -- CloseWindow é 45x23, então +4px
+  GradientBorder.BackgroundColor3 = Color3.new(1, 1, 1)  -- Necessário para o gradiente funcionar
+  GradientBorder.BorderSizePixel = 0
+  GradientBorder.ZIndex = CloseWindow.ZIndex - 1         -- Fica atrás do botão
+  
+  local BorderCorner = Instance.new("UICorner")
+  BorderCorner.CornerRadius = UDim.new(0, 5)             -- Um pouco maior que o do CloseWindow
+  BorderCorner.Parent = GradientBorder
+  
+  -- 3. Aplica o gradiente usando o próprio sistema do Compkiller
+  Compkiller:ApplyGradient(GradientBorder, "CloseBtnGradient")
+  
+  -- 4. UIStroke sólido opcional para dar profundidade extra no CloseWindow
+  local CloseStroke = Instance.new("UIStroke")
+  CloseStroke.Name = "CloseStroke"
+  CloseStroke.Parent = CloseWindow
+  CloseStroke.Color = Compkiller.Colors.Highlight
+  CloseStroke.Thickness = 1.5
+  CloseStroke.Transparency = 0.3
+  
+  -- 5. Sincroniza a posição da borda gradiente quando o CloseWindow for arrastado
+  CloseWindow:GetPropertyChangedSignal("Position"):Connect(function()
+      GradientBorder.Position = CloseWindow.Position
+  end)
+  
+  -- 6. Sincroniza visibilidade (quando o CloseWindow some/aparece)
+  CloseWindow:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function()
+      local isVisible = CloseWindow.BackgroundTransparency < 0.9
+      GradientBorder.Visible = isVisible
+  end)
 
 		ImageLabel.Parent = CloseWindow
 		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
