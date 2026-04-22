@@ -6976,9 +6976,9 @@ function Compkiller.new(Config : Window)
 		ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		ImageLabel.BorderSizePixel = 0
 		ImageLabel.Position = UDim2.new(1, -5, 0, 5)
-		ImageLabel.Size = UDim2.new(0, 15, 0, 15)
+		ImageLabel.Size = UDim2.new(0, 17, 0, 17)
 		ImageLabel.ZIndex = 67
-		ImageLabel.Image = Compkiller:CacheImage("rbxassetid://10747384394")
+		ImageLabel.Image = Compkiller:CacheImage("rbxassetid://127426072704909")
 		ImageLabel.ImageTransparency = 0.500
 
 		function WindowArgs.UserSettings:Create()
