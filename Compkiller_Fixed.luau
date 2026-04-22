@@ -11186,7 +11186,7 @@ function Compkiller:AdvancedNotify(properties: {
     local duration = properties.Duration or 6
     if duration > 0 then
         task.delay(duration, function()
-            self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
+            self:_(notification, state, MAX_NOTIFICATIONS, properties.Callback)
         end)
     end
     
@@ -11202,8 +11202,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     notification.AutomaticSize = Enum.AutomaticSize.Y
     notification.BackgroundTransparency = 1
     notification.BorderSizePixel = 0
-    notification.Position = UDim2.new(1, -162.5, 1, 50)
-    notification.Size = UDim2.fromOffset(325, 0)
+    notification.Position = UDim2.new(1, -140, 1, 50) -- Ajustado para o novo tamanho
+    notification.Size = UDim2.fromOffset(280, 0) -- Reduzido de 325 para 280
     
     -- Canvas
     local canvas = Instance.new("Frame")
@@ -11217,11 +11217,12 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     canvas.Size = UDim2.fromScale(1, 0)
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 12)
+    corner.CornerRadius = UDim.new(0, 10) -- Reduzido de 12 para 10
     corner.Parent = canvas
     
     local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 5)    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 4) -- Reduzido de 5 para 4
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     listLayout.Parent = canvas
     
@@ -11241,8 +11242,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     titleContainer.BackgroundTransparency = 1
     titleContainer.BorderSizePixel = 0
     titleContainer.LayoutOrder = 1
-    
-    local titleLayout = Instance.new("UIListLayout")
+        local titleLayout = Instance.new("UIListLayout")
     titleLayout.FillDirection = Enum.FillDirection.Horizontal
     titleLayout.Padding = UDim.new(0, 5)
     titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -11270,7 +11270,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     title.LayoutOrder = 2
     title.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
     title.LineHeight = 0
-    title.Size = UDim2.new(1, 0, 0, 20)    title.Text = properties.Title or "Notification"
+    title.Size = UDim2.new(1, 0, 0, 20)
+    title.Text = properties.Title or "Notification"
     title.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
     title.TextSize = 13
     title.TextWrapped = true
@@ -11290,8 +11291,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         subtitle.BackgroundTransparency = 1
         subtitle.BorderSizePixel = 0
         subtitle.FontFace = Font.new("rbxassetid://12187365364")
-        subtitle.LayoutOrder = 1
-        subtitle.RichText = true
+        subtitle.LayoutOrder = 1        subtitle.RichText = true
         subtitle.Size = UDim2.fromScale(1, 0)
         subtitle.Text = properties.Subtitle
         subtitle.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
@@ -11303,9 +11303,9 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     end
     
     local contentPadding = Instance.new("UIPadding")
-    contentPadding.PaddingBottom = UDim.new(0, 12)
-    contentPadding.PaddingLeft = UDim.new(0, 12)
-    contentPadding.PaddingRight = UDim.new(0, 12)
+    contentPadding.PaddingBottom = UDim.new(0, 10) -- Reduzido de 12 para 10
+    contentPadding.PaddingLeft = UDim.new(0, 10) -- Reduzido de 12 para 10
+    contentPadding.PaddingRight = UDim.new(0, 10) -- Reduzido de 12 para 10
     contentPadding.Parent = content
     
     -- Topbar (se existir App ou AppIcon)
@@ -11319,7 +11319,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         
         local topbarLayout = Instance.new("UIListLayout")
         topbarLayout.FillDirection = Enum.FillDirection.Horizontal
-        topbarLayout.Padding = UDim.new(0, 5)        topbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        topbarLayout.Padding = UDim.new(0, 5)
+        topbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
         topbarLayout.VerticalAlignment = Enum.VerticalAlignment.Center
         topbarLayout.Parent = topbar
         
@@ -11339,8 +11340,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appLabel.TextTransparency = 0.5
             appLabel.TextXAlignment = Enum.TextXAlignment.Left
             appLabel.RichText = true
-            appLabel.Parent = topbar
-        end
+            appLabel.Parent = topbar        end
         
         if properties.AppIcon then
             local appIcon = Instance.new("ImageLabel")
@@ -11354,24 +11354,25 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         end
         
         local topbarPadding = Instance.new("UIPadding")
-        topbarPadding.PaddingLeft = UDim.new(0, 12)
-        topbarPadding.PaddingRight = UDim.new(0, 12)
-        topbarPadding.PaddingTop = UDim.new(0, 12)
+        topbarPadding.PaddingLeft = UDim.new(0, 10) -- Reduzido de 12 para 10
+        topbarPadding.PaddingRight = UDim.new(0, 10) -- Reduzido de 12 para 10
+        topbarPadding.PaddingTop = UDim.new(0, 10) -- Reduzido de 12 para 10
         topbarPadding.Parent = topbar
         
         topbar.Parent = canvas
     end
     
-    -- Exit Button
+    -- Exit Button - MOVIDO PARA DIREITA NO TOPO
     local exitBtn = Instance.new("TextButton")
     exitBtn.Name = "Exit"
     exitBtn.AnchorPoint = Vector2.new(0.5, 0.5)
     exitBtn.AutoButtonColor = false
-    exitBtn.BackgroundColor3 = self.Colors.BlockColor or Color3.fromRGB(28, 29, 34)
-    exitBtn.BackgroundTransparency = 0.1    exitBtn.BorderSizePixel = 0
+    exitBtn.BackgroundColor3 = self.Colors.Highlight or Color3.fromRGB(17, 238, 253)
+    exitBtn.BackgroundTransparency = 0.2
+    exitBtn.BorderSizePixel = 0
     exitBtn.FontFace = Font.new("rbxassetid://12187365364")
-    exitBtn.Position = UDim2.fromOffset(3, 3)
-    exitBtn.Size = UDim2.fromOffset(20, 20)
+    exitBtn.Position = UDim2.new(1, -12, 0, 12) -- MOVIDO: canto superior direito
+    exitBtn.Size = UDim2.fromOffset(14, 14) -- Reduzido de 20x20 para 14x14 (bolinha menor)
     exitBtn.Text = ""
     exitBtn.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
     exitBtn.TextSize = 14
@@ -11379,47 +11380,34 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     exitBtn.ZIndex = 10
     
     local exitCorner = Instance.new("UICorner")
-    exitCorner.CornerRadius = UDim.new(1, 0)
+    exitCorner.CornerRadius = UDim.new(1, 0) -- Bolinha perfeita
     exitCorner.Parent = exitBtn
     
-    local exitIcon = Instance.new("ImageLabel")
-    exitIcon.Name = "Icon"
-    exitIcon.AnchorPoint = Vector2.new(0.5, 0.5)
-    exitIcon.BackgroundTransparency = 1
-    exitIcon.BorderSizePixel = 0
-    exitIcon.Image = "rbxassetid://72660323302468" -- Ícone de X
-    exitIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-    exitIcon.ImageTransparency = 0.5
-    exitIcon.Position = UDim2.fromScale(0.5, 0.5)
-    exitIcon.Size = UDim2.fromOffset(20, 20)
-    exitIcon.Parent = exitBtn
-    
-    local exitShadow = Instance.new("Frame")
-    exitShadow.Name = "Shadow"
-    exitShadow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    exitShadow.BackgroundTransparency = 1
-    exitShadow.BorderSizePixel = 0
-    exitShadow.Size = UDim2.fromScale(1, 1)
-    exitShadow.ZIndex = -1
-    
-    local shadowStroke = Instance.new("UIStroke")
-    shadowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    shadowStroke.Transparency = 0.9
-    shadowStroke.Parent = exitShadow
-    
-    local shadowCorner = Instance.new("UICorner")
-    shadowCorner.CornerRadius = UDim.new(1, 0)
-    shadowCorner.Parent = exitShadow
-    
-    exitShadow.Parent = exitBtn
+    -- REMOVIDO: exitIcon (ícone de X)
+    -- REMOVIDO: exitShadow e shadowStroke
     
     local exitStroke = Instance.new("UIStroke")
     exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-    exitStroke.Thickness = 2
-    exitStroke.Transparency = 0.96    exitStroke.Parent = exitBtn
+    exitStroke.Thickness = 1    exitStroke.Transparency = 0.7 -- Mais visível
+    exitStroke.Parent = exitBtn
     
     exitBtn.Parent = canvas
+    
+    -- Hover effects
+    exitBtn.MouseEnter:Connect(function()
+        tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BackgroundTransparency = 0,
+            Size = UDim2.fromOffset(16, 16)
+        }):Play()
+    end)
+    
+    exitBtn.MouseLeave:Connect(function()
+        tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BackgroundTransparency = 0.2,
+            Size = UDim2.fromOffset(14, 14)
+        }):Play()
+    end)
     
     -- Hierarquia
     titleContainer.Parent = content
@@ -11450,8 +11438,7 @@ function Compkiller:_CloseNotification(notification, state, MAX_NOTIFICATIONS, c
     local fadeTween = tweenService:Create(
         notification,
         TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {
-            Position = notification.Position + UDim2.fromOffset(350, 0),
+        {            Position = notification.Position + UDim2.fromOffset(350, 0),
         }
     )
     
