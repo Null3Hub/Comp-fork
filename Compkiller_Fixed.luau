@@ -11226,59 +11226,6 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     listLayout.Parent = canvas
     
-    -- Header/TopBar Container (NOVO - para posicionar o botão corretamente)
-    local header = Instance.new("Frame")
-    header.Name = "Header"
-    header.BackgroundTransparency = 1
-    header.BorderSizePixel = 0
-    header.Size = UDim2.new(1, 0, 0, 32) -- Altura fixa para o header
-    header.LayoutOrder = 0
-    header.Parent = canvas
-    
-    -- Exit Button - Agora dentro do Header
-    local exitBtn = Instance.new("TextButton")
-    exitBtn.Name = "Exit"
-    exitBtn.AnchorPoint = Vector2.new(1, 0)
-    exitBtn.AutoButtonColor = false
-    exitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    exitBtn.BackgroundTransparency = 0.2
-    exitBtn.BorderSizePixel = 0    exitBtn.FontFace = Font.new("rbxassetid://12187365364")
-    exitBtn.Position = UDim2.new(1, -8, 0, 8) -- Canto superior direito do header
-    exitBtn.Size = UDim2.fromOffset(14, 14)
-    exitBtn.Text = ""
-    exitBtn.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-    exitBtn.TextSize = 14
-    exitBtn.TextTransparency = 0.5
-    exitBtn.ZIndex = 10
-    
-    local exitCorner = Instance.new("UICorner")
-    exitCorner.CornerRadius = UDim.new(1, 0)
-    exitCorner.Parent = exitBtn
-    
-    local exitStroke = Instance.new("UIStroke")
-    exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-    exitStroke.Thickness = 1
-    exitStroke.Transparency = 0.7
-    exitStroke.Parent = exitBtn
-    
-    exitBtn.Parent = header
-    
-    -- Hover effects
-    exitBtn.MouseEnter:Connect(function()
-        tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            BackgroundTransparency = 0,
-            Size = UDim2.fromOffset(16, 16)
-        }):Play()
-    end)
-    
-    exitBtn.MouseLeave:Connect(function()
-        tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            BackgroundTransparency = 0.2,
-            Size = UDim2.fromOffset(14, 14)
-        }):Play()
-    end)
-    
     -- Content
     local content = Instance.new("Frame")
     content.Name = "Content"
@@ -11291,11 +11238,11 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     -- Title Container
     local titleContainer = Instance.new("Frame")
     titleContainer.Name = "TitleContainer"
-    titleContainer.AutomaticSize = Enum.AutomaticSize.XY    titleContainer.BackgroundTransparency = 1
+    titleContainer.AutomaticSize = Enum.AutomaticSize.XY
+    titleContainer.BackgroundTransparency = 1
     titleContainer.BorderSizePixel = 0
     titleContainer.LayoutOrder = 1
-    
-    local titleLayout = Instance.new("UIListLayout")
+        local titleLayout = Instance.new("UIListLayout")
     titleLayout.FillDirection = Enum.FillDirection.Horizontal
     titleLayout.Padding = UDim.new(0, 5)
     titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -11340,11 +11287,11 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     if properties.Subtitle and properties.Subtitle ~= "" then
         local subtitle = Instance.new("TextLabel")
         subtitle.Name = "Subtitle"
-        subtitle.AutomaticSize = Enum.AutomaticSize.Y        subtitle.BackgroundTransparency = 1
+        subtitle.AutomaticSize = Enum.AutomaticSize.Y
+        subtitle.BackgroundTransparency = 1
         subtitle.BorderSizePixel = 0
         subtitle.FontFace = Font.new("rbxassetid://12187365364")
-        subtitle.LayoutOrder = 1
-        subtitle.RichText = true
+        subtitle.LayoutOrder = 1        subtitle.RichText = true
         subtitle.Size = UDim2.fromScale(1, 0)
         subtitle.Text = properties.Subtitle
         subtitle.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
@@ -11361,7 +11308,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     contentPadding.PaddingRight = UDim.new(0, 10)
     contentPadding.Parent = content
     
-    -- Topbar (se existir App ou AppIcon)
+    -- Topbar (se existir App ou AppIcon) - AGORA COM EXIT BUTTON
     if properties.App or properties.AppIcon then
         local topbar = Instance.new("Frame")
         topbar.Name = "Topbar"
@@ -11389,11 +11336,11 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appLabel.Size = UDim2.fromOffset(0, 14)
             appLabel.Text = string.upper(properties.App)
             appLabel.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-            appLabel.TextSize = 13            appLabel.TextTransparency = 0.5
+            appLabel.TextSize = 13
+            appLabel.TextTransparency = 0.5
             appLabel.TextXAlignment = Enum.TextXAlignment.Left
             appLabel.RichText = true
-            appLabel.Parent = topbar
-        end
+            appLabel.Parent = topbar        end
         
         if properties.AppIcon then
             local appIcon = Instance.new("ImageLabel")
@@ -11406,6 +11353,51 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appIcon.Parent = topbar
         end
         
+        -- Exit Button - MOVIDO PARA O TOPBAR
+        local exitBtn = Instance.new("TextButton")
+        exitBtn.Name = "Exit"
+        exitBtn.AnchorPoint = Vector2.new(1, 0)
+        exitBtn.AutoButtonColor = false
+        exitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        exitBtn.BackgroundTransparency = 0.2
+        exitBtn.BorderSizePixel = 0
+        exitBtn.FontFace = Font.new("rbxassetid://12187365364")
+        exitBtn.LayoutOrder = 999 -- Sempre à direita
+        exitBtn.Position = UDim2.new(1, -8, 0, 8)
+        exitBtn.Size = UDim2.fromOffset(14, 14)
+        exitBtn.Text = ""
+        exitBtn.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+        exitBtn.TextSize = 14
+        exitBtn.TextTransparency = 0.5
+        exitBtn.ZIndex = 10
+        
+        local exitCorner = Instance.new("UICorner")
+        exitCorner.CornerRadius = UDim.new(1, 0)
+        exitCorner.Parent = exitBtn
+        
+        local exitStroke = Instance.new("UIStroke")
+        exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+        exitStroke.Thickness = 1
+        exitStroke.Transparency = 0.7
+        exitStroke.Parent = exitBtn
+        
+        exitBtn.Parent = topbar
+        
+        -- Hover effects
+        exitBtn.MouseEnter:Connect(function()
+            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0,
+                Size = UDim2.fromOffset(16, 16)
+            }):Play()        end)
+        
+        exitBtn.MouseLeave:Connect(function()
+            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0.2,
+                Size = UDim2.fromOffset(14, 14)
+            }):Play()
+        end)
+        
         local topbarPadding = Instance.new("UIPadding")
         topbarPadding.PaddingLeft = UDim.new(0, 10)
         topbarPadding.PaddingRight = UDim.new(0, 10)
@@ -11413,17 +11405,17 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         topbarPadding.Parent = topbar
         
         topbar.Parent = content
+        
+        -- Click handler
+        exitBtn.MouseButton1Click:Connect(function()
+            self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
+        end)
     end
     
     -- Hierarquia
     titleContainer.Parent = content
     content.Parent = canvas
     canvas.Parent = notification
-    
-    -- Click handler
-    exitBtn.MouseButton1Click:Connect(function()
-        self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
-    end)
     
     return notification
 end
