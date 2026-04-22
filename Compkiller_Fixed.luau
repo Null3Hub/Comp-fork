@@ -6544,8 +6544,8 @@ UICorner.Parent = MainFrame;
 	TabFrame.Size = UDim2.new(0, 85, 1, 0)
 
 	-- Linha ~2934
-UICorner_2.CornerRadius = UDim.new(0, 10); -- Altere aqui também
-UICorner_2.Parent = TabFrame;
+ UICorner_2.CornerRadius = UDim.new(0, 10); -- Altere aqui também
+ UICorner_2.Parent = TabFrame;
 
 	LineFrame1.Name = Compkiller:_RandomString()
 	LineFrame1.Parent = TabFrame
@@ -9677,103 +9677,71 @@ UICorner_2.Parent = TabFrame;
 	end;
 
 	local CloseWindow = Instance.new("Frame")
-do
-	local UICorner = Instance.new("UICorner")
-	local ImageLabel = Instance.new("ImageLabel")
-	local UIStroke = Instance.new("UIStroke") -- ✨ NOVO: Borda
-	
-	-- ✨ NOVO: Definição do Gradiente Local para a Borda
-	local BorderGrad = Compkiller.Gradient.Create({
-		["0"]   = { Color = Compkiller.Colors.Highlight, Transparency = 0.05 },
-		["100"] = { Color = Compkiller.Colors.Highlight, Transparency = 1 },
-	}, { Rotation = 45 })
+	do
+		local UICorner = Instance.new("UICorner")
+		local ImageLabel = Instance.new("ImageLabel")
 
-	CloseWindow.Name = Compkiller:_RandomString()
-	CloseWindow.Parent = CompKiller
-	CloseWindow.AnchorPoint = Vector2.new(1, 0)
-	CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor
-	table.insert(Compkiller.Elements.BGDBColor,{
-		Element = CloseWindow,
-		Property = 'BackgroundColor3'
-	});
-	CloseWindow.BackgroundTransparency = 1
-	CloseWindow.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	CloseWindow.BorderSizePixel = 0
-	CloseWindow.Position = UDim2.new(1, -10, 0, 10)
-	CloseWindow.Size = UDim2.new(0, 0, 0, 23)
-	CloseWindow.ZIndex = 150
-	CloseWindow.ClipsDescendants = true;
-	
-	UICorner.CornerRadius = UDim.new(0, 6) -- ✨ Ajustado para combinar melhor com UIStroke
-	UICorner.Parent = CloseWindow
+		CloseWindow.Name = Compkiller:_RandomString()
+		CloseWindow.Parent = CompKiller
+		CloseWindow.AnchorPoint = Vector2.new(1, 0)
+		CloseWindow.BackgroundColor3 = Compkiller.Colors.BGDBColor
 
-	-- ✨ NOVO: Configuração do UIStroke
-	UIStroke.Thickness = 2
-	UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	UIStroke.Transparency = 1
-	UIStroke.Parent = CloseWindow
+		table.insert(Compkiller.Elements.BGDBColor,{
+			Element = CloseWindow,
+			Property = 'BackgroundColor3'
+		});
 
-	local StrokeGrad = Instance.new("UIGradient")
-	StrokeGrad.Color = BorderGrad.Color
-	StrokeGrad.Transparency = BorderGrad.Transparency
-	StrokeGrad.Rotation = BorderGrad.Rotation
-	StrokeGrad.Offset = Vector2.new(0, 0)
-	StrokeGrad.Parent = UIStroke
+		CloseWindow.BackgroundTransparency = 1
+		CloseWindow.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		CloseWindow.BorderSizePixel = 0
+		CloseWindow.Position = UDim2.new(1, -10, 0, 10)
+		CloseWindow.Size = UDim2.new(0, 0, 0, 23)
+		CloseWindow.ZIndex = 150
+		CloseWindow.ClipsDescendants = true;
 
-	-- ✨ NOVO: Thread de Animação do Offset
-	task.spawn(function()
-		local t = 0
-		while CloseWindow and CloseWindow.Parent do
-			t += 0.015
-			local x = math.sin(t) * 0.35			local y = math.cos(t) * 0.35
-			StrokeGrad.Offset = Vector2.new(x, y)
-			task.wait()
-		end
-	end)
+		UICorner.CornerRadius = UDim.new(0, 3)
+		UICorner.Parent = CloseWindow
 
-	ImageLabel.Parent = CloseWindow
-	ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-	ImageLabel.BackgroundTransparency = 1.000
-	ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	ImageLabel.BorderSizePixel = 0
-	ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-	ImageLabel.Size = UDim2.new(0.800000012, 0, 0.800000012, 0)
-	ImageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
-	ImageLabel.ZIndex = 151
-	ImageLabel.Image = Config.Logo
-	ImageLabel.ImageTransparency = 1
-	ImageLabel.ClipsDescendants = false;
+		ImageLabel.Parent = CloseWindow
+		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+		ImageLabel.BackgroundTransparency = 1.000
+		ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+		ImageLabel.BorderSizePixel = 0
+		ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+		ImageLabel.Size = UDim2.new(0.800000012, 0, 0.800000012, 0)
+		ImageLabel.SizeConstraint = Enum.SizeConstraint.RelativeYY
+		ImageLabel.ZIndex = 151
+		ImageLabel.Image = Config.Logo
+		ImageLabel.ImageTransparency = 1
+		ImageLabel.ClipsDescendants = false;
 
-	local ToggleCloseUI = function(v)
-		ImageLabel.Image = Config.Logo;
-		if v then
-			ImageLabel.ClipsDescendants = true;
-			Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
-				Size = UDim2.new(0, 45, 0, 23),
-				BackgroundTransparency = 0.025
-			})
-			Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-				ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
-			})
-			-- ✨ NOVO: Mostrar borda ao abrir
-			Compkiller:_Animation(UIStroke,TweenInfo.new(0.2),{
-				Transparency = 0
-			})
-		else
-			ImageLabel.ClipsDescendants = false;
-			Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
-				Size = UDim2.new(0, 0, 0, 23),
-				BackgroundTransparency = 1
-			})
-			Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
-				ImageTransparency = 1
-			})
-			-- ✨ NOVO: Esconder borda ao fechar
-			Compkiller:_Animation(UIStroke,TweenInfo.new(0.2),{
-				Transparency = 1
-			})
+		local ToggleCloseUI = function(v)
+			ImageLabel.Image = Config.Logo;
+
+			if v then
+				ImageLabel.ClipsDescendants = true;
+
+				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+					Size = UDim2.new(0, 45, 0, 23),
+					BackgroundTransparency = 0.025
+				})
+
+				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+					ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
+				})
+			else
+				ImageLabel.ClipsDescendants = false;
+
+				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+					Size = UDim2.new(0, 0, 0, 23),
+					BackgroundTransparency = 1
+				})
+
+				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+					ImageTransparency = 1
+				})
+			end;
 		end;
-	end;
 
 		function WindowArgs:Watermark()
 			local Signal = Compkiller.__SIGNAL(true);
@@ -9999,27 +9967,19 @@ do
 		end;
 
 		function WindowArgs:_ToggleUI()
-		WindowArgs.IsOpen = not WindowArgs.IsOpen;
-		WindowArgs:Toggle(WindowArgs.IsOpen);
-	end;
+	WindowArgs.IsOpen = not WindowArgs.IsOpen;
+	WindowArgs:Toggle(WindowArgs.IsOpen);
+end;
 
-	local Button = Compkiller:_Input(CloseWindow, function()
-		local override = WindowArgs.__CloseButtonOverride;
-		if override and override.OnClick then
-			override.OnClick();
-		else
-			WindowArgs:_ToggleUI();
-		end
-	end);
+local Button = Compkiller:_Input(CloseWindow, function()
+    local override = WindowArgs.__CloseButtonOverride;
 
-	Compkiller:Drag(Button, CloseWindow, 0.1);
-	if not Compkiller:_IsMobile() then
-		Compkiller:_Hover(Button, function()
-			ImageLabel:SetAttribute("Hover", true);
-		end, function()
-			ImageLabel:SetAttribute("Hover", false);
-		end);
-	end;
+    if override and override.OnClick then
+        override.OnClick();
+    else
+        WindowArgs:_ToggleUI();
+    end;
+end);
 
 Compkiller:Drag(Button, CloseWindow, 0.1);
 
@@ -10032,53 +9992,55 @@ if not Compkiller:_IsMobile() then
 end;
 
 table.insert(WindowArgs.THREADS, task.spawn(function()
-		while true do task.wait(0.15)
-			local override = WindowArgs.__CloseButtonOverride;
-			local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
-			local _stroke = CloseWindow:FindFirstChildWhichIsA("UIStroke"); -- ✨ NOVO
-			local isMobile = Compkiller:_IsMobile();
-			local onlyMobile = not override and true or (override.OnlyMobile ~= nil and override.OnlyMobile or true);
-			local dragging = WindowArgs.__CloseButtonIsDragging;
-			local disabled = WindowArgs.__CloseButtonDisabled;
-			-- esconde tudo se desativado ou se onlyMobile=true em PC
-			if disabled or (not isMobile and onlyMobile) then
-				CloseWindow.BackgroundTransparency = 1;
-				CloseWindow.Size = UDim2.new(0, 0, 0, 23);
-				if _img then _img.ImageTransparency = 1; end;
-				if _stroke then _stroke.Transparency = 1; end; -- ✨ NOVO
-				continue;
-			end;
-			if isMobile or not onlyMobile then
-				CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
-				CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
-				CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
-				if not dragging and override and override.Position then
-					CloseWindow.Position = override.Position;
-				end;
-				if _img then
-					_img.Image = (override and override.Logo) or Config.Logo;
-					if WindowArgs.IsOpen then
-						_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
-					else
-						_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
-					end;
-				end;
-			else
-				-- PC onlyMobile=false mas sem override: comportamento padrão
-				if not WindowArgs.IsOpen then
-					ToggleCloseUI(true);
-				else
-					ToggleCloseUI(false);
-				end;
-			end;
-		end;	end));
+	while true do task.wait(0.15)
+		local override = WindowArgs.__CloseButtonOverride;
+		local _img = CloseWindow:FindFirstChildWhichIsA("ImageLabel");
+		local isMobile = Compkiller:_IsMobile();
+		local onlyMobile = not override and true or (override.OnlyMobile ~= nil and override.OnlyMobile or true);
+		local dragging = WindowArgs.__CloseButtonIsDragging;
+		local disabled = WindowArgs.__CloseButtonDisabled;
 
-	UserInputService.InputBegan:Connect(function(Input, Typing)
-		if not Typing and (Input.KeyCode == Config.Keybind or Input.KeyCode.Name == Config.Keybind) then
-			WindowArgs:_ToggleUI();
+		-- esconde tudo se desativado ou se onlyMobile=true em PC
+		if disabled or (not isMobile and onlyMobile) then
+			CloseWindow.BackgroundTransparency = 1;
+			CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+			if _img then _img.ImageTransparency = 1; end;
+			continue;
 		end;
-	end);
-end;
+
+		if isMobile or not onlyMobile then
+			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
+			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
+			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
+
+			if not dragging and override and override.Position then
+				CloseWindow.Position = override.Position;
+			end;
+
+			if _img then
+				_img.Image = (override and override.Logo) or Config.Logo;
+				if WindowArgs.IsOpen then
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.35;
+				else
+					_img.ImageTransparency = (override and override.ImageTransparency ~= nil and override.ImageTransparency) or 0.1;
+				end;
+			end;
+		else
+			-- PC onlyMobile=false mas sem override: comportamento padrão
+			if not WindowArgs.IsOpen then
+				ToggleCloseUI(true);
+			else
+				ToggleCloseUI(false);
+			end;
+		end;
+	end;
+end));
+
+UserInputService.InputBegan:Connect(function(Input, Typing)
+	if not Typing and (Input.KeyCode == Config.Keybind or Input.KeyCode.Name == Config.Keybind) then
+		WindowArgs:_ToggleUI();
+	end;
+end);
 
 end; -- fecha o bloco do CloseWindow
 
