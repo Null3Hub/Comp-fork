@@ -7276,10 +7276,10 @@ function Compkiller.new(Config : Window)
   MinimizeBtn.Parent = Top
   MinimizeBtn.AnchorPoint = Vector2.new(1, 0.5)
   MinimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-  MinimizeBtn.BackgroundTransparency = 0.5
+  MinimizeBtn.BackgroundTransparency = 0
   MinimizeBtn.BorderSizePixel = 0
-  MinimizeBtn.Position = UDim2.new(1, -5, 0.5, 0)
-  MinimizeBtn.Size = UDim2.new(0, 15, 0, 15)
+  MinimizeBtn.Position = UDim2.new(-1, -5, 0.5, 0)
+  MinimizeBtn.Size = UDim2.new(0, 14, 0, 14)
   MinimizeBtn.ZIndex = Top.ZIndex + 5
   local MinCorner = Instance.new("UICorner")
   MinCorner.CornerRadius = UDim.new(1, 0)
@@ -7291,10 +7291,10 @@ function Compkiller.new(Config : Window)
   CloseBtn.Parent = Top
   CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
   CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-  CloseBtn.BackgroundTransparency = 0.5
+  CloseBtn.BackgroundTransparency = 0
   CloseBtn.BorderSizePixel = 0
-  CloseBtn.Position = UDim2.new(1, -25, 0.5, 0)
-  CloseBtn.Size = UDim2.new(0, 15, 0, 15)
+  CloseBtn.Position = UDim2.new(-1, -25, 0.5, 0)
+  CloseBtn.Size = UDim2.new(0, 14, 0, 14)
   CloseBtn.ZIndex = Top.ZIndex + 5
   local CloseCorner = Instance.new("UICorner")
   CloseCorner.CornerRadius = UDim.new(1, 0)
