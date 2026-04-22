@@ -9769,18 +9769,19 @@ function Compkiller.new(Config : Window)
 
 		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = CloseWindow
-		
-  -- 1. Registra o gradiente
+
+  -- 1. Registra o gradiente no sistema do Compkiller (se ainda não existir)
   if not Compkiller.Gradients["CloseBtnStroke"] then
       Compkiller.Gradients["CloseBtnStroke"] = Compkiller.Gradient.Create({
           ["0"]   = {Color = Compkiller.Colors.Highlight, Transparency = 0},
+          ["50"]  = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0},
           ["100"] = {Color = Compkiller.Colors.Toggle, Transparency = 0}
       }, {
-          Rotation = 45
+          Rotation = 90
       })
   end
   
-  -- 2. Cria o stroke
+  -- 2. Cria o UIStroke com gradiente
   local CloseStroke = Instance.new("UIStroke")
   CloseStroke.Name = "CloseStroke"
   CloseStroke.Parent = CloseWindow
@@ -9788,8 +9789,26 @@ function Compkiller.new(Config : Window)
   CloseStroke.Transparency = 0
   CloseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
   
-  -- 3. Aplica gradiente no stroke (hack: cria UIGradient filho do stroke)
-  Compkiller:ApplyGradient(CloseStroke, "CloseBtnStroke", true)
+  -- 3. Aplica o gradiente diretamente no stroke usando UIGradient
+  local StrokeGradient = Instance.new("UIGradient")
+  StrokeGradient.Name = "StrokeGradient"
+  StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
+  StrokeGradient.Rotation = Compkiller.Gradients["CloseBtnStroke"].Rotation or 90
+  StrokeGradient.Parent = CloseStroke
+  
+  -- 4. Sincroniza com mudanças de tema
+  table.insert(Compkiller.Elements.Highlight, {
+      Element = CloseStroke,
+      Property = "Color"
+  })
+  
+  -- 5. Atualiza o gradiente quando o tema muda
+  Compkiller.ThemeUpdate = Compkiller.ThemeUpdate or {}
+  table.insert(Compkiller.ThemeUpdate, function()
+      if Compkiller.Gradients["CloseBtnStroke"] then
+          StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
+      end
+  end)
 
 		ImageLabel.Parent = CloseWindow
 		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
