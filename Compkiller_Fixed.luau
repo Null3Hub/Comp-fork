@@ -7284,80 +7284,99 @@ function Compkiller.new(Config : Window)
 		UIListLayout.FillDirection = Enum.FillDirection.Horizontal
 		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		UIListLayout.HorizontalFlex = Enum.UIFlexAlignment.None
 		UIListLayout.Padding = UDim.new(0, 10)
-  
-  -- RightControls: ancora no lado direito do Top
+
+		-- Spacer que empurra botões para direita
+		local Spacer = Instance.new("Frame")
+		Spacer.Name = "Spacer"
+		Spacer.Parent = Top
+		Spacer.BackgroundTransparency = 1
+		Spacer.BorderSizePixel = 0
+		Spacer.Size = UDim2.new(1, 0, 1, 0)
+		Spacer.LayoutOrder = 9998
+
+		local SpacerFlex = Instance.new("UIFlexItem")
+		SpacerFlex.FlexMode = Enum.UIFlexMode.Fill
+		SpacerFlex.Parent = Spacer
+
+		-- Container dos botões, sempre à direita
 		local RightControls = Instance.new("Frame")
 		RightControls.Name = "RightControls"
 		RightControls.Parent = Top
-		RightControls.AnchorPoint = Vector2.new(1, 0.5)
 		RightControls.BackgroundTransparency = 1
 		RightControls.BorderSizePixel = 0
-		RightControls.Position = UDim2.new(1, -5, 0.5, 0)
-		RightControls.Size = UDim2.new(0, 50, 0, 20)
+		RightControls.Size = UDim2.new(0, 42, 1, 0)
+		RightControls.LayoutOrder = 9999
 		RightControls.ZIndex = Top.ZIndex + 1
 
-		-- MINIMIZE BUTTON
-		local MinBtn = Instance.new("Frame")
-		MinBtn.Name = "MinimizeBtn"
-		MinBtn.Parent = RightControls
-		MinBtn.AnchorPoint = Vector2.new(1, 0.5)
-		MinBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		MinBtn.BackgroundTransparency = 0
-		MinBtn.BorderSizePixel = 0
-		MinBtn.Position = UDim2.new(1, 0, 0.5, 0)
-		MinBtn.Size = UDim2.new(0, 14, 0, 14)
-		MinBtn.ZIndex = RightControls.ZIndex + 1
+		local RightLayout = Instance.new("UIListLayout")
+		RightLayout.Parent = RightControls
+		RightLayout.FillDirection = Enum.FillDirection.Horizontal
+		RightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+		RightLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		RightLayout.Padding = UDim.new(0, 6)
 
-		local MinCorner = Instance.new("UICorner")
-		MinCorner.CornerRadius = UDim.new(1, 0)
-		MinCorner.Parent = MinBtn
-
-		-- CLOSE BUTTON
+		-- CLOSE BUTTON (LayoutOrder menor = mais à esquerda dentro do RightControls)
 		local CloseBtn = Instance.new("Frame")
 		CloseBtn.Name = "CloseBtn"
 		CloseBtn.Parent = RightControls
-		CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
 		CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		CloseBtn.BackgroundTransparency = 0.5
+		CloseBtn.BackgroundTransparency = 0.65
 		CloseBtn.BorderSizePixel = 0
-		CloseBtn.Position = UDim2.new(1, -22, 0.5, 0)
-		CloseBtn.Size = UDim2.new(0, 14, 0, 14)
+		CloseBtn.Size = UDim2.new(0, 12, 0, 12)
 		CloseBtn.ZIndex = RightControls.ZIndex + 1
+		CloseBtn.LayoutOrder = 1
 
 		local CloseBtnCorner = Instance.new("UICorner")
 		CloseBtnCorner.CornerRadius = UDim.new(1, 0)
 		CloseBtnCorner.Parent = CloseBtn
 
-		-- hover nos botões
+		-- MINIMIZE BUTTON
+		local MinBtn = Instance.new("Frame")
+		MinBtn.Name = "MinimizeBtn"
+		MinBtn.Parent = RightControls
+		MinBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		MinBtn.BackgroundTransparency = 0.2
+		MinBtn.BorderSizePixel = 0
+		MinBtn.Size = UDim2.new(0, 12, 0, 12)
+		MinBtn.ZIndex = RightControls.ZIndex + 1
+		MinBtn.LayoutOrder = 2
+
+		local MinCorner = Instance.new("UICorner")
+		MinCorner.CornerRadius = UDim.new(1, 0)
+		MinCorner.Parent = MinBtn
+
+		-- inputs e hover
 		Compkiller:_Hover(
 			Compkiller:_Input(MinBtn, function()
 				WindowArgs:_ToggleUI();
 			end),
 			function()
 				Compkiller:_Animation(MinBtn, TweenInfo.new(0.15), {
-					BackgroundTransparency = 0.3
+					BackgroundTransparency = 0
 				});
 			end,
 			function()
 				Compkiller:_Animation(MinBtn, TweenInfo.new(0.15), {
-					BackgroundTransparency = 0
+					BackgroundTransparency = 0.2
 				});
 			end
 		);
 
 		Compkiller:_Hover(
 			Compkiller:_Input(CloseBtn, function()
-   WindowArgs:Destroy()
+				WindowArgs:Destroy()
 			end),
 			function()
 				Compkiller:_Animation(CloseBtn, TweenInfo.new(0.15), {
-					BackgroundTransparency = 0.1
+					BackgroundTransparency = 0.3
 				});
 			end,
 			function()
 				Compkiller:_Animation(CloseBtn, TweenInfo.new(0.15), {
-					BackgroundTransparency = 0.5
+					BackgroundTransparency = 0.65
 				});
 			end
 		);
