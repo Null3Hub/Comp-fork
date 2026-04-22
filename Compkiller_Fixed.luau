@@ -7288,7 +7288,7 @@ function Compkiller.new(Config : Window)
   MinBtn.Parent = RightControls
   MinBtn.AnchorPoint = Vector2.new(1, 0.5)
   MinBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-  MinBtn.BackgroundTransparency = 0.5
+  MinBtn.BackgroundTransparency = 0
   MinBtn.BorderSizePixel = 0
   MinBtn.Position = UDim2.new(1, -4, 0.5, 0)
   MinBtn.Size = UDim2.new(0, 15, 0, 15)
