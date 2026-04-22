@@ -9775,9 +9775,9 @@ function Compkiller.new(Config : Window)
       Compkiller.Gradients["CloseBtnGradient"] = Compkiller.Gradient.Create({
           ["0"]   = {Color = Compkiller.Colors.Highlight, Transparency = 0},   -- Cor principal
           ["50"]  = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0}, -- Branco no meio
-          ["100"] = {Color = Compkiller.Colors.Toggle, Transparency = 0}       -- Cor secundária
+          ["100"] = {Color = Compkiller.Colors.Highlight, Transparency = 0}       -- Cor secundária
       }, {
-          Rotation = 90
+          Rotation = 45
       })
   end
   
@@ -9787,7 +9787,7 @@ function Compkiller.new(Config : Window)
   GradientBorder.Parent = CloseWindow.Parent
   GradientBorder.AnchorPoint = CloseWindow.AnchorPoint
   GradientBorder.Position = CloseWindow.Position
-  GradientBorder.Size = UDim2.new(0, 49, 0, 27)          -- CloseWindow é 45x23, então +4px
+  GradientBorder.Size = UDim2.new(0, 50, 0, 50)          -- CloseWindow é 45x23, então +4px
   GradientBorder.BackgroundColor3 = Color3.new(1, 1, 1)  -- Necessário para o gradiente funcionar
   GradientBorder.BorderSizePixel = 0
   GradientBorder.ZIndex = CloseWindow.ZIndex - 1         -- Fica atrás do botão
