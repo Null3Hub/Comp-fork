@@ -7269,7 +7269,46 @@ function Compkiller.new(Config : Window)
 		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		UIListLayout.Padding = UDim.new(0, 10)
-
+  
+  -- Minimize Button (oculta/exibe o conteúdo interno das abas)
+  local MinimizeBtn = Instance.new("Frame")
+  MinimizeBtn.Name = "MinimizeBtn"
+  MinimizeBtn.Parent = Top
+  MinimizeBtn.AnchorPoint = Vector2.new(1, 0.5)
+  MinimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+  MinimizeBtn.BackgroundTransparency = 0.5
+  MinimizeBtn.BorderSizePixel = 0
+  MinimizeBtn.Position = UDim2.new(1, -5, 0.5, 0)
+  MinimizeBtn.Size = UDim2.new(0, 15, 0, 15)
+  MinimizeBtn.ZIndex = Top.ZIndex + 5
+  local MinCorner = Instance.new("UICorner")
+  MinCorner.CornerRadius = UDim.new(1, 0)
+  MinCorner.Parent = MinimizeBtn
+  
+  -- Close Button (minimiza/oculta a Janela Principal)
+  local CloseBtn = Instance.new("Frame")
+  CloseBtn.Name = "CloseBtn"
+  CloseBtn.Parent = Top
+  CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
+  CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+  CloseBtn.BackgroundTransparency = 0.5
+  CloseBtn.BorderSizePixel = 0
+  CloseBtn.Position = UDim2.new(1, -25, 0.5, 0)
+  CloseBtn.Size = UDim2.new(0, 15, 0, 15)
+  CloseBtn.ZIndex = Top.ZIndex + 5
+  local CloseCorner = Instance.new("UICorner")
+  CloseCorner.CornerRadius = UDim.new(1, 0)
+  CloseCorner.Parent = CloseBtn
+  
+  -- Handlers (usando o padrão seguro da Compkiller)
+  Compkiller:_Input(MinimizeBtn, function()
+  	MainFrame.Visible = not MainFrame.Visible
+  end)
+  
+  Compkiller:_Input(CloseBtn, function()
+  	WindowArgs:Toggle(false)
+  end)
+  
 		-- Functions --
 		Highlight:GetPropertyChangedSignal('BackgroundTransparency'):Connect(function()
 			if Highlight.BackgroundTransparency <= 0.99 then
