@@ -7270,43 +7270,56 @@ function Compkiller.new(Config : Window)
 		UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 		UIListLayout.Padding = UDim.new(0, 10)
   
-  -- Minimize Button (oculta/exibe o conteúdo interno das abas)
-  local MinimizeBtn = Instance.new("Frame")
-  MinimizeBtn.Name = "MinimizeBtn"
-  MinimizeBtn.Parent = Top
-  MinimizeBtn.AnchorPoint = Vector2.new(1, 0.5)
-  MinimizeBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-  MinimizeBtn.BackgroundTransparency = 0
-  MinimizeBtn.BorderSizePixel = 0
-  MinimizeBtn.Position = UDim2.new(-1, -5, 0.5, 0)
-  MinimizeBtn.Size = UDim2.new(0, 14, 0, 14)
-  MinimizeBtn.ZIndex = Top.ZIndex + 5
+    -- [CONTROLE DIREITO] Frame isolado para evitar conflito com UIListLayout das tabs
+  local RightControls = Instance.new("Frame")
+  RightControls.Name = "RightControls"
+  RightControls.Parent = Top
+  RightControls.AnchorPoint = Vector2.new(1, 0.5)
+  RightControls.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+  RightControls.BackgroundTransparency = 1
+  RightControls.BorderSizePixel = 0
+  RightControls.Position = UDim2.new(1, -8, 0.5, 0) -- Margem de 8px da borda direita
+  RightControls.Size = UDim2.new(0, 38, 0, 15)      -- Espaço para 2 botões de 15px + 8px de gap
+  RightControls.ZIndex = Top.ZIndex + 5
+  
+  -- MINIMIZE BUTTON
+  local MinBtn = Instance.new("Frame")
+  MinBtn.Name = "MinimizeBtn"
+  MinBtn.Parent = RightControls
+  MinBtn.AnchorPoint = Vector2.new(1, 0.5)
+  MinBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+  MinBtn.BackgroundTransparency = 0.5
+  MinBtn.BorderSizePixel = 0
+  MinBtn.Position = UDim2.new(1, -4, 0.5, 0)
+  MinBtn.Size = UDim2.new(0, 15, 0, 15)
+  MinBtn.ZIndex = RightControls.ZIndex + 1
   local MinCorner = Instance.new("UICorner")
   MinCorner.CornerRadius = UDim.new(1, 0)
-  MinCorner.Parent = MinimizeBtn
+  MinCorner.Parent = MinBtn
   
-  -- Close Button (minimiza/oculta a Janela Principal)
+  -- CLOSE BUTTON
   local CloseBtn = Instance.new("Frame")
   CloseBtn.Name = "CloseBtn"
-  CloseBtn.Parent = Top
-  CloseBtn.AnchorPoint = Vector2.new(0, 0.5)
-  CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255) 
-  CloseBtn.BackgroundTransparency = 0
+  CloseBtn.Parent = RightControls
+  CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
+  CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+  CloseBtn.BackgroundTransparency = 0.5
   CloseBtn.BorderSizePixel = 0
-  CloseBtn.Position = UDim2.new(1, -25, 0.5, 0) 
-  CloseBtn.Size = UDim2.new(0, 14, 0, 14)
-  CloseBtn.ZIndex = Top.ZIndex + 5
+  CloseBtn.Position = UDim2.new(1, -23, 0.5, 0) -- 15 (tamanho) + 8 (gap)
+  CloseBtn.Size = UDim2.new(0, 15, 0, 15)
+  CloseBtn.ZIndex = RightControls.ZIndex + 1
   local CloseCorner = Instance.new("UICorner")
   CloseCorner.CornerRadius = UDim.new(1, 0)
   CloseCorner.Parent = CloseBtn
   
-  -- Handlers (usando o padrão seguro da Compkiller)
-  Compkiller:_Input(MinimizeBtn, function()
-  	MainFrame.Visible = not MainFrame.Visible
+  -- HANDLERS (Mantendo padrão Compkiller)
+  Compkiller:_Input(MinBtn, function()
+  	-- Ajuste conforme sua lógica de minimizar (ex: esconder Frame interno ou reduzir Size)
+  	ContainerTab.ContentFrame.Visible = not ContainerTab.ContentFrame.Visible
   end)
   
   Compkiller:_Input(CloseBtn, function()
-  	WindowArgs:Toggle(false)
+  	WindowArgs:Toggle(false) -- ou a função que fecha a janela principal na sua fork
   end)
   
 		-- Functions --
