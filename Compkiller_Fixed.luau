@@ -6978,7 +6978,7 @@ function Compkiller.new(Config : Window)
    CloseButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
    CloseButton.BorderSizePixel = 0
    CloseButton.Position = UDim2.new(1, -5, 0, 5)
-   CloseButton.Size = UDim2.new(0, 15, 0, 15)
+   CloseButton.Size = UDim2.new(0, 13, 0, 13)
    CloseButton.ZIndex = 67
   
    local UICorner_Close = Instance.new("UICorner")
