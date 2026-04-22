@@ -6969,17 +6969,21 @@ function Compkiller.new(Config : Window)
 			Property = 'TextColor3'
 		});
 
-		ImageLabel.Parent = Header
-		ImageLabel.AnchorPoint = Vector2.new(1, 0)
-		ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		ImageLabel.BackgroundTransparency = 1.000
-		ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		ImageLabel.BorderSizePixel = 0
-		ImageLabel.Position = UDim2.new(1, -5, 0, 5)
-		ImageLabel.Size = UDim2.new(0, 17, 0, 17)
-		ImageLabel.ZIndex = 67
-		ImageLabel.Image = Compkiller:CacheImage("rbxassetid://127426072704909")
-		ImageLabel.ImageTransparency = 0.500
+   local CloseButton = Instance.new("Frame")
+   CloseButton.Name = "CloseButton"
+   CloseButton.Parent = Header
+   CloseButton.AnchorPoint = Vector2.new(1, 0)
+   CloseButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Cor da bolinha (Edite aqui se quiser)
+   CloseButton.BackgroundTransparency = 0.5 -- Transparência (0 = Sólido, 1 = Invisível)
+   CloseButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+   CloseButton.BorderSizePixel = 0
+   CloseButton.Position = UDim2.new(1, -5, 0, 5)
+   CloseButton.Size = UDim2.new(0, 15, 0, 15)
+   CloseButton.ZIndex = 67
+  
+   local UICorner_Close = Instance.new("UICorner")
+   UICorner_Close.CornerRadius = UDim.new(1, 0) -- Transforma o frame quadrado em uma bola perfeita
+   UICorner_Close.Parent = CloseButton
 
 		function WindowArgs.UserSettings:Create()
 
@@ -7043,9 +7047,9 @@ function Compkiller.new(Config : Window)
 				end;
 			end;
 
-			Compkiller:_Input(ImageLabel,function()
-				WindowArgs.UserSettings:Window(false);
-			end);
+   Compkiller:_Input(CloseButton, function()
+   	WindowArgs.UserSettings:Window(false)
+   end)
 
 			WindowArgs.UserSettings:Window(false);
 
