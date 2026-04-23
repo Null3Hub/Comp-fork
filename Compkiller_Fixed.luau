@@ -11274,15 +11274,6 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appLabel.Parent = topbar
         end
     end
-
-    -- Spacer (pushes exit button to the right)
-    local spacer = Instance.new("Frame")
-    spacer.Name = "Spacer"
-    spacer.BackgroundTransparency = 1
-    spacer.BorderSizePixel = 0
-    spacer.Size = UDim2.fromScale(1, 0)
-    spacer.LayoutOrder = 999 -- High priority to push exit button
-    spacer.Parent = topbar
     
     -- Exit Button (Right Side)
     if properties.CloseButton ~= false then
@@ -11290,11 +11281,13 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         exitBtn.Name = "Exit"
         exitBtn.AnchorPoint = Vector2.new(0.5, 0.5)
         exitBtn.AutoButtonColor = false
-        exitBtn.BackgroundColor3 = self.Colors.Highlight or Color3.fromRGB(17, 238, 253)
+        exitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         exitBtn.BackgroundTransparency = 0.2
-        exitBtn.BorderSizePixel = 0        exitBtn.FontFace = Font.new("rbxassetid://12187365364")
+        exitBtn.BorderSizePixel = 0
+        exitBtn.FontFace = Font.new("rbxassetid://12187365364")
         exitBtn.Size = UDim2.fromOffset(14, 14)
         exitBtn.Text = ""
+        exitBtn.LayoutOrder = 999 -- ADICIONE ISSO - empurra para direita
         exitBtn.ZIndex = 10
         
         local exitCorner = Instance.new("UICorner")
