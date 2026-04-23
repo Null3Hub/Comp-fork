@@ -1634,141 +1634,204 @@ function Compkiller:GetCalculatePosition(planePos: number, planeNormal: number, 
 	return rayOrigin + (a * rayDirection);
 end;
 
-function Compkiller:_Blur(element : Frame , WindowRemote) : RBXScriptSignal
+ local Lighting = cloneref(game:GetService("Lighting"))
+ local Workspace = cloneref(game:GetService("Workspace"))
+ local RunService = game:GetService("RunService")
+ 
+ function Compkiller:_GetBlurFolder()
+ 	local camera = Workspace.CurrentCamera
+ 	if not camera then
+ 		return nil
+ 	end
+ 
+ 	local folder = camera:FindFirstChild("Compkiller Blur Elements")
+ 	if not folder then
+ 		folder = Instance.new("Folder")
+ 		folder.Name = "Compkiller Blur Elements"
+ 		folder.Parent = camera
+ 	end
+ 
+ 	return folder
+ end
+ 
+ function Compkiller:_ViewportPointToWorld(position: Vector2, distance: number)
+ 	local camera = Workspace.CurrentCamera
+ 	if not camera then
+ 		return Vector3.zero
+ 	end
+ 
+ 	local ray = camera:ViewportPointToRay(position.X, position.Y, distance)
+ 	return ray.Origin + ray.Direction * distance
+ end
+ 
+ function Compkiller:_CreateAcrylicPart()
+ 	local part = Instance.new("Part")
+ 	part.Name = "CompkillerAcrylic"
+ 	part.Color = Color3.new(0, 0, 0)
+ 	part.Material = Enum.Material.Glass
+ 	part.Anchored = true
+ 	part.CanCollide = false
+ 	part.CanQuery = false
+ 	part.CastShadow = false
+ 	part.Locked = true
+ 	part.Transparency = 0.98
+ 	part.Size = Vector3.new(1, 1, 0.001)
+ 
+ 	local mesh = Instance.new("SpecialMesh")
+ 	mesh.MeshType = Enum.MeshType.Brick
+ 	mesh.Offset = Vector3.new(0, 0, -0.000001)
+ 	mesh.Scale = Vector3.new(1, 1, 0.001)
+ 	mesh.Parent = part
+ 
+ 	return part, mesh
+ end
+ 
+ function Compkiller:_GetOrCreateBlurEffect()
+ 	local blur = Lighting:FindFirstChild("compkillerBlur")
+ 	if blur and blur:IsA("DepthOfFieldEffect") then
+ 		return blur
+ 	end
+ 
+ 	blur = Instance.new("DepthOfFieldEffect")
+ 	blur.Name = "compkillerBlur"
+ 	blur.Enabled = true
+ 	blur.FarIntensity = 0
+ 	blur.FocusDistance = 500
+ 	blur.InFocusRadius = 500
+ 	blur.NearIntensity = 0
+ 	blur.Parent = Lighting
+ 
+ 	return blur
+ end
+
+function Compkiller:_Blur(element: Frame, WindowRemote): RBXScriptSignal
 	if Compkiller.SecureMode and not Compkiller.SecurityConfig.BlurEnabled then
-		return game.Changed:Connect(function() end);
-	end;
+		return game.Changed:Connect(function() end)
+	end
 
-	local Part = Instance.new('Part',Compkiller.ArcylicParent);
-	local DepthOfField = Instance.new('DepthOfFieldEffect',cloneref(game:GetService('Lighting')));
-	local BlockMesh = Instance.new("BlockMesh");
-	local userSettings = UserSettings():GetService("UserGameSettings");
+	local camera = Workspace.CurrentCamera
+	if not camera or not element then
+		return game.Changed:Connect(function() end)
+	end
 
-	BlockMesh.Parent = Part;
+	local folder = Compkiller:_GetBlurFolder()
+	if not folder then
+		return game.Changed:Connect(function() end)
+	end
 
-	Part.Material = Enum.Material.Glass;
-	Part.Transparency = 1;
-	Part.Reflectance = 1;
-	Part.CastShadow = false;
-	Part.Anchored = true;
-	Part.CanCollide = false;
-	Part.CanQuery = false;
-	Part.CollisionGroup = Compkiller:_RandomString();
-	Part.Size = Vector3.new(1, 1, 1) * 0.01;
-	Part.Color = Color3.fromRGB(0,0,0);
+	local blurEffect = Compkiller:_GetOrCreateBlurEffect()
+	local part, mesh = Compkiller:_CreateAcrylicPart()
 
-	DepthOfField.Enabled = true;
-	DepthOfField.FarIntensity = 0;
-	DepthOfField.FocusDistance = 0;
-	DepthOfField.InFocusRadius = 1000;
-	DepthOfField.NearIntensity = 1;
-	DepthOfField.Name = Compkiller:_RandomString();
+	part.Parent = folder
 
-	Part.Name = Compkiller:_RandomString();
+	local cleanups = {}
+	local destroyed = false
+	local distance = 0.05
 
-	local disconnect;
+	local function setVisible(visible)
+		if destroyed or not part then
+			return
+		end
 
-	local UpdateFunction = function()
-		if Compkiller.SecureMode then
-			if Part then
-				Part:Destroy();
-				Part = nil;
-			end;
+		part.Transparency = visible and 0.98 or 1
+		blurEffect.NearIntensity = visible and 1 or 0
+	end
 
-			if DepthOfField then
-				DepthOfField:Destroy();
-				DepthOfField = nil;
-			end;
+	local function render()
+		if destroyed or not element or not element.Parent then
+			return
+		end
 
-			if BlockMesh then
-				BlockMesh:Destroy();
-				BlockMesh = nil;
-			end;
+		local currentCamera = Workspace.CurrentCamera
+		if not currentCamera then
+			return
+		end
 
-			if disconnect then
-				disconnect();
-				disconnect = nil;
-			end;
+		local isWindowActive = WindowRemote and WindowRemote:GetValue()
+		if not isWindowActive then
+			setVisible(false)
+			return
+		end
 
-			return;
-		end;
+		local absPos = element.AbsolutePosition
+		local absSize = element.AbsoluteSize
 
-		local IsWindowActive = WindowRemote:GetValue();
+		if absSize.X <= 0 or absSize.Y <= 0 then
+			setVisible(false)
+			return
+		end
 
-		if IsWindowActive then
+		setVisible(true)
 
-			Compkiller:_Animation(DepthOfField,TweenInfo.new(0.1),{
-				NearIntensity = 1
-			})
+		local topLeft2D = absPos
+		local topRight2D = absPos + Vector2.new(absSize.X, 0)
+		local bottomRight2D = absPos + absSize
 
-			Compkiller:_Animation(Part,TweenInfo.new(0.1),{
-				Transparency = 0.97,
-				Size = Vector3.new(1, 1, 1) * 0.01;
-			})
+		local topLeft3D = Compkiller:_ViewportPointToWorld(topLeft2D, distance)
+		local topRight3D = Compkiller:_ViewportPointToWorld(topRight2D, distance)
+		local bottomRight3D = Compkiller:_ViewportPointToWorld(bottomRight2D, distance)
+
+		local width = (topRight3D - topLeft3D).Magnitude
+		local height = (topRight3D - bottomRight3D).Magnitude
+
+		part.CFrame = CFrame.fromMatrix(
+			(topLeft3D + bottomRight3D) / 2,
+			currentCamera.CFrame.XVector,
+			currentCamera.CFrame.YVector,
+			currentCamera.CFrame.ZVector
+		)
+
+		if mesh then
+			mesh.Scale = Vector3.new(width, height, 0.001)
+		end
+
+		pcall(function()
+			part.Color = element.BackgroundColor3
+		end)
+	end
+
+	local function disconnect()
+		if destroyed then
+			return
+		end
+
+		destroyed = true
+
+		for _, connection in ipairs(cleanups) do
+			pcall(function()
+				connection:Disconnect()
+			end)
+		end
+
+		if part then
+			part:Destroy()
+		end
+	end
+
+	table.insert(cleanups, camera:GetPropertyChangedSignal("CFrame"):Connect(render))
+	table.insert(cleanups, camera:GetPropertyChangedSignal("ViewportSize"):Connect(render))
+	table.insert(cleanups, camera:GetPropertyChangedSignal("FieldOfView"):Connect(render))
+	table.insert(cleanups, element:GetPropertyChangedSignal("AbsolutePosition"):Connect(render))
+	table.insert(cleanups, element:GetPropertyChangedSignal("AbsoluteSize"):Connect(render))
+	table.insert(cleanups, element:GetPropertyChangedSignal("BackgroundColor3"):Connect(render))
+	table.insert(cleanups, element.AncestryChanged:Connect(function(_, parent)
+		if not parent then
+			disconnect()
 		else
-			Compkiller:_Animation(DepthOfField,TweenInfo.new(0.1),{
-				NearIntensity = 0
-			})
+			render()
+		end
+	end))
+	table.insert(cleanups, element.Destroying:Connect(disconnect))
 
-			Compkiller:_Animation(Part,TweenInfo.new(0.1),{
-				Size = Vector3.zero,
-				Transparency = 1.5,
-			})
+	local heartbeatConnection = RunService.Heartbeat:Connect(function()
+		pcall(render)
+	end)
+	table.insert(cleanups, heartbeatConnection)
 
-			return false;
-		end;
+	task.spawn(render)
 
-		if IsWindowActive then
-			local corner0 = element.AbsolutePosition;
-			local corner1 = corner0 + element.AbsoluteSize;
-
-			local ray0 = CurrentCamera.ScreenPointToRay(CurrentCamera,corner0.X, corner0.Y, 1);
-			local ray1 = CurrentCamera.ScreenPointToRay(CurrentCamera,corner1.X, corner1.Y, 1);
-
-			local planeOrigin = CurrentCamera.CFrame.Position + CurrentCamera.CFrame.LookVector * (0.05 - CurrentCamera.NearPlaneZ);
-
-			local planeNormal = CurrentCamera.CFrame.LookVector;
-
-			local pos0 = Compkiller:GetCalculatePosition(planeOrigin, planeNormal, ray0.Origin, ray0.Direction);
-			local pos1 = Compkiller:GetCalculatePosition(planeOrigin, planeNormal, ray1.Origin, ray1.Direction);
-
-			pos0 = CurrentCamera.CFrame:PointToObjectSpace(pos0);
-			pos1 = CurrentCamera.CFrame:PointToObjectSpace(pos1);
-
-			local size   = pos1 - pos0;
-			local center = (pos0 + pos1) / 2;
-
-			BlockMesh.Offset = center
-			BlockMesh.Scale  = size / 0.0101;
-			Part.CFrame = CurrentCamera.CFrame;
-		end;
-	end;
-
-	local rbxsignal = CurrentCamera:GetPropertyChangedSignal('CFrame'):Connect(UpdateFunction)
-	local loopThread = UserInputService.InputChanged:Connect(function(Input)
-		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-			pcall(UpdateFunction);
-		end;
-	end);
-
-	local THREAD = task.spawn(function()
-		while true do task.wait(0.1)
-			pcall(UpdateFunction);
-		end;
-	end);
-
-	disconnect = function()
-		rbxsignal:Disconnect();
-		loopThread:Disconnect();
-		task.cancel(THREAD);
-		Part:Destroy();
-		DepthOfField:Destroy();
-	end;
-
-	element.Destroying:Connect(disconnect);
-
-	return rbxsignal;
-end;
+	return heartbeatConnection
+end
 
 function Compkiller:_AddDragBlacklist(Frame: Frame)
 	local IsAdded = false;
