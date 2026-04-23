@@ -10812,8 +10812,8 @@ function Compkiller:Loader(IconId,Duration)
  	Text.BorderSizePixel = 0
  	Text.Position = UDim2.new(0.5, 0, 0.5, 110)
  	Text.Size = UDim2.new(0, 300, 0, 30)
- 	Text.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
- 	Text.Text = "Loading."
+ 	Text.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold)
+ 	Text.Text = "Loading Script."
  	Text.TextColor3 = Color3.fromRGB(255,255,255)
  	Text.TextSize = 16
  	Text.TextTransparency = 1
