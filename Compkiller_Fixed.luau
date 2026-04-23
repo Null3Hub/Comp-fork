@@ -11196,6 +11196,7 @@ end
 function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     local tweenService = game:GetService("TweenService")
     
+    -- Notification Container
     local notification = Instance.new("Frame")
     notification.Name = "Notification"
     notification.AnchorPoint = Vector2.new(0.5, 1)
@@ -11220,20 +11221,132 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = canvas
     
+    -- Main Layout
     local listLayout = Instance.new("UIListLayout")
     listLayout.Padding = UDim.new(0, 4)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     listLayout.Parent = canvas
     
-    -- Content
+    -- Topbar Container (App/Icon + Exit Button)
+    local topbar = Instance.new("Frame")
+    topbar.Name = "Topbar"
+    topbar.AutomaticSize = Enum.AutomaticSize.Y
+    topbar.BackgroundTransparency = 1
+    topbar.BorderSizePixel = 0
+    topbar.Size = UDim2.fromScale(1, 0)
+    topbar.Visible = (properties.App ~= nil) or (properties.AppIcon ~= nil) or properties.CloseButton ~= false
+    
+    local topbarLayout = Instance.new("UIListLayout")
+    topbarLayout.FillDirection = Enum.FillDirection.Horizontal
+    topbarLayout.Padding = UDim.new(0, 5)
+    topbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    topbarLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    topbarLayout.Parent = topbar    
+    -- App Info (Left Side)
+    if properties.App or properties.AppIcon then
+        if properties.AppIcon then
+            local appIcon = Instance.new("ImageLabel")
+            appIcon.Name = "AppIcon"
+            appIcon.BackgroundTransparency = 1
+            appIcon.BorderSizePixel = 0
+            appIcon.Image = properties.AppIcon
+            appIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+            appIcon.Size = UDim2.fromOffset(20, 20)
+            appIcon.Parent = topbar
+        end
+        
+        if properties.App then
+            local appLabel = Instance.new("TextLabel")
+            appLabel.Name = "App"
+            appLabel.AutomaticSize = Enum.AutomaticSize.X
+            appLabel.BackgroundTransparency = 1
+            appLabel.BorderSizePixel = 0
+            appLabel.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+            appLabel.LineHeight = 0
+            appLabel.Size = UDim2.fromOffset(0, 14)
+            appLabel.Text = string.upper(properties.App)
+            appLabel.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+            appLabel.TextSize = 13
+            appLabel.TextTransparency = 0.5
+            appLabel.TextXAlignment = Enum.TextXAlignment.Left
+            appLabel.RichText = true
+            appLabel.Parent = topbar
+        end
+    end
+    
+    -- Spacer (pushes exit button to the right)
+    local spacer = Instance.new("Frame")
+    spacer.Name = "Spacer"
+    spacer.BackgroundTransparency = 1
+    spacer.BorderSizePixel = 0
+    spacer.Size = UDim2.new(1, 0, 0, 0) -- Takes remaining space
+    spacer.Parent = topbar
+    
+    -- Exit Button (Right Side)
+    if properties.CloseButton ~= false then
+        local exitBtn = Instance.new("TextButton")
+        exitBtn.Name = "Exit"
+        exitBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+        exitBtn.AutoButtonColor = false
+        exitBtn.BackgroundColor3 = self.Colors.Highlight or Color3.fromRGB(17, 238, 253)
+        exitBtn.BackgroundTransparency = 0.2
+        exitBtn.BorderSizePixel = 0        exitBtn.FontFace = Font.new("rbxassetid://12187365364")
+        exitBtn.Size = UDim2.fromOffset(14, 14)
+        exitBtn.Text = ""
+        exitBtn.ZIndex = 10
+        
+        local exitCorner = Instance.new("UICorner")
+        exitCorner.CornerRadius = UDim.new(1, 0)
+        exitCorner.Parent = exitBtn
+        
+        local exitStroke = Instance.new("UIStroke")
+        exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+        exitStroke.Thickness = 1
+        exitStroke.Transparency = 0.7
+        exitStroke.Parent = exitBtn
+        
+        -- Hover effects
+        exitBtn.MouseEnter:Connect(function()
+            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0,
+                Size = UDim2.fromOffset(16, 16)
+            }):Play()
+        end)
+        
+        exitBtn.MouseLeave:Connect(function()
+            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0.2,
+                Size = UDim2.fromOffset(14, 14)
+            }):Play()
+        end)
+        
+        exitBtn.MouseButton1Click:Connect(function()
+            self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
+        end)
+        
+        exitBtn.Parent = topbar
+    end
+    
+    local topbarPadding = Instance.new("UIPadding")
+    topbarPadding.PaddingLeft = UDim.new(0, 10)
+    topbarPadding.PaddingRight = UDim.new(0, 10)
+    topbarPadding.PaddingTop = UDim.new(0, 10)
+    topbarPadding.PaddingBottom = UDim.new(0, 4)
+    topbarPadding.Parent = topbar
+    
+    -- Content Container
     local content = Instance.new("Frame")
     content.Name = "Content"
     content.AutomaticSize = Enum.AutomaticSize.Y
-    content.BackgroundTransparency = 1
-    content.BorderSizePixel = 0
+    content.BackgroundTransparency = 1    content.BorderSizePixel = 0
     content.LayoutOrder = 1
     content.Size = UDim2.fromScale(1, 0)
+    
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Parent = content
     
     -- Title Container
     local titleContainer = Instance.new("Frame")
@@ -11242,14 +11355,15 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     titleContainer.BackgroundTransparency = 1
     titleContainer.BorderSizePixel = 0
     titleContainer.LayoutOrder = 1
-    local titleLayout = Instance.new("UIListLayout")    
+    
+    local titleLayout = Instance.new("UIListLayout")
     titleLayout.FillDirection = Enum.FillDirection.Horizontal
     titleLayout.Padding = UDim.new(0, 5)
     titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
     titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     titleLayout.Parent = titleContainer
     
-    -- Icon (se existir)
+    -- Icon
     if properties.Icon then
         local icon = Instance.new("ImageLabel")
         icon.Name = "Icon"
@@ -11275,15 +11389,11 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     title.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
     title.TextSize = 13
     title.TextWrapped = true
-    title.RichText = true
+    title.RichText = true    
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = titleContainer
     
-    local contentLayout = Instance.new("UIListLayout")
-    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Parent = content
-    
-    -- Subtitle (se existir)
+    -- Subtitle
     if properties.Subtitle and properties.Subtitle ~= "" then
         local subtitle = Instance.new("TextLabel")
         subtitle.Name = "Subtitle"
@@ -11291,8 +11401,9 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         subtitle.BackgroundTransparency = 1
         subtitle.BorderSizePixel = 0
         subtitle.FontFace = Font.new("rbxassetid://12187365364")
-        subtitle.LayoutOrder = 1
-        subtitle.RichText = true        subtitle.Size = UDim2.fromScale(1, 0)
+        subtitle.LayoutOrder = 2
+        subtitle.RichText = true
+        subtitle.Size = UDim2.fromScale(1, 0)
         subtitle.Text = properties.Subtitle
         subtitle.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
         subtitle.TextSize = 13
@@ -11308,115 +11419,41 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     contentPadding.PaddingRight = UDim.new(0, 10)
     contentPadding.Parent = content
     
-    -- Topbar (se existir App ou AppIcon)
-    if properties.App or properties.AppIcon then
-        local topbar = Instance.new("Frame")
-        topbar.Name = "Topbar"
-        topbar.AutomaticSize = Enum.AutomaticSize.Y
-        topbar.BackgroundTransparency = 1
-        topbar.BorderSizePixel = 0
-        topbar.Size = UDim2.fromScale(1, 0)
-        
-        local topbarLayout = Instance.new("UIListLayout")
-        topbarLayout.FillDirection = Enum.FillDirection.Horizontal
-        topbarLayout.Padding = UDim.new(0, 15) -- Aumentado para separar melhor
-        topbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        topbarLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-        topbarLayout.Parent = topbar
-        
-        if properties.App then
-            local appLabel = Instance.new("TextLabel")
-            appLabel.Name = "App"
-            appLabel.AutomaticSize = Enum.AutomaticSize.X
-            appLabel.BackgroundTransparency = 1
-            appLabel.BorderSizePixel = 0
-            appLabel.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-            appLabel.LayoutOrder = 2
-            appLabel.LineHeight = 0
-            appLabel.Size = UDim2.fromOffset(0, 14)
-            appLabel.Text = string.upper(properties.App)
-            appLabel.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-            appLabel.TextSize = 13
-            appLabel.TextTransparency = 0.5
-            appLabel.TextXAlignment = Enum.TextXAlignment.Left
-            appLabel.RichText = true
-            appLabel.Parent = topbar
-        end        
-        if properties.AppIcon then
-            local appIcon = Instance.new("ImageLabel")
-            appIcon.Name = "Icon"
-            appIcon.BackgroundTransparency = 1
-            appIcon.BorderSizePixel = 0
-            appIcon.Image = properties.AppIcon
-            appIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-            appIcon.Size = UDim2.fromOffset(20, 20)
-            appIcon.LayoutOrder = 1
-            appIcon.Parent = topbar
-        end
-        
-        -- Exit Button - À direita
-        local exitBtn = Instance.new("TextButton")
-        exitBtn.Name = "Exit"
-        exitBtn.AutoButtonColor = false
-        exitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        exitBtn.BackgroundTransparency = 0.2
-        exitBtn.BorderSizePixel = 0
-        exitBtn.FontFace = Font.new("rbxassetid://12187365364")
-        exitBtn.LayoutOrder = 999 -- Sempre à direita
-        exitBtn.Size = UDim2.fromOffset(16, 16)
-        exitBtn.Text = ""
-        exitBtn.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-        exitBtn.TextSize = 14
-        exitBtn.TextTransparency = 0.5
-        exitBtn.ZIndex = 10
-        
-        local exitCorner = Instance.new("UICorner")
-        exitCorner.CornerRadius = UDim.new(1, 0)
-        exitCorner.Parent = exitBtn
-        
-        local exitStroke = Instance.new("UIStroke")
-        exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-        exitStroke.Thickness = 1
-        exitStroke.Transparency = 0.7
-        exitStroke.Parent = exitBtn
-        
-        exitBtn.Parent = topbar
-        
-        -- Hover effects
-        exitBtn.MouseEnter:Connect(function()
-            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0,
-                Size = UDim2.fromOffset(16, 16)
-            }):Play()
-        end)
-                exitBtn.MouseLeave:Connect(function()
-            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0.2,
-                Size = UDim2.fromOffset(14, 14)
-            }):Play()
-        end)
-        
-        local topbarPadding = Instance.new("UIPadding")
-        topbarPadding.PaddingLeft = UDim.new(0, 4) -- Reduzido para aproximar da borda
-        topbarPadding.PaddingRight = UDim.new(0, 3.5) -- Espaço à direita
-        topbarPadding.PaddingTop = UDim.new(0, 10)
-        topbarPadding.Parent = topbar
-        
-        topbar.Parent = content
-        
-        -- Click handler
-        exitBtn.MouseButton1Click:Connect(function()
-            self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
-        end)
-    end
-    
-    -- Hierarquia
+    -- Hierarchy
     titleContainer.Parent = content
     content.Parent = canvas
+    topbar.Parent = canvas
     canvas.Parent = notification
     
     return notification
+end
+
+function Compkiller:_CloseNotification(notification, state, MAX_NOTIFICATIONS, callback)
+    local tweenService = game:GetService("TweenService")
+    
+    if not notification or not notification.Parent then
+        return
+    end
+    
+    -- Callback
+    if callback then
+        task.spawn(callback)
+    end
+    
+    -- Animação de saída
+    local fadeTween = tweenService:Create(
+        notification,
+        TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+        {            Position = notification.Position + UDim2.fromOffset(350, 0),
+        }
+    )
+    
+    fadeTween:Play()
+    fadeTween.Completed:Connect(function()
+        if notification and notification.Parent then
+            notification:Destroy()
+        end
+    end)
 end
 
 function Compkiller:_CloseNotification(notification, state, MAX_NOTIFICATIONS, callback)
