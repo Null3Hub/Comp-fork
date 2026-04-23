@@ -10905,16 +10905,20 @@ function Compkiller:Loader(IconId,Duration)
  			})
  
  			task.delay(0.1,function()
- 				Compkiller:_Animation(Vignette,TweenInfo.new(1,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
- 					ImageTransparency = 1
- 				})
- 
- 				task.wait(0.2)
- 
- 				task.delay(3,function()
- 					CompKiller:Destroy()
- 				end)
- 			end)
+    Compkiller:_Animation(Vignette,TweenInfo.new(1,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
+        ImageTransparency = 1
+    })
+
+    task.delay(1, function()
+        if Vignette then
+            Vignette:Destroy()
+        end
+    end)
+
+      task.delay(1.5,function()
+          CompKiller:Destroy()
+      end)
+  end)
  
  			task.delay(0.6,function()
  				Event:Fire()
