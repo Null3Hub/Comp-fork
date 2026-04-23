@@ -11319,9 +11319,9 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     local right = Instance.new("Frame")
     right.Name = "Right"
     right.BackgroundTransparency = 1
-    right.Size = UDim2.fromOffset(20, 20)
+    right.Size = UDim2.fromOffset(15, 15)
     right.AnchorPoint = Vector2.new(1, 0.5)
-    right.Position = UDim2.new(1, 13, 0.5, 5)
+    right.Position = UDim2.new(1, 14, 0.5, 5)
     right.Parent = topbar
     
     -- App Info
