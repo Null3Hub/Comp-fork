@@ -11152,8 +11152,8 @@ function Compkiller:AdvancedNotify(properties: {
         
         local containerFrame = Instance.new("Frame")
         containerFrame.Name = "Notifications"
-        containerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        containerFrame.BackgroundTransparency = 1
+        containerFrame.BackgroundColor3 = Compkiller.Colors.BGDBColor
+        containerFrame.BackgroundTransparency = 0.100
         containerFrame.BorderSizePixel = 0
         containerFrame.Size = UDim2.fromScale(1, 1)
         containerFrame.Parent = notificationContainer
