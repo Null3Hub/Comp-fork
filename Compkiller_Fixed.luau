@@ -11385,7 +11385,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     right.BackgroundTransparency = 1
     right.Size = UDim2.fromOffset(15, 15)
     right.AnchorPoint = Vector2.new(1, 0.5)
-    right.Position = UDim2.new(1, 14, 0.5, 0.9)
+    right.Position = UDim2.new(1, 14, 0.5, 0.8)
     right.Parent = topbar
     
     -- App Info
@@ -11430,7 +11430,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         exitBtn.BackgroundTransparency = 0.2
         exitBtn.BorderSizePixel = 0
         exitBtn.FontFace = Font.new("rbxassetid://12187365364")
-        exitBtn.Size = UDim2.fromOffset(14, 14)
+        exitBtn.Size = UDim2.fromOffset(12, 12)
         exitBtn.Text = ""
         exitBtn.ZIndex = 10
         
@@ -11449,14 +11449,14 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         exitBtn.MouseEnter:Connect(function()
             tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0,
-                Size = UDim2.fromOffset(16, 16)
+                Size = UDim2.fromOffset(14, 14)
             }):Play()
         end)
         
         exitBtn.MouseLeave:Connect(function()
             tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0.2,
-                Size = UDim2.fromOffset(14, 14)
+                Size = UDim2.fromOffset(12, 12)
             }):Play()
         end)
         
