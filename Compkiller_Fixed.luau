@@ -11274,13 +11274,14 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appLabel.Parent = topbar
         end
     end
-    
+
     -- Spacer (pushes exit button to the right)
     local spacer = Instance.new("Frame")
     spacer.Name = "Spacer"
     spacer.BackgroundTransparency = 1
     spacer.BorderSizePixel = 0
-    spacer.Size = UDim2.new(1, 0, 0, 0) -- Takes remaining space
+    spacer.Size = UDim2.fromScale(1, 0)
+    spacer.LayoutOrder = 999 -- High priority to push exit button
     spacer.Parent = topbar
     
     -- Exit Button (Right Side)
@@ -11426,34 +11427,6 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     canvas.Parent = notification
     
     return notification
-end
-
-function Compkiller:_CloseNotification(notification, state, MAX_NOTIFICATIONS, callback)
-    local tweenService = game:GetService("TweenService")
-    
-    if not notification or not notification.Parent then
-        return
-    end
-    
-    -- Callback
-    if callback then
-        task.spawn(callback)
-    end
-    
-    -- Animação de saída
-    local fadeTween = tweenService:Create(
-        notification,
-        TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {            Position = notification.Position + UDim2.fromOffset(350, 0),
-        }
-    )
-    
-    fadeTween:Play()
-    fadeTween.Completed:Connect(function()
-        if notification and notification.Parent then
-            notification:Destroy()
-        end
-    end)
 end
 
 function Compkiller:_CloseNotification(notification, state, MAX_NOTIFICATIONS, callback)
