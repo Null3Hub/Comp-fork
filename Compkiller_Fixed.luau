@@ -11228,7 +11228,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
     listLayout.Parent = canvas
     
-    -- Topbar Container (App/Icon + Exit Button)
+        -- Topbar Container
     local topbar = Instance.new("Frame")
     topbar.Name = "Topbar"
     topbar.AutomaticSize = Enum.AutomaticSize.Y
@@ -11237,13 +11237,38 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     topbar.Size = UDim2.fromScale(1, 0)
     topbar.Visible = (properties.App ~= nil) or (properties.AppIcon ~= nil) or properties.CloseButton ~= false
     
-    local topbarLayout = Instance.new("UIListLayout")
-    topbarLayout.FillDirection = Enum.FillDirection.Horizontal
-    topbarLayout.Padding = UDim.new(0, 5)
-    topbarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    topbarLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    topbarLayout.Parent = topbar    
-    -- App Info (Left Side)
+    -- Padding
+    local topbarPadding = Instance.new("UIPadding")
+    topbarPadding.PaddingLeft = UDim.new(0, 10)
+    topbarPadding.PaddingRight = UDim.new(0, 10)
+    topbarPadding.PaddingTop = UDim.new(0, 10)
+    topbarPadding.PaddingBottom = UDim.new(0, 4)
+    topbarPadding.Parent = topbar
+    
+    -- LEFT CONTAINER (App info)
+    local left = Instance.new("Frame")
+    left.Name = "Left"
+    left.BackgroundTransparency = 1
+    left.Size = UDim2.new(1, -40, 1, 0) -- espaço pro botão
+    left.Parent = topbar
+    
+    local leftLayout = Instance.new("UIListLayout")
+    leftLayout.FillDirection = Enum.FillDirection.Horizontal
+    leftLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    leftLayout.Padding = UDim.new(0, 5)
+    leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    leftLayout.Parent = left
+    
+    -- RIGHT CONTAINER (Exit button)
+    local right = Instance.new("Frame")
+    right.Name = "Right"
+    right.BackgroundTransparency = 1
+    right.Size = UDim2.fromOffset(20, 20)
+    right.AnchorPoint = Vector2.new(1, 0.5)
+    right.Position = UDim2.new(1, -10, 0.5, 0)
+    right.Parent = topbar
+    
+    -- App Info
     if properties.App or properties.AppIcon then
         if properties.AppIcon then
             local appIcon = Instance.new("ImageLabel")
@@ -11253,7 +11278,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appIcon.Image = properties.AppIcon
             appIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
             appIcon.Size = UDim2.fromOffset(20, 20)
-            appIcon.Parent = topbar
+            appIcon.Parent = left
         end
         
         if properties.App then
@@ -11271,11 +11296,11 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             appLabel.TextTransparency = 0.5
             appLabel.TextXAlignment = Enum.TextXAlignment.Left
             appLabel.RichText = true
-            appLabel.Parent = topbar
+            appLabel.Parent = left
         end
     end
     
-    -- Exit Button (Right Side)
+    -- Exit Button
     if properties.CloseButton ~= false then
         local exitBtn = Instance.new("TextButton")
         exitBtn.Name = "Exit"
@@ -11287,7 +11312,6 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         exitBtn.FontFace = Font.new("rbxassetid://12187365364")
         exitBtn.Size = UDim2.fromOffset(14, 14)
         exitBtn.Text = ""
-        exitBtn.LayoutOrder = 999 -- ADICIONE ISSO - empurra para direita
         exitBtn.ZIndex = 10
         
         local exitCorner = Instance.new("UICorner")
@@ -11301,7 +11325,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         exitStroke.Transparency = 0.7
         exitStroke.Parent = exitBtn
         
-        -- Hover effects
+        -- Hover
         exitBtn.MouseEnter:Connect(function()
             tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 BackgroundTransparency = 0,
@@ -11320,21 +11344,15 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
             self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
         end)
         
-        exitBtn.Parent = topbar
+        exitBtn.Parent = right
     end
-    
-    local topbarPadding = Instance.new("UIPadding")
-    topbarPadding.PaddingLeft = UDim.new(0, 10)
-    topbarPadding.PaddingRight = UDim.new(0, 10)
-    topbarPadding.PaddingTop = UDim.new(0, 10)
-    topbarPadding.PaddingBottom = UDim.new(0, 4)
-    topbarPadding.Parent = topbar
     
     -- Content Container
     local content = Instance.new("Frame")
     content.Name = "Content"
     content.AutomaticSize = Enum.AutomaticSize.Y
-    content.BackgroundTransparency = 1    content.BorderSizePixel = 0
+    content.BackgroundTransparency = 1    
+    content.BorderSizePixel = 0
     content.LayoutOrder = 1
     content.Size = UDim2.fromScale(1, 0)
     
