@@ -11265,7 +11265,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     right.BackgroundTransparency = 1
     right.Size = UDim2.fromOffset(20, 20)
     right.AnchorPoint = Vector2.new(1, 0.5)
-    right.Position = UDim2.new(1, 4, 0.5, 1.5)
+    right.Position = UDim2.new(1, 5, 0.5, 2)
     right.Parent = topbar
     
     -- App Info
