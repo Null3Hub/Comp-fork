@@ -10769,19 +10769,33 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 	return Args;
 end;
 
-function Compkiller:Loader(Config: { Icon?: string, Text?: string, Duration?: number })
+function Compkiller:Loader(Config: any)
+
     local IconId = ""
     local Duration = 5
-    
+    local TextContent = nil
+
     if type(Config) == "table" then
-        IconId = tostring(Config.Icon or "")
+        -- Modo Novas Configurações: Compkiller:Loader({Icon = "...", Text = "...", Duration = 3})
+        local rawIcon = Config.Icon
+        if typeof(rawIcon) == "string" then
+            IconId = rawIcon
+        end
+        
         Duration = Config.Duration or 5
+        TextContent = Config.Text or nil
+
     elseif type(Config) == "string" then
+        -- Compatibilidade Retroativa: Compkiller:Loader("rbxassetid://...")
         IconId = Config
     end
     
-    local TextContent = (type(Config) == "table" and Config.Text) or nil
-    
+    -- Segurança Extra: Garante que nunca tentaremos carregar algo que não seja imagem ou string vazia
+    if not typeof(IconId) == "string" then
+        IconId = ""
+    end
+
+    -- 2. Instanciação da Interface
     local CompKiller = Instance.new("ScreenGui")
     CompKiller.Name = Compkiller:_RandomString()
     CompKiller.Parent = CoreGui
@@ -10799,11 +10813,12 @@ function Compkiller:Loader(Config: { Icon?: string, Text?: string, Duration?: nu
     Loader.BorderSizePixel = 0
     Loader.Position = UDim2.new(0.5, 0, 0.5, 0)
     Loader.Size = UDim2.fromOffset(100, 100)
+    Loader.BackgroundTransparency = 1 -- Começa invisível
 
+    -- Ícone Principal
     local Icon = Instance.new("ImageLabel")
     Icon.Name = Compkiller:_RandomString()
-    Icon.Parent = Loader
-    Icon.AnchorPoint = Vector2.new(0.5, 0.5)
+    Icon.Parent = Loader    Icon.AnchorPoint = Vector2.new(0.5, 0.5)
     Icon.BackgroundTransparency = 1.000
     Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)
     Icon.BorderSizePixel = 0
@@ -10814,24 +10829,24 @@ function Compkiller:Loader(Config: { Icon?: string, Text?: string, Duration?: nu
         Icon.Image = IconId
     end
     
-    -- ✨ NOVO: Label de Texto
+    -- NOVO: Texto de Status Abaixo do Ícone
     local LoadingText = Instance.new("TextLabel")
-    LoadingText.Name = "LoadingText"
+    LoadingText.Name = "LoadingStatus"
     LoadingText.Parent = Loader
     LoadingText.AnchorPoint = Vector2.new(0.5, 0.5)
     LoadingText.BackgroundTransparency = 1.000
     LoadingText.BorderSizePixel = 0
-    LoadingText.Position = UDim2.new(0.5, 0, 0.9, 0) -- Posicionado logo abaixo do ícone
-    LoadingText.Size = UDim2.fromOffset(150, 30)
-    LoadingText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold)
+    LoadingText.Position = UDim2.new(0.5, 0, 0.85, 0) -- Posicionado logo abaixo do ícone
+    LoadingText.Size = UDim2.fromOffset(100, 25)       -- Tamanho ajustado
+    LoadingText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
     LoadingText.LineHeight = 1.2
     LoadingText.RichText = true
-    LoadingText.Text = TextContent or "Carregando..."
+    LoadingText.Text = TextContent or "Carregando..." -- Se nil, usa padrão
     LoadingText.TextColor3 = Compkiller.Colors.SwitchColor
-    LoadingText.TextSize = 18
-    LoadingText.TextTransparency = 1.000 -- Invisível inicialmente
+    LoadingText.TextSize = 14
+    LoadingText.TextTransparency = 1.000 -- Começa invisível
     LoadingText.TextWrapped = true
-    LoadingText.TextXAlignment = Enum.TextXAlignment.Left
+    LoadingText.TextXAlignment = Enum.TextXAlignment.Center
 
     local Vignette = Instance.new("ImageLabel")
     Vignette.Name = Compkiller:_RandomString()
@@ -10847,29 +10862,23 @@ function Compkiller:Loader(Config: { Icon?: string, Text?: string, Duration?: nu
     Vignette.Transparent = false
     Vignette.Visible = false
 
-    -- Animação de Entrada (Fade Out do Loader)
+    -- 3. Animação e Destruição (Mantendo o padrão da lib)
     if Duration and Duration > 0 then
-        -- Fade Out dos elementos do Loader
-        task.delay(0.3, function()
+        task.delay(0.2, function()
+            -- Fade Out Conjunto
             Compkiller:_Animation(Loader, TweenInfo.new(0.4), {BackgroundTransparency = 1})
-            Compkiller:_Animation(Icon, TweenInfo.new(0.4), {ImageTransparency = 1})
-            if TextContent then
-                -- A animação do texto segue o mesmo tempo do loader para sair junto
+            Compkiller:_Animation(Icon, TweenInfo.new(0.4), {ImageTransparency = 1})            
+            -- Se tiver texto personalizado, ele também desvanece junto com o ícone
+            if TextContent ~= nil then
                 Compkiller:_Animation(LoadingText, TweenInfo.new(0.4), {TextTransparency = 1})
             end
+            
             task.delay(0.5, function()
                 CompKiller:Destroy()
             end)
         end)
     end
 end
-
-	return {
-		yield = function()
-			return Event.Event:Wait();
-		end	
-	};
-end;
 
 function Compkiller.newNotify()
 	if Compkiller.NOTIFY_CACHE then
