@@ -10813,7 +10813,7 @@ function Compkiller:Loader(IconId,Duration)
 	Text.Position = UDim2.new(0.5, 0, 0.5, 110)
 	Text.Size = UDim2.new(0, 300, 0, 30)
 	Text.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
-	Text.Text = "Loading Script."
+	Text.Text = "Loading The Script."
 	Text.TextColor3 = Color3.fromRGB(255,255,255)
 	Text.TextSize = 16
 	Text.TextTransparency = 1
@@ -10859,7 +10859,7 @@ function Compkiller:Loader(IconId,Duration)
 			while running do
 				-- dots
 				local dotStr = string.rep(".", dots)
-				Text.Text = "Loading Script" .. dotStr
+				Text.Text = "Loading The Script" .. dotStr
 				Text.TextTransparency = 0.05 + (Vignette.ImageTransparency * 0.3)
 
 				-- pulse
@@ -11322,7 +11322,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     right.BackgroundTransparency = 1
     right.Size = UDim2.fromOffset(15, 15)
     right.AnchorPoint = Vector2.new(1, 0.5)
-    right.Position = UDim2.new(1, 14, 0.5, 5)
+    right.Position = UDim2.new(1, 14, 0.5, 2)
     right.Parent = topbar
     
     -- App Info
@@ -11378,8 +11378,8 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
         local exitStroke = Instance.new("UIStroke")
         exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-        exitStroke.Thickness = 1
-        exitStroke.Transparency = 0.7
+        exitStroke.Thickness = 0.5
+        exitStroke.Transparency = 0.5
         exitStroke.Parent = exitBtn
         
         -- Hover
