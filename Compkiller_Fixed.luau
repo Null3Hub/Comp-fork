@@ -11248,364 +11248,336 @@ function Compkiller.newNotify()
 	return Compkiller.NOTIFY_CACHE;
 end;
 
-function Compkiller:AdvancedNotify(properties: {
-    Title: string,
-    Subtitle: string?,
-    Content: string?,
-    Duration: number?,
-    Icon: string?,
-    App: string?,
-    AppIcon: string?,
-    Callback: (() -> ())?,
-})
-    properties = properties or {}
-   
-    local tweenService = game:GetService("TweenService")
-    
-    local notificationContainer = self.NotificationContainer
-    if not notificationContainer then
-        notificationContainer = Instance.new("ScreenGui")
-        notificationContainer.Name = "CompkillerNotifications"
-        notificationContainer.ResetOnSpawn = false
-        notificationContainer.ZIndexBehavior = Enum.ZIndexBehavior.Global
-        notificationContainer.Parent = (gethui and gethui()) or game:GetService("CoreGui")
-        self.NotificationContainer = notificationContainer
-        
-        local containerFrame = Instance.new("Frame")
-        containerFrame.Name = "Notifications"
-        containerFrame.BackgroundTransparency = 1
-        containerFrame.BorderSizePixel = 0
-        containerFrame.Size = UDim2.fromScale(1, 1)
-        containerFrame.Parent = notificationContainer
-        
-        local padding = Instance.new("UIPadding")
-        padding.PaddingBottom = UDim.new(0, 15)
-        padding.PaddingRight = UDim.new(0, 15)
-        padding.Parent = containerFrame
-        
-        self.NotificationFrame = containerFrame
-    end
-    
-    local MAX_NOTIFICATIONS = 4
-    local state = { Age = 0 }
-    
-    -- Criar notificação
-    local notification = self:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
-    notification.Parent = self.NotificationFrame
-        -- Animação de entrada
-    local enterTween = tweenService:Create(
-        notification,
-        TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {
-            Position = UDim2.new(1, -162.5, 1, 0)
-        }
-    )
-    enterTween:Play()
-    
-    -- Auto-close
-    local duration = properties.Duration or 6
-    if duration > 0 then
-        task.delay(duration, function()
-            self:_(notification, state, MAX_NOTIFICATIONS, properties.Callback)
-        end)
-    end
-    
-    return notification
-end
-
-function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
-    local tweenService = game:GetService("TweenService")
-    
-    -- Notification Container
-    local notification = Instance.new("Frame")
-    notification.Name = "Notification"
-    notification.AnchorPoint = Vector2.new(0.5, 1)
-    notification.AutomaticSize = Enum.AutomaticSize.Y
-    notification.BackgroundTransparency = 1
-    notification.BorderSizePixel = 0
-    notification.Position = UDim2.new(1, -140, 1, 50)
-    notification.Size = UDim2.fromOffset(280, 0)
-    
-    -- Canvas
-    local canvas = Instance.new("Frame")
-    canvas.Name = "Canvas"
-    canvas.AnchorPoint = Vector2.new(0, 0)
-    canvas.AutomaticSize = Enum.AutomaticSize.Y
-    canvas.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(39, 40, 47)
-    canvas.BackgroundTransparency = 0.1
-    canvas.BorderSizePixel = 0
-    canvas.Position = UDim2.fromScale(0, 0)
-    canvas.Size = UDim2.fromScale(1, 0)
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 10)
-    corner.Parent = canvas
-    
-    -- Main Layout
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 4)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    listLayout.Parent = canvas
-    
-        -- Topbar Container
-    local topbar = Instance.new("Frame")
-    topbar.Name = "Topbar"
-    topbar.AutomaticSize = Enum.AutomaticSize.Y
-    topbar.BackgroundTransparency = 1
-    topbar.BorderSizePixel = 0
-    topbar.Size = UDim2.fromScale(1, 0)
-    topbar.Visible = (properties.App ~= nil) or (properties.AppIcon ~= nil) or properties.CloseButton ~= false
-    
-    -- Padding
-    local topbarPadding = Instance.new("UIPadding")
-    topbarPadding.PaddingLeft = UDim.new(0, 10)
-    topbarPadding.PaddingRight = UDim.new(0, 10)
-    topbarPadding.PaddingTop = UDim.new(0, 10)
-    topbarPadding.PaddingBottom = UDim.new(0, 4)
-    topbarPadding.Parent = topbar
-    
-    -- LEFT CONTAINER (App info)
-    local left = Instance.new("Frame")
-    left.Name = "Left"
-    left.BackgroundTransparency = 1
-    left.Size = UDim2.new(1, -40, 1, 0) -- espaço pro botão
-    left.Parent = topbar
-    
-    local leftLayout = Instance.new("UIListLayout")
-    leftLayout.FillDirection = Enum.FillDirection.Horizontal
-    leftLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    leftLayout.Padding = UDim.new(0, 5)
-    leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    leftLayout.Parent = left
-    
-    -- RIGHT CONTAINER (Exit button)
-    local right = Instance.new("Frame")
-    right.Name = "Right"
-    right.BackgroundTransparency = 1
-    right.Size = UDim2.fromOffset(15, 15)
-    right.AnchorPoint = Vector2.new(1, 0.5)
-    right.Position = UDim2.new(1, 14, 0.5, 0.8)
-    right.Parent = topbar
-    
-    -- App Info
-    if properties.App or properties.AppIcon then
-        if properties.AppIcon then
-            local appIcon = Instance.new("ImageLabel")
-            appIcon.Name = "AppIcon"
-            appIcon.BackgroundTransparency = 1
-            appIcon.BorderSizePixel = 0
-            appIcon.Image = properties.AppIcon
-            appIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-            appIcon.Size = UDim2.fromOffset(20, 20)
-            appIcon.Parent = left
-        end
-        
-        if properties.App then
-            local appLabel = Instance.new("TextLabel")
-            appLabel.Name = "App"
-            appLabel.AutomaticSize = Enum.AutomaticSize.X
-            appLabel.BackgroundTransparency = 1
-            appLabel.BorderSizePixel = 0
-            appLabel.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
-            appLabel.LineHeight = 0
-            appLabel.Size = UDim2.fromOffset(0, 14)
-            appLabel.Text = string.upper(properties.App)
-            appLabel.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-            appLabel.TextSize = 13
-            appLabel.TextTransparency = 0.5
-            appLabel.TextXAlignment = Enum.TextXAlignment.Left
-            appLabel.RichText = true
-            appLabel.Parent = left
-        end
-    end
-    
-    -- Exit Button
-    if properties.CloseButton ~= false then
-        local exitBtn = Instance.new("TextButton")
-        exitBtn.Name = "Exit"
-        exitBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-        exitBtn.AutoButtonColor = false
-        exitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        exitBtn.BackgroundTransparency = 0.2
-        exitBtn.BorderSizePixel = 0
-        exitBtn.FontFace = Font.new("rbxassetid://12187365364")
-        exitBtn.Size = UDim2.fromOffset(12, 12)
-        exitBtn.Text = ""
-        exitBtn.ZIndex = 10
-        
-        local exitCorner = Instance.new("UICorner")
-        exitCorner.CornerRadius = UDim.new(1, 0)
-        exitCorner.Parent = exitBtn
-        
-        local exitStroke = Instance.new("UIStroke")
-        exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-        exitStroke.Thickness = 0.5
-        exitStroke.Transparency = 0.5
-        exitStroke.Parent = exitBtn
-        
-        -- Hover
-        exitBtn.MouseEnter:Connect(function()
-            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0,
-                Size = UDim2.fromOffset(14, 14)
-            }):Play()
-        end)
-        
-        exitBtn.MouseLeave:Connect(function()
-            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-                BackgroundTransparency = 0.2,
-                Size = UDim2.fromOffset(12, 12)
-            }):Play()
-        end)
-        
-        exitBtn.MouseButton1Click:Connect(function()
-            self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
-        end)
-        
-        exitBtn.Parent = right
-    end
-    
-    -- Content Container
-    local content = Instance.new("Frame")
-    content.Name = "Content"
-    content.AutomaticSize = Enum.AutomaticSize.Y
-    content.BackgroundTransparency = 1    
-    content.BorderSizePixel = 0
-    content.LayoutOrder = 1
-    content.Size = UDim2.fromScale(1, 0)
-    
-    local contentLayout = Instance.new("UIListLayout")
-    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    contentLayout.Parent = content
-    
-    -- Title Container
-    local titleContainer = Instance.new("Frame")
-    titleContainer.Name = "TitleContainer"
-    titleContainer.AutomaticSize = Enum.AutomaticSize.XY
-    titleContainer.BackgroundTransparency = 1
-    titleContainer.BorderSizePixel = 0
-    titleContainer.LayoutOrder = 1
-    
-    local titleLayout = Instance.new("UIListLayout")
-    titleLayout.FillDirection = Enum.FillDirection.Horizontal
-    titleLayout.Padding = UDim.new(0, 5)
-    titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    titleLayout.Parent = titleContainer
-    
-    -- Icon
-    if properties.Icon then
-        local icon = Instance.new("ImageLabel")
-        icon.Name = "Icon"
-        icon.BackgroundTransparency = 1
-        icon.LayoutOrder = 1
-        icon.Size = UDim2.fromOffset(13, 13)
-        icon.Image = properties.Icon
-        icon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-        icon.Parent = titleContainer
-    end
-    
-     -- Title
-     local title = Instance.new("TextLabel")
-     title.Name = "Title"
-     title.AutomaticSize = Enum.AutomaticSize.Y
-     title.BackgroundTransparency = 1
-     title.BorderSizePixel = 0
-     title.LayoutOrder = 2
-     title.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
-     title.LineHeight = 0
-     title.Size = UDim2.new(1, 0, 0, 20)
-     title.Text = properties.Title or "Notification"
-     title.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-     title.TextSize = 13
-     title.TextWrapped = true
-     title.RichText = true    
-     title.TextXAlignment = Enum.TextXAlignment.Left
-     title.Parent = titleContainer
-    
-    -- Subtitle
-    if properties.Subtitle and properties.Subtitle ~= "" then
-        local subtitle = Instance.new("TextLabel")
-        subtitle.Name = "Subtitle"
-        subtitle.AutomaticSize = Enum.AutomaticSize.Y
-        subtitle.BackgroundTransparency = 1
-        subtitle.BorderSizePixel = 0
-        subtitle.FontFace = Font.new("rbxassetid://12187365364")
-        subtitle.LayoutOrder = 2
-        subtitle.RichText = true
-        subtitle.Size = UDim2.fromScale(1, 0)
-        subtitle.Text = properties.Subtitle
-        subtitle.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-        subtitle.TextSize = 13
-        subtitle.TextTransparency = 0.5
-        subtitle.TextWrapped = true
-        subtitle.TextXAlignment = Enum.TextXAlignment.Left
-        subtitle.Parent = content
-    end
-    
-    if properties.Content and properties.Content ~= "" then
-        local contentText = Instance.new("TextLabel")
-        contentText.Name = "ContentText"
-        contentText.AutomaticSize = Enum.AutomaticSize.Y
-        contentText.BackgroundTransparency = 1
-        contentText.BorderSizePixel = 0
-        contentText.FontFace = Font.new("rbxassetid://12187365364")
-        contentText.LayoutOrder = 3
-        contentText.RichText = true
-        contentText.Size = UDim2.fromScale(1, 0)
-        contentText.Text = properties.Content
-        contentText.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-        contentText.TextSize = 13
-        contentText.TextTransparency = 0.2
-        contentText.TextWrapped = true
-        contentText.TextXAlignment = Enum.TextXAlignment.Left
-        contentText.Parent = content
-    end
-    
-    local contentPadding = Instance.new("UIPadding")
-    contentPadding.PaddingBottom = UDim.new(0, 10)
-    contentPadding.PaddingLeft = UDim.new(0, 10)
-    contentPadding.PaddingRight = UDim.new(0, 10)
-    contentPadding.Parent = content
-    
-    -- Hierarchy
-    titleContainer.Parent = content
-    content.Parent = canvas
-    topbar.Parent = canvas
-    canvas.Parent = notification
-    
-    return notification
-end
-
-function Compkiller:_CloseNotification(notification, state, MAX_NOTIFICATIONS, callback)
-    local tweenService = game:GetService("TweenService")
-    
-    if not notification or not notification.Parent then
-        return
-    end
-    
-    -- Callback
-    if callback then
-        task.spawn(callback)
-    end
-    
-    -- Animação de saída
-    local fadeTween = tweenService:Create(
-        notification,
-        TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
-        {            Position = notification.Position + UDim2.fromOffset(350, 0),
-        }
-    )
-    
-    fadeTween:Play()
-    fadeTween.Completed:Connect(function()
-        if notification and notification.Parent then
-            notification:Destroy()
-        end
-    end)
-end
+ function Compkiller:AdvancedNotify(properties: {
+  	Title: string,
+  	Description: string?,
+  	Content: string?,
+  	Duration: number?,
+  	Icon: string?,
+  	Callback: (() -> ())?,
+  })
+  	properties = properties or {}
+  
+  	local TweenService = game:GetService("TweenService")
+  	local RunService = game:GetService("RunService")
+  	local CoreGui = game:GetService("CoreGui")
+  
+  	if not self.NotificationContainer then
+  		local gui = Instance.new("ScreenGui")
+  		gui.Name = "CompkillerNotifications"
+  		gui.ResetOnSpawn = false
+  		gui.IgnoreGuiInset = true
+  		gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+  		gui.Parent = (gethui and gethui()) or CoreGui
+  		self.NotificationContainer = gui
+  
+  		local holder = Instance.new("Frame")
+  		holder.Name = "Notifications"
+  		holder.AnchorPoint = Vector2.new(1, 1)
+  		holder.BackgroundTransparency = 1
+  		holder.BorderSizePixel = 0
+  		holder.Position = UDim2.new(1, -16, 1, -16)
+  		holder.Size = UDim2.fromOffset(310, 500)
+  		holder.Parent = gui
+  
+  		local layout = Instance.new("UIListLayout")
+  		layout.SortOrder = Enum.SortOrder.LayoutOrder
+  		layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+  		layout.Padding = UDim.new(0, 10)
+  		layout.Parent = holder
+  
+  		self.NotificationFrame = holder
+  	end
+  
+  	local notification, api = self:_CreateNotificationUI(properties)
+  	notification.Parent = self.NotificationFrame
+  
+  	task.defer(function()
+  		api.Open()
+  	end)
+  
+  	local duration = properties.Duration
+  	if duration == nil then
+  		local text = tostring(properties.Description or properties.Content or "")
+  		duration = math.clamp((#text * 0.08) + 3, 3, 10)
+  	end
+  
+  	if duration > 0 then
+  		task.delay(duration, function()
+  			self:_CloseNotification(notification, api, properties.Callback)
+  		end)
+  	end
+  
+  	return notification
+  end
+  
+ function Compkiller:_CreateNotificationUI(properties)
+  	local TweenService = game:GetService("TweenService")
+  	local RunService = game:GetService("RunService")
+  
+  	local notification = Instance.new("Frame")
+  	notification.Name = "AdvancedNotification"
+  	notification.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(28, 29, 34)
+  	notification.BackgroundTransparency = 1
+  	notification.BorderSizePixel = 0
+  	notification.ClipsDescendants = false
+  	notification.Size = UDim2.new(1, 0, 0, 0)
+  	notification.LayoutOrder = os.clock() * 1000
+  
+  	local corner = Instance.new("UICorner")
+  	corner.CornerRadius = UDim.new(0, 14)
+  	corner.Parent = notification
+  
+  	local stroke = Instance.new("UIStroke")
+  	stroke.Name = "UIStroke"
+  	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+  	stroke.Color = self.Colors.Stroke or Color3.fromRGB(255, 255, 255)
+  	stroke.Thickness = 1
+  	stroke.Transparency = 1
+  	stroke.Parent = notification
+  
+  	local shadow = Instance.new("Folder")
+  	shadow.Name = "Shadow"
+  	shadow.Parent = notification
+  
+  	local function createShadow(name, sizeOffset, transparency, z)
+  		local image = Instance.new("ImageLabel")
+  		image.Name = name
+  		image.AnchorPoint = Vector2.new(0.5, 0.5)
+  		image.BackgroundTransparency = 1
+  		image.BorderSizePixel = 0
+  		image.Image = "rbxassetid://1316045217"
+  		image.ImageColor3 = Color3.fromRGB(0, 0, 0)
+  		image.ImageTransparency = 1
+  		image.Position = UDim2.fromScale(0.5, 0.5)
+  		image.Size = UDim2.new(1, sizeOffset, 1, sizeOffset)
+  		image.ScaleType = Enum.ScaleType.Slice
+  		image.SliceCenter = Rect.new(10, 10, 118, 118)
+  		image.ZIndex = z
+  		image.Parent = shadow
+  		image:SetAttribute("TargetTransparency", transparency)
+  		return image
+  	end
+  
+  	local antumbraShadow = createShadow("antumbraShadow", 34, 0.94, notification.ZIndex - 3)
+  	local penumbraShadow = createShadow("penumbraShadow", 26, 0.55, notification.ZIndex - 2)
+  	local umbraShadow = createShadow("umbraShadow", 18, 0.4, notification.ZIndex - 1)
+  
+  	local acrylic = Instance.new("Frame")
+  	acrylic.Name = "Acrylic"
+  	acrylic.BackgroundTransparency = 1
+  	acrylic.BorderSizePixel = 0
+  	acrylic.ClipsDescendants = true
+  	acrylic.Size = UDim2.fromScale(1, 1)
+  	acrylic.ZIndex = notification.ZIndex
+  	acrylic.Parent = notification
+  
+  	local acrylicCorner = Instance.new("UICorner")
+  	acrylicCorner.CornerRadius = UDim.new(0, 14)
+  	acrylicCorner.Parent = acrylic
+  
+  	local acrylicShadow = Instance.new("ImageLabel")
+  	acrylicShadow.Name = "shadow"
+  	acrylicShadow.BackgroundTransparency = 1
+  	acrylicShadow.Image = "rbxassetid://1316045217"
+  	acrylicShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+  	acrylicShadow.ImageTransparency = 1
+  	acrylicShadow.Position = UDim2.fromOffset(-18, -18)
+  	acrylicShadow.Size = UDim2.new(1, 36, 1, 36)
+  	acrylicShadow.ScaleType = Enum.ScaleType.Slice
+  	acrylicShadow.SliceCenter = Rect.new(10, 10, 118, 118)
+  	acrylicShadow.ZIndex = acrylic.ZIndex
+  	acrylicShadow.Parent = acrylic
+  
+  	local tint = Instance.new("Frame")
+  	tint.Name = "tint"
+  	tint.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(35, 36, 42)
+  	tint.BackgroundTransparency = 1
+  	tint.BorderSizePixel = 0
+  	tint.Size = UDim2.fromScale(1, 1)
+  	tint.ZIndex = acrylic.ZIndex + 1
+  	tint.Parent = acrylic
+  
+  	local noise = Instance.new("ImageLabel")
+  	noise.Name = "Noise"
+  	noise.BackgroundTransparency = 1
+  	noise.BorderSizePixel = 0
+  	noise.Image = "rbxassetid://9968344105"
+  	noise.ImageTransparency = 1
+  	noise.ScaleType = Enum.ScaleType.Tile
+  	noise.TileSize = UDim2.fromOffset(128, 128)
+  	noise.Size = UDim2.fromScale(1, 1)
+  	noise.ZIndex = acrylic.ZIndex + 2
+  	noise.Parent = acrylic
+  
+  	local icon = Instance.new("ImageLabel")
+  	icon.Name = "Icon"
+  	icon.BackgroundTransparency = 1
+  	icon.Image = properties.Icon or ""
+  	icon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+  	icon.ImageTransparency = 1
+  	icon.Position = UDim2.fromOffset(15, 16)
+  	icon.Size = UDim2.fromOffset(20, 20)
+  	icon.ZIndex = acrylic.ZIndex + 4
+  	icon.Parent = notification
+  
+  	local title = Instance.new("TextLabel")
+  	title.Name = "Title"
+  	title.BackgroundTransparency = 1
+  	title.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold)
+  	title.Position = UDim2.fromOffset(45, 13)
+  	title.Size = UDim2.new(1, -95, 0, 22)
+  	title.Text = properties.Title or "Notification"
+  	title.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+  	title.TextSize = 14
+  	title.TextTransparency = 1
+  	title.TextXAlignment = Enum.TextXAlignment.Left
+  	title.TextYAlignment = Enum.TextYAlignment.Center
+  	title.RichText = true
+  	title.ZIndex = acrylic.ZIndex + 4
+  	title.Parent = notification
+  
+  	local timeText = Instance.new("TextLabel")
+  	timeText.Name = "Time"
+  	timeText.BackgroundTransparency = 1
+  	timeText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
+  	timeText.AnchorPoint = Vector2.new(1, 0)
+  	timeText.Position = UDim2.new(1, -14, 0, 16)
+  	timeText.Size = UDim2.fromOffset(48, 18)
+  	timeText.Text = "now"
+  	timeText.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+  	timeText.TextSize = 12
+  	timeText.TextTransparency = 1
+  	timeText.TextXAlignment = Enum.TextXAlignment.Right
+  	timeText.ZIndex = acrylic.ZIndex + 4
+  	timeText.Parent = notification
+  
+  	local description = Instance.new("TextLabel")
+  	description.Name = "Description"
+  	description.BackgroundTransparency = 1
+  	description.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular)
+  	description.Position = UDim2.fromOffset(45, 38)
+  	description.Size = UDim2.new(1, -60, 0, math.huge)
+  	description.Text = properties.Description or properties.Content or ""
+  	description.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+  	description.TextSize = 13
+  	description.TextTransparency = 1
+  	description.TextWrapped = true
+  	description.TextXAlignment = Enum.TextXAlignment.Left
+  	description.TextYAlignment = Enum.TextYAlignment.Top
+  	description.RichText = true
+  	description.ZIndex = acrylic.ZIndex + 4
+  	description.Parent = notification
+  
+  	task.wait()
+  	local descHeight = math.max(description.TextBounds.Y + 2, 18)
+  	description.Size = UDim2.new(1, -60, 0, descHeight)
+  
+  	local finalHeight = descHeight + 58
+  	local creationTime = tick()
+  	local closed = false
+  
+  	local timeConnection
+  	timeConnection = RunService.RenderStepped:Connect(function()
+  		if closed or not notification.Parent then
+  			if timeConnection then timeConnection:Disconnect() end
+  			return
+  		end
+  
+  		local elapsed = tick() - creationTime
+  		if elapsed <= 4 then
+  			timeText.Text = "now"
+  		elseif elapsed < 60 then
+  			timeText.Text = math.floor(elapsed) .. "s ago"
+  		elseif elapsed < 3600 then
+  			timeText.Text = math.floor(elapsed / 60) .. "m ago"
+  		else
+  			timeText.Text = math.floor(elapsed / 3600) .. "h ago"
+  		end
+  	end)
+  
+  	local api = {}
+  
+  	function api.Open()
+  		TweenService:Create(notification, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {
+  			Size = UDim2.new(1, 0, 0, finalHeight),
+  			BackgroundTransparency = 0.38,
+  		}):Play()
+  
+  		task.wait(0.12)
+  
+  		TweenService:Create(acrylicShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = 0.7 }):Play()
+  		TweenService:Create(tint, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { BackgroundTransparency = 0.18 }):Play()
+  		TweenService:Create(noise, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = 0.9 }):Play()
+  
+  		TweenService:Create(antumbraShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = antumbraShadow:GetAttribute("TargetTransparency") }):Play()
+  		TweenService:Create(penumbraShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = penumbraShadow:GetAttribute("TargetTransparency") }):Play()
+  		TweenService:Create(umbraShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = umbraShadow:GetAttribute("TargetTransparency") }):Play()
+  
+  		task.wait(0.05)
+  		TweenService:Create(title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { TextTransparency = 0 }):Play()
+  
+  		task.wait(0.05)
+  		TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { ImageTransparency = properties.Icon and 0 or 1 }):Play()
+  
+  		task.wait(0.05)
+  		TweenService:Create(description, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { TextTransparency = 0.35 }):Play()
+  		TweenService:Create(timeText, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { TextTransparency = 0.35 }):Play()
+  		TweenService:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { Transparency = 0.88 }):Play()
+  	end
+  
+  	function api.Close(callback)
+  		if closed then return end
+  		closed = true
+  
+  		if callback then
+  			task.spawn(callback)
+  		end
+  
+  		if timeConnection then
+  			timeConnection:Disconnect()
+  		end
+  
+  		TweenService:Create(notification, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
+  			BackgroundTransparency = 1,
+  		}):Play()
+  
+  		TweenService:Create(stroke, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { Transparency = 1 }):Play()
+  		TweenService:Create(acrylicShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
+  		TweenService:Create(tint, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { BackgroundTransparency = 1 }):Play()
+  		TweenService:Create(noise, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
+  
+  		TweenService:Create(antumbraShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
+  		TweenService:Create(penumbraShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
+  		TweenService:Create(umbraShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
+  
+  		TweenService:Create(title, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { TextTransparency = 1 }):Play()
+  		TweenService:Create(icon, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
+  		TweenService:Create(description, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { TextTransparency = 1 }):Play()
+  		TweenService:Create(timeText, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { TextTransparency = 1 }):Play()
+  
+  		local closeTween = TweenService:Create(notification, TweenInfo.new(0.55, Enum.EasingStyle.Exponential), {
+  			Size = UDim2.new(1, 0, 0, 0),
+  		})
+  
+  		closeTween:Play()
+  		closeTween.Completed:Connect(function()
+  			if notification then
+  				notification:Destroy()
+  			end
+  		end)
+  	end
+  
+  	return notification, api
+  end
+  
+  function Compkiller:_CloseNotification(notification, api, callback)
+  	if api and api.Close then
+  		api.Close(callback)
+  	elseif notification and notification.Parent then
+  		notification:Destroy()
+  	end
+  end
 
 Compkiller.NilFolder.Name = "Nil-Instances";
 
