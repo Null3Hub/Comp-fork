@@ -10769,32 +10769,9 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 	return Args;
 end;
 
-function Compkiller:Loader(Config: any)
-	local IconId = ""
-	local Duration = 5
-	local TextContent = nil
-
-	-- Tratamento de parâmetros
-	if type(Config) == "table" then
-		local rawIcon = Config.Icon
-		if typeof(rawIcon) == "string" then
-			IconId = rawIcon
-		end
-		
-		Duration = Config.Duration or 5
-		TextContent = Config.Text or nil
-
-	elseif type(Config) == "string" then
-		IconId = Config
-	end
-	
-	-- Segurança Extra
-	if not typeof(IconId) == "string" then
-		IconId = ""
-	end
-
-	-- Instanciação
+function Compkiller:Loader(IconId,Duration)
 	local CompKiller = Instance.new("ScreenGui")
+
 	CompKiller.Name = Compkiller:_RandomString()
 	CompKiller.Parent = CoreGui
 	CompKiller.Enabled = true
@@ -10803,89 +10780,98 @@ function Compkiller:Loader(Config: any)
 	CompKiller.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
 	local Loader = Instance.new("Frame")
+	local Icon = Instance.new("ImageLabel")
+	local Vignette = Instance.new("ImageLabel")
+
 	Loader.Name = Compkiller:_RandomString()
 	Loader.Parent = CompKiller
 	Loader.AnchorPoint = Vector2.new(0.5, 0.5)
 	Loader.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	Loader.BackgroundTransparency = 1 -- Começa invisível para animar entrada depois
+	Loader.BackgroundTransparency = 1
+	Loader.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	Loader.BorderSizePixel = 0
 	Loader.Position = UDim2.new(0.5, 0, 0.5, 0)
-	Loader.Size = UDim2.fromOffset(100, 100)
+	Loader.Size = UDim2.new(1, 0, 1, 0)
 
-	-- Ícone Principal
-	local Icon = Instance.new("ImageLabel")
 	Icon.Name = Compkiller:_RandomString()
-	Icon.Parent = Loader    
+	Icon.Parent = Loader
 	Icon.AnchorPoint = Vector2.new(0.5, 0.5)
 	Icon.BackgroundTransparency = 1.000
-	Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)	Icon.BorderSizePixel = 0
+	Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Icon.BorderSizePixel = 0
 	Icon.Position = UDim2.new(0.5, 0, 0.5, 0)
-	Icon.Size = UDim2.fromOffset(50, 50)
-	
-	if IconId ~= "" then
-		Icon.Image = IconId
-	end
-	
-	-- NOVO: Texto de Status Abaixo do Ícone
-	local LoadingText = Instance.new("TextLabel")
-	LoadingText.Name = "LoadingStatus"
-	LoadingText.Parent = Loader
-	LoadingText.AnchorPoint = Vector2.new(0.5, 0.5)
-	LoadingText.BackgroundTransparency = 1.000
-	LoadingText.BorderSizePixel = 0
-	LoadingText.Position = UDim2.new(0.5, 0, 0.85, 0) 
-	LoadingText.Size = UDim2.fromOffset(100, 25)       
-	LoadingText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
-	LoadingText.LineHeight = 1.2
-	LoadingText.RichText = true
-	LoadingText.Text = TextContent or "Carregando..." 
-	LoadingText.TextColor3 = Compkiller.Colors.SwitchColor
-	LoadingText.TextSize = 14
-	LoadingText.TextTransparency = 1.000 -- Começa invisível
-	LoadingText.TextWrapped = true
-	LoadingText.TextXAlignment = Enum.TextXAlignment.Center
+	Icon.Size = UDim2.new(0, 750, 0, 750)
+	Icon.ZIndex = 100
+	Icon.Image = IconId or Compkiller.Logo;
+	Icon.ImageTransparency = 1
 
-	-- FIX REMOVIDO: Vignette Transparent não existe em ImageLabel
-	local Vignette = Instance.new("ImageLabel")
 	Vignette.Name = Compkiller:_RandomString()
-	Vignette.Parent = CompKiller
-	Vignette.AnchorPoint = Vector2.new(0.5, 0.5)
+	Vignette.Parent = Loader
 	Vignette.BackgroundTransparency = 1.000
-	Vignette.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Vignette.BorderColor3 = Color3.fromRGB(27, 42, 53)
 	Vignette.BorderSizePixel = 0
-	Vignette.Image = "rbxassetid://124496434332452"
-	Vignette.Position = UDim2.new(0.5, 0, 0.5, 0)
-	Vignette.ScaleType = Enum.ScaleType.Fit
-	Vignette.Size = UDim2.fromScale(1.5, 1.5)
-	Vignette.Visible = false -- Apenas use Visible para controle de exibição
+	Vignette.Size = UDim2.new(1, 0, 1, 0)
+	Vignette.Image = Compkiller:CacheImage("rbxassetid://18720640102")
+	Vignette.ImageColor3 = Compkiller.Colors.Highlight
+	Vignette.ImageTransparency = 1
+	Vignette.AnchorPoint = Vector2.new(0.5,0.5)
+	Vignette.Position = UDim2.fromScale(0.5,0.5)
 
-	-- Animação e Destruição Corrigida (Fade In -> Duração -> Fade Out)
-	if Duration and Duration > 0 then
-		task.delay(0.1, function()
-			-- FADE IN
-			Compkiller:_Animation(Loader, TweenInfo.new(0.4), {BackgroundTransparency = 0})
-			Compkiller:_Animation(Icon, TweenInfo.new(0.4), {ImageTransparency = 0})            
-			
-			if TextContent ~= nil then
-				Compkiller:_Animation(LoadingText, TweenInfo.new(0.4), {TextTransparency = 0})			end
-			
-			-- ESPERA A DURAÇÃO DEFINIDA PELO USUÁRIO
-			task.wait(Duration)
-			
-			-- FADE OUT
-			Compkiller:_Animation(Loader, TweenInfo.new(0.4), {BackgroundTransparency = 1})
-			Compkiller:_Animation(Icon, TweenInfo.new(0.4), {ImageTransparency = 1})            
-			
-			if TextContent ~= nil then
-				Compkiller:_Animation(LoadingText, TweenInfo.new(0.4), {TextTransparency = 1})
-			end
-			
-			task.delay(0.5, function()
-				CompKiller:Destroy()
+	Compkiller:_Animation(Loader,TweenInfo.new(0.55,Enum.EasingStyle.Quint),{
+		BackgroundTransparency = 0.5
+	});
+
+	local Event = Instance.new('BindableEvent');
+
+	task.delay(0.5,function()
+		Compkiller:_Animation(Icon,TweenInfo.new(0.75,Enum.EasingStyle.Quint),{
+			ImageTransparency = 0.01,
+			Size = UDim2.new(0, 200, 0, 200)
+		});
+
+		task.delay(0.25,function()
+			Compkiller:_Animation(Vignette,TweenInfo.new(5),{
+				ImageTransparency = 0.2
+			});
+
+			task.wait(Duration or 4.5)
+
+			Compkiller:_Animation(Vignette,TweenInfo.new(3,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
+				Size = UDim2.new(2, 0, 2, 0)
+			});
+
+			Compkiller:_Animation(Icon,TweenInfo.new(0.75,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
+				ImageTransparency = 1,
+			});
+
+			Compkiller:_Animation(Loader,TweenInfo.new(1.5,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
+				BackgroundTransparency = 1
+			});
+
+			task.delay(0.1,function()
+				Compkiller:_Animation(Vignette,TweenInfo.new(1,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
+					ImageTransparency = 1
+				});
+
+				task.wait(0.2)
+
+				task.delay(3,function()
+					CompKiller:Destroy();
+				end)
+			end)
+
+			task.delay(0.6,function()
+				Event:Fire();
 			end)
 		end)
-	end
-end
+	end);
+
+	return {
+		yield = function()
+			return Event.Event:Wait();
+		end	
+	};
+end;
 
 function Compkiller.newNotify()
 	if Compkiller.NOTIFY_CACHE then
@@ -11279,7 +11265,7 @@ function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
     right.BackgroundTransparency = 1
     right.Size = UDim2.fromOffset(20, 20)
     right.AnchorPoint = Vector2.new(1, 0.5)
-    right.Position = UDim2.new(1, -5, 0.5, 0)
+    right.Position = UDim2.new(1, -1, 1, 0)
     right.Parent = topbar
     
     -- App Info
