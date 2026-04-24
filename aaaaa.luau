@@ -1634,141 +1634,204 @@ function Compkiller:GetCalculatePosition(planePos: number, planeNormal: number, 
 	return rayOrigin + (a * rayDirection);
 end;
 
-function Compkiller:_Blur(element : Frame , WindowRemote) : RBXScriptSignal
+ local Lighting = cloneref(game:GetService("Lighting"))
+ local Workspace = cloneref(game:GetService("Workspace"))
+ local RunService = game:GetService("RunService")
+ 
+ function Compkiller:_GetBlurFolder()
+ 	local camera = Workspace.CurrentCamera
+ 	if not camera then
+ 		return nil
+ 	end
+ 
+ 	local folder = camera:FindFirstChild("Compkiller Blur Elements")
+ 	if not folder then
+ 		folder = Instance.new("Folder")
+ 		folder.Name = "Compkiller Blur Elements"
+ 		folder.Parent = camera
+ 	end
+ 
+ 	return folder
+ end
+ 
+ function Compkiller:_ViewportPointToWorld(position: Vector2, distance: number)
+ 	local camera = Workspace.CurrentCamera
+ 	if not camera then
+ 		return Vector3.zero
+ 	end
+ 
+ 	local ray = camera:ViewportPointToRay(position.X, position.Y, distance)
+ 	return ray.Origin + ray.Direction * distance
+ end
+ 
+ function Compkiller:_CreateAcrylicPart()
+ 	local part = Instance.new("Part")
+ 	part.Name = "CompkillerAcrylic"
+ 	part.Color = Color3.new(0, 0, 0)
+ 	part.Material = Enum.Material.Glass
+ 	part.Anchored = true
+ 	part.CanCollide = false
+ 	part.CanQuery = false
+ 	part.CastShadow = false
+ 	part.Locked = true
+ 	part.Transparency = 0.98
+ 	part.Size = Vector3.new(1, 1, 0.001)
+ 
+ 	local mesh = Instance.new("SpecialMesh")
+ 	mesh.MeshType = Enum.MeshType.Brick
+ 	mesh.Offset = Vector3.new(0, 0, -0.000001)
+ 	mesh.Scale = Vector3.new(1, 1, 0.001)
+ 	mesh.Parent = part
+ 
+ 	return part, mesh
+ end
+ 
+ function Compkiller:_GetOrCreateBlurEffect()
+ 	local blur = Lighting:FindFirstChild("compkillerBlur")
+ 	if blur and blur:IsA("DepthOfFieldEffect") then
+ 		return blur
+ 	end
+ 
+ 	blur = Instance.new("DepthOfFieldEffect")
+ 	blur.Name = "compkillerBlur"
+ 	blur.Enabled = true
+ 	blur.FarIntensity = 0
+ 	blur.FocusDistance = 500
+ 	blur.InFocusRadius = 500
+ 	blur.NearIntensity = 0
+ 	blur.Parent = Lighting
+ 
+ 	return blur
+ end
+
+function Compkiller:_Blur(element: Frame, WindowRemote): RBXScriptSignal
 	if Compkiller.SecureMode and not Compkiller.SecurityConfig.BlurEnabled then
-		return game.Changed:Connect(function() end);
-	end;
+		return game.Changed:Connect(function() end)
+	end
 
-	local Part = Instance.new('Part',Compkiller.ArcylicParent);
-	local DepthOfField = Instance.new('DepthOfFieldEffect',cloneref(game:GetService('Lighting')));
-	local BlockMesh = Instance.new("BlockMesh");
-	local userSettings = UserSettings():GetService("UserGameSettings");
+	local camera = Workspace.CurrentCamera
+	if not camera or not element then
+		return game.Changed:Connect(function() end)
+	end
 
-	BlockMesh.Parent = Part;
+	local folder = Compkiller:_GetBlurFolder()
+	if not folder then
+		return game.Changed:Connect(function() end)
+	end
 
-	Part.Material = Enum.Material.Glass;
-	Part.Transparency = 1;
-	Part.Reflectance = 1;
-	Part.CastShadow = false;
-	Part.Anchored = true;
-	Part.CanCollide = false;
-	Part.CanQuery = false;
-	Part.CollisionGroup = Compkiller:_RandomString();
-	Part.Size = Vector3.new(1, 1, 1) * 0.01;
-	Part.Color = Color3.fromRGB(0,0,0);
+	local blurEffect = Compkiller:_GetOrCreateBlurEffect()
+	local part, mesh = Compkiller:_CreateAcrylicPart()
 
-	DepthOfField.Enabled = true;
-	DepthOfField.FarIntensity = 0;
-	DepthOfField.FocusDistance = 0;
-	DepthOfField.InFocusRadius = 1000;
-	DepthOfField.NearIntensity = 1;
-	DepthOfField.Name = Compkiller:_RandomString();
+	part.Parent = folder
 
-	Part.Name = Compkiller:_RandomString();
+	local cleanups = {}
+	local destroyed = false
+	local distance = 0.05
 
-	local disconnect;
+	local function setVisible(visible)
+		if destroyed or not part then
+			return
+		end
 
-	local UpdateFunction = function()
-		if Compkiller.SecureMode then
-			if Part then
-				Part:Destroy();
-				Part = nil;
-			end;
+		part.Transparency = visible and 0.98 or 1
+		blurEffect.NearIntensity = visible and 1 or 0
+	end
 
-			if DepthOfField then
-				DepthOfField:Destroy();
-				DepthOfField = nil;
-			end;
+	local function render()
+		if destroyed or not element or not element.Parent then
+			return
+		end
 
-			if BlockMesh then
-				BlockMesh:Destroy();
-				BlockMesh = nil;
-			end;
+		local currentCamera = Workspace.CurrentCamera
+		if not currentCamera then
+			return
+		end
 
-			if disconnect then
-				disconnect();
-				disconnect = nil;
-			end;
+		local isWindowActive = WindowRemote and WindowRemote:GetValue()
+		if not isWindowActive then
+			setVisible(false)
+			return
+		end
 
-			return;
-		end;
+		local absPos = element.AbsolutePosition
+		local absSize = element.AbsoluteSize
 
-		local IsWindowActive = WindowRemote:GetValue();
+		if absSize.X <= 0 or absSize.Y <= 0 then
+			setVisible(false)
+			return
+		end
 
-		if IsWindowActive then
+		setVisible(true)
 
-			Compkiller:_Animation(DepthOfField,TweenInfo.new(0.1),{
-				NearIntensity = 1
-			})
+		local topLeft2D = absPos
+		local topRight2D = absPos + Vector2.new(absSize.X, 0)
+		local bottomRight2D = absPos + absSize
 
-			Compkiller:_Animation(Part,TweenInfo.new(0.1),{
-				Transparency = 0.97,
-				Size = Vector3.new(1, 1, 1) * 0.01;
-			})
+		local topLeft3D = Compkiller:_ViewportPointToWorld(topLeft2D, distance)
+		local topRight3D = Compkiller:_ViewportPointToWorld(topRight2D, distance)
+		local bottomRight3D = Compkiller:_ViewportPointToWorld(bottomRight2D, distance)
+
+		local width = (topRight3D - topLeft3D).Magnitude
+		local height = (topRight3D - bottomRight3D).Magnitude
+
+		part.CFrame = CFrame.fromMatrix(
+			(topLeft3D + bottomRight3D) / 2,
+			currentCamera.CFrame.XVector,
+			currentCamera.CFrame.YVector,
+			currentCamera.CFrame.ZVector
+		)
+
+		if mesh then
+			mesh.Scale = Vector3.new(width, height, 0.001)
+		end
+
+		pcall(function()
+			part.Color = element.BackgroundColor3
+		end)
+	end
+
+	local function disconnect()
+		if destroyed then
+			return
+		end
+
+		destroyed = true
+
+		for _, connection in ipairs(cleanups) do
+			pcall(function()
+				connection:Disconnect()
+			end)
+		end
+
+		if part then
+			part:Destroy()
+		end
+	end
+
+	table.insert(cleanups, camera:GetPropertyChangedSignal("CFrame"):Connect(render))
+	table.insert(cleanups, camera:GetPropertyChangedSignal("ViewportSize"):Connect(render))
+	table.insert(cleanups, camera:GetPropertyChangedSignal("FieldOfView"):Connect(render))
+	table.insert(cleanups, element:GetPropertyChangedSignal("AbsolutePosition"):Connect(render))
+	table.insert(cleanups, element:GetPropertyChangedSignal("AbsoluteSize"):Connect(render))
+	table.insert(cleanups, element:GetPropertyChangedSignal("BackgroundColor3"):Connect(render))
+	table.insert(cleanups, element.AncestryChanged:Connect(function(_, parent)
+		if not parent then
+			disconnect()
 		else
-			Compkiller:_Animation(DepthOfField,TweenInfo.new(0.1),{
-				NearIntensity = 0
-			})
+			render()
+		end
+	end))
+	table.insert(cleanups, element.Destroying:Connect(disconnect))
 
-			Compkiller:_Animation(Part,TweenInfo.new(0.1),{
-				Size = Vector3.zero,
-				Transparency = 1.5,
-			})
+	local heartbeatConnection = RunService.Heartbeat:Connect(function()
+		pcall(render)
+	end)
+	table.insert(cleanups, heartbeatConnection)
 
-			return false;
-		end;
+	task.spawn(render)
 
-		if IsWindowActive then
-			local corner0 = element.AbsolutePosition;
-			local corner1 = corner0 + element.AbsoluteSize;
-
-			local ray0 = CurrentCamera.ScreenPointToRay(CurrentCamera,corner0.X, corner0.Y, 1);
-			local ray1 = CurrentCamera.ScreenPointToRay(CurrentCamera,corner1.X, corner1.Y, 1);
-
-			local planeOrigin = CurrentCamera.CFrame.Position + CurrentCamera.CFrame.LookVector * (0.05 - CurrentCamera.NearPlaneZ);
-
-			local planeNormal = CurrentCamera.CFrame.LookVector;
-
-			local pos0 = Compkiller:GetCalculatePosition(planeOrigin, planeNormal, ray0.Origin, ray0.Direction);
-			local pos1 = Compkiller:GetCalculatePosition(planeOrigin, planeNormal, ray1.Origin, ray1.Direction);
-
-			pos0 = CurrentCamera.CFrame:PointToObjectSpace(pos0);
-			pos1 = CurrentCamera.CFrame:PointToObjectSpace(pos1);
-
-			local size   = pos1 - pos0;
-			local center = (pos0 + pos1) / 2;
-
-			BlockMesh.Offset = center
-			BlockMesh.Scale  = size / 0.0101;
-			Part.CFrame = CurrentCamera.CFrame;
-		end;
-	end;
-
-	local rbxsignal = CurrentCamera:GetPropertyChangedSignal('CFrame'):Connect(UpdateFunction)
-	local loopThread = UserInputService.InputChanged:Connect(function(Input)
-		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
-			pcall(UpdateFunction);
-		end;
-	end);
-
-	local THREAD = task.spawn(function()
-		while true do task.wait(0.1)
-			pcall(UpdateFunction);
-		end;
-	end);
-
-	disconnect = function()
-		rbxsignal:Disconnect();
-		loopThread:Disconnect();
-		task.cancel(THREAD);
-		Part:Destroy();
-		DepthOfField:Destroy();
-	end;
-
-	element.Destroying:Connect(disconnect);
-
-	return rbxsignal;
-end;
+	return heartbeatConnection
+end
 
 function Compkiller:_AddDragBlacklist(Frame: Frame)
 	local IsAdded = false;
@@ -7284,58 +7347,102 @@ function Compkiller.new(Config : Window)
 		UIListLayout.FillDirection = Enum.FillDirection.Horizontal
 		UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		UIListLayout.HorizontalFlex = Enum.UIFlexAlignment.None
 		UIListLayout.Padding = UDim.new(0, 10)
-  
-    -- [CONTROLE DIREITO] Frame isolado para evitar conflito com UIListLayout das tabs
-  local RightControls = Instance.new("Frame")
-  RightControls.Name = "RightControls"
-  RightControls.Parent = Top
-  RightControls.AnchorPoint = Vector2.new(1, 0.5)
-  RightControls.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-  RightControls.BackgroundTransparency = 1
-  RightControls.BorderSizePixel = 0
-  RightControls.Position = UDim2.new(1, -8, 0.5, 0) -- Margem de 8px da borda direita
-  RightControls.Size = UDim2.new(0, 38, 0, 15)      -- Espaço para 2 botões de 15px + 8px de gap
-  RightControls.ZIndex = Top.ZIndex + 5
-  
-  -- MINIMIZE BUTTON
-  local MinBtn = Instance.new("Frame")
-  MinBtn.Name = "MinimizeBtn"
-  MinBtn.Parent = RightControls
-  MinBtn.AnchorPoint = Vector2.new(1, 0.5)
-  MinBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-  MinBtn.BackgroundTransparency = 0
-  MinBtn.BorderSizePixel = 0
-  MinBtn.Position = UDim2.new(1, -4, 0.5, 0)
-  MinBtn.Size = UDim2.new(0, 14, 0, 14)
-  MinBtn.ZIndex = RightControls.ZIndex + 1
-  local MinCorner = Instance.new("UICorner")
-  MinCorner.CornerRadius = UDim.new(1, 0)
-  MinCorner.Parent = MinBtn
-  
-  -- CLOSE BUTTON
-  local CloseBtn = Instance.new("Frame")
-  CloseBtn.Name = "CloseBtn"
-  CloseBtn.Parent = RightControls
-  CloseBtn.AnchorPoint = Vector2.new(1, 0.5)
-  CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-  CloseBtn.BackgroundTransparency = 0.5
-  CloseBtn.BorderSizePixel = 0
-  CloseBtn.Position = UDim2.new(1, -23, 0.5, 0) -- 15 (tamanho) + 8 (gap)
-  CloseBtn.Size = UDim2.new(0, 14, 0, 14)
-  CloseBtn.ZIndex = RightControls.ZIndex + 1
-  local CloseCorner = Instance.new("UICorner")
-  CloseCorner.CornerRadius = UDim.new(1, 0)
-  CloseCorner.Parent = CloseBtn
-  
-  -- HANDLERS (Mantendo padrão Compkiller)
-  Compkiller:_Input(MinBtn, function()
-  	 WindowArgs:_ToggleUI();
-  end)
-  
-  Compkiller:_Input(CloseBtn, function()
-  	WindowArgs:Destroy()
-  end)
+
+		-- Spacer que empurra botões para direita
+		local Spacer = Instance.new("Frame")
+		Spacer.Name = "Spacer"
+		Spacer.Parent = Top
+		Spacer.BackgroundTransparency = 1
+		Spacer.BorderSizePixel = 0
+		Spacer.Size = UDim2.new(1, 0, 1, 0)
+		Spacer.LayoutOrder = 9998
+
+		local SpacerFlex = Instance.new("UIFlexItem")
+		SpacerFlex.FlexMode = Enum.UIFlexMode.Fill
+		SpacerFlex.Parent = Spacer
+
+		-- Container dos botões, sempre à direita
+		local RightControls = Instance.new("Frame")
+		RightControls.Name = "RightControls"
+		RightControls.Parent = Top
+		RightControls.BackgroundTransparency = 1
+		RightControls.BorderSizePixel = 0
+		RightControls.Size = UDim2.new(0, 42, 1, 0)
+		RightControls.LayoutOrder = 9999
+		RightControls.ZIndex = Top.ZIndex + 1
+
+		local RightLayout = Instance.new("UIListLayout")
+		RightLayout.Parent = RightControls
+		RightLayout.FillDirection = Enum.FillDirection.Horizontal
+		RightLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+		RightLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		RightLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		RightLayout.Padding = UDim.new(0, 6)
+
+		-- CLOSE BUTTON (LayoutOrder menor = mais à esquerda dentro do RightControls)
+		local CloseBtn = Instance.new("Frame")
+		CloseBtn.Name = "CloseBtn"
+		CloseBtn.Parent = RightControls
+		CloseBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		CloseBtn.BackgroundTransparency = 0
+		CloseBtn.BorderSizePixel = 0
+		CloseBtn.Size = UDim2.new(0, 12, 0, 12)
+		CloseBtn.ZIndex = RightControls.ZIndex + 1
+		CloseBtn.LayoutOrder = 2
+
+		local CloseBtnCorner = Instance.new("UICorner")
+		CloseBtnCorner.CornerRadius = UDim.new(1, 0)
+		CloseBtnCorner.Parent = CloseBtn
+
+		-- MINIMIZE BUTTON
+		local MinBtn = Instance.new("Frame")
+		MinBtn.Name = "MinimizeBtn"
+		MinBtn.Parent = RightControls
+		MinBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		MinBtn.BackgroundTransparency = 0.5
+		MinBtn.BorderSizePixel = 0
+		MinBtn.Size = UDim2.new(0, 12, 0, 12)
+		MinBtn.ZIndex = RightControls.ZIndex + 1
+		MinBtn.LayoutOrder = 1
+
+		local MinCorner = Instance.new("UICorner")
+		MinCorner.CornerRadius = UDim.new(1, 0)
+		MinCorner.Parent = MinBtn
+
+		-- inputs e hover
+		Compkiller:_Hover(
+			Compkiller:_Input(MinBtn, function()
+				WindowArgs:_ToggleUI();
+			end),
+			function()
+				Compkiller:_Animation(MinBtn, TweenInfo.new(0.15), {
+					BackgroundTransparency = 0
+				});
+			end,
+			function()
+				Compkiller:_Animation(MinBtn, TweenInfo.new(0.15), {
+					BackgroundTransparency = 0.2
+				});
+			end
+		);
+
+		Compkiller:_Hover(
+			Compkiller:_Input(CloseBtn, function()
+				WindowArgs:Destroy()
+			end),
+			function()
+				Compkiller:_Animation(CloseBtn, TweenInfo.new(0.15), {
+					BackgroundTransparency = 0.3
+				});
+			end,
+			function()
+				Compkiller:_Animation(CloseBtn, TweenInfo.new(0.15), {
+					BackgroundTransparency = 0.65
+				});
+			end
+		);
   
 		-- Functions --
 		Highlight:GetPropertyChangedSignal('BackgroundTransparency'):Connect(function()
@@ -9775,26 +9882,25 @@ function Compkiller.new(Config : Window)
       Compkiller.Gradients["CloseBtnStroke"] = Compkiller.Gradient.Create({
           ["0"]   = {Color = Compkiller.Colors.Highlight, Transparency = 0},
           ["50"]  = {Color = Color3.fromRGB(255, 255, 255), Transparency = 0},
-          ["100"] = {Color = Compkiller.Colors.Toggle, Transparency = 0}
+          ["100"] = {Color = Compkiller.Colors.Highlight, Transparency = 0}
       }, {
-          Rotation = 90
+          Rotation = 45
       })
   end
   
-  -- 2. Cria o UIStroke com gradiente
-  local CloseStroke = Instance.new("UIStroke")
-  CloseStroke.Name = "CloseStroke"
-  CloseStroke.Parent = CloseWindow
-  CloseStroke.Thickness = 2
-  CloseStroke.Transparency = 0
-  CloseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  
-  -- 3. Aplica o gradiente diretamente no stroke usando UIGradient
-  local StrokeGradient = Instance.new("UIGradient")
-  StrokeGradient.Name = "StrokeGradient"
-  StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
-  StrokeGradient.Rotation = Compkiller.Gradients["CloseBtnStroke"].Rotation or 90
-  StrokeGradient.Parent = CloseStroke
+-- Cria o UIStroke com gradiente
+		local CloseStroke = Instance.new("UIStroke")
+		CloseStroke.Name = "CloseStroke"
+		CloseStroke.Parent = CloseWindow
+		CloseStroke.Thickness = 2
+		CloseStroke.Transparency = 0
+		CloseStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+		local StrokeGradient = Instance.new("UIGradient")
+		StrokeGradient.Name = "StrokeGradient"
+		StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
+		StrokeGradient.Rotation = Compkiller.Gradients["CloseBtnStroke"].Rotation or 90
+		StrokeGradient.Parent = CloseStroke
   
   -- 4. Sincroniza com mudanças de tema
   table.insert(Compkiller.Elements.Highlight, {
@@ -9809,14 +9915,6 @@ function Compkiller.new(Config : Window)
           StrokeGradient.Color = Compkiller.Gradients["CloseBtnStroke"].Color
       end
   end)
-
-  -- Adiciona após o código acima
-  local gradientAnim = TweenService:Create(
-      CloseStroke.StrokeGradient,
-      TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1, true),
-      {Rotation = 360}
-  )
-  gradientAnim:Play()
 
 		ImageLabel.Parent = CloseWindow
 		ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -9837,25 +9935,33 @@ function Compkiller.new(Config : Window)
 			if v then
 				ImageLabel.ClipsDescendants = true;
 
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
 					Size = UDim2.new(0, 45, 0, 23),
 					BackgroundTransparency = 0.025
-				})
+				});
 
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseStroke, TweenInfo.new(0.2), {
+					Transparency = 0
+				});
+
+				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
 					ImageTransparency = (ImageLabel:GetAttribute('Hover') and 0.1) or 0.35
-				})
+				});
 			else
 				ImageLabel.ClipsDescendants = false;
 
-				Compkiller:_Animation(CloseWindow,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseWindow, TweenInfo.new(0.2), {
 					Size = UDim2.new(0, 0, 0, 23),
 					BackgroundTransparency = 1
-				})
+				});
 
-				Compkiller:_Animation(ImageLabel,TweenInfo.new(0.2),{
+				Compkiller:_Animation(CloseStroke, TweenInfo.new(0.2), {
+					Transparency = 1
+				});
+
+				Compkiller:_Animation(ImageLabel, TweenInfo.new(0.2), {
 					ImageTransparency = 1
-				})
+				});
 			end;
 		end;
 
@@ -10144,6 +10250,7 @@ table.insert(WindowArgs.THREADS, task.spawn(function()
 		if disabled or (not isMobile and onlyMobile) then
 			CloseWindow.BackgroundTransparency = 1;
 			CloseWindow.Size = UDim2.new(0, 0, 0, 23);
+			CloseStroke.Transparency = 1;
 			if _img then _img.ImageTransparency = 1; end;
 			continue;
 		end;
@@ -10152,7 +10259,6 @@ table.insert(WindowArgs.THREADS, task.spawn(function()
 			CloseWindow.BackgroundColor3 = (override and override.Color) or Compkiller.Colors.BGDBColor;
 			CloseWindow.BackgroundTransparency = (override and override.BackgroundTransparency ~= nil and override.BackgroundTransparency) or 0.025;
 			CloseWindow.Size = (override and override.Size) or UDim2.new(0, 45, 0, 23);
-
 			if not dragging and override and override.Position then
 				CloseWindow.Position = override.Position;
 			end;
@@ -10540,20 +10646,149 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 		Config = "Software"
 	});
 
-	if not isfolder(ConfigManager.Directory) then
-		makefolder(ConfigManager.Directory);
-	end;
-
-	if not isfolder(Compkiller:_Path(ConfigManager.Directory , ConfigManager.Config)) then
-		makefolder(Compkiller:_Path(ConfigManager.Directory , ConfigManager.Config));
-	end;
+	local FileExtension = ".json";
+	local RootDirectory = ConfigManager.Directory;
+	local ConfigFolder = ConfigManager.Config;
+	local BaseDirectory = Compkiller:_Path(RootDirectory , ConfigFolder);
+	local ConfigDirectory = Compkiller:_Path(BaseDirectory , "configs");
+	local OptionsDirectory = Compkiller:_Path(BaseDirectory , "options");
 
 	local Args = {
-		Directory = Compkiller:_Path(ConfigManager.Directory , ConfigManager.Config);
+		Directory = ConfigDirectory,
+		RootDirectory = RootDirectory,
+		BaseDirectory = BaseDirectory,
+		ConfigDirectory = ConfigDirectory,
+		OptionsDirectory = OptionsDirectory,
+		FileExtension = FileExtension,
 		EnableNotify = false,
 	};
 
 	local notify = Compkiller.newNotify();
+
+	local function FilesystemAvailable()
+		return isfolder and makefolder and isfile and writefile and readfile and listfiles and delfile;
+	end;
+
+	local function BuildFolderTree()
+		if not FilesystemAvailable() then
+			return false, "Config system unavailable.";
+		end;
+
+		for _, Path in next, { RootDirectory, BaseDirectory, ConfigDirectory, OptionsDirectory } do
+			if not isfolder(Path) then
+				makefolder(Path);
+			end;
+		end;
+
+		return true;
+	end;
+
+	local function NormalizeConfigName(Name: string)
+		Name = tostring(Name or "");
+		Name = Name:gsub("[/\\]", "");
+
+		if Name:sub(-#FileExtension) == FileExtension then
+			Name = Name:sub(1, #Name - #FileExtension);
+		end;
+
+		return Name;
+	end;
+
+	local function GetConfigPath(Name: string)
+		Name = NormalizeConfigName(Name);
+		return Compkiller:_Path(ConfigDirectory, Name .. FileExtension), Name;
+	end;
+
+	local function DecodeFile(Path: string)
+		if not isfile(Path) then
+			return false, "Invalid file.";
+		end;
+
+		local Success, Decoded = pcall(HttpService.JSONDecode, HttpService, readfile(Path));
+		if not Success then
+			return false, "Unable to decode JSON data.";
+		end;
+
+		return true, Decoded;
+	end;
+
+	local function EncodeAndWrite(Path: string, Data)
+		local Success, Encoded = pcall(HttpService.JSONEncode, HttpService, Data);
+		if not Success then
+			return false, "Unable to encode into JSON data.";
+		end;
+
+		writefile(Path, Encoded);
+		return true;
+	end;
+
+	local ConfigMethods = {
+		Save = function(Flag: string, Object)
+			return {
+				type = Object.Value.Type,
+				idx = Flag,
+				flag = Flag,
+				data = Object.Value,
+				autoKeybind = Object.AutoKeybind,
+			};
+		end,
+		Load = function(Object, Flags)
+			if not Object then return; end;
+
+			local Flag = Object.flag or Object.idx or Object.Flag;
+			local Data = Object.data or Object.Value;
+			local AutoKeybind = Object.autoKeybind or Object.AutoKeybind;
+
+			if not Flag or not Data then return; end;
+
+			local Target = Flags[Flag];
+			if not Target or not Target.Functions then return; end;
+
+			if Data.Type == "NormalElement" then
+				Target.Functions:SetValue(Data.Value);
+			elseif Data.Type == "ColorPicker" then
+				local SavedColor = Data.Color3;
+				if SavedColor then
+					Target.Functions:SetValue(Color3.new(SavedColor.R, SavedColor.G, SavedColor.B), Data.Transparency);
+				end;
+			end;
+
+			if Target.Functions.AutoKeybind and AutoKeybind then
+				Target.Functions.AutoKeybind:LoadSettings(AutoKeybind);
+			end;
+		end,
+	};
+
+	BuildFolderTree();
+
+	function Args:BuildFolderTree()
+		return BuildFolderTree();
+	end;
+
+	function Args:SaveConfig(ConfigName: string, Path: string?)
+		local _Path, Name = GetConfigPath(ConfigName);
+		if Path then
+			_Path = Path .. Name .. FileExtension;
+		end;
+
+		local Data = {
+			information = {
+				Type = "Information",
+				Author = LocalPlayer.Name,
+				Name = Name,
+				CreatedDate = Compkiller:GetDate(),
+			},
+			objects = {},
+		};
+
+		for Flag, Object in next, Compkiller:GetConfig("MK") do
+			if Flag ~= "__INFORMATION" and Object and Object.Flag then
+				table.insert(Data.objects, ConfigMethods.Save(Flag, Object));
+			end;
+		end;
+
+		return EncodeAndWrite(_Path, Data);
+	end;
 
 	function Args:WriteConfig(Config: WriteConfig)
 		Config = Compkiller.__CONFIG(Config , {
@@ -10561,166 +10796,203 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 			Author = LocalPlayer.Name,
 		});
 
-		local Flags = Compkiller:GetConfig("MK");
-
-		Flags["__INFORMATION"] = {
-			Type = "Information",
-			Author = Config.Author,
-			Name = Config.Name,
-			CreatedDate = Compkiller:GetDate()
+		local _Path, Name = GetConfigPath(Config.Name);
+		local Data = {
+			information = {
+				Type = "Information",
+				Author = Config.Author,
+				Name = Name,
+				CreatedDate = Compkiller:GetDate(),
+			},
+			objects = {},
 		};
+
+		for Flag, Object in next, Compkiller:GetConfig("MK") do
+			if Flag ~= "__INFORMATION" and Object and Object.Flag then
+				table.insert(Data.objects, ConfigMethods.Save(Flag, Object));
+			end;
+		end;
 
 		if Args.EnableNotify then
 			notify.new({
 				Title = "Configs",
 				Icon = Compkiller:_GetIcon('settings'),
-				Content = "Create config \""..Config.Name.."\""
+				Content = "Create config \""..Name.."\""
 			})
 		end
 
-		writefile(Compkiller:_Path(Args.Directory , Config.Name) , HttpService:JSONEncode(Flags));
+		return EncodeAndWrite(_Path, Data);
 	end;
 
 	function Args:LoadConfigFromString(str: string)
-		local decoded = HttpService:JSONDecode(str);
+		local Success, Decoded = pcall(HttpService.JSONDecode, HttpService, str);
+		if not Success then
+			return false, "Unable to decode JSON data.";
+		end;
 
 		local Flags = Compkiller:GetConfig("KV");
 
-		for i,v in next , decoded do
-			if v and v.Flag then
-
-				local Value = Flags[v.Flag];
-
-				if Value then
-
-					if v.Value.Type == "NormalElement" then
-						Value.Functions:SetValue(v.Value.Value);
-
-					elseif v.Value.Type == "ColorPicker" then
-
-						local Color = Color3.new(v.Value.Color3.R,v.Value.Color3.G,v.Value.Color3.B);
-
-						local Transparency = v.Value.Transparency;
-
-						Value.Functions:SetValue(Color , Transparency);
-					end;
-				end;
-			end
+		if Decoded.objects then
+			for _, Object in next, Decoded.objects do
+				ConfigMethods.Load(Object, Flags);
+			end;
+			return true;
 		end;
+
+		for _, Object in next, Decoded do
+			if typeof(Object) == "table" and Object.Flag then
+				ConfigMethods.Load(Object, Flags);
+			end;
+		end;
+
+		return true;
 	end;
 
 	function Args:GetCurrentConfig()
-		return Compkiller:GetConfig("MK")
+		local Data = { objects = {} };
+
+		for Flag, Object in next, Compkiller:GetConfig("MK") do
+			if Flag ~= "__INFORMATION" and Object and Object.Flag then
+				table.insert(Data.objects, ConfigMethods.Save(Flag, Object));
+			end;
+		end;
+
+		return Data;
 	end;
 
 	function Args:ReadInfo(ConfigName: string)
-		local _path = Compkiller:_Path(Args.Directory , ConfigName);
+		local _Path = GetConfigPath(ConfigName);
+		local Success, Decoded = DecodeFile(_Path);
 
-		if isfile(_path) then
-			local info = readfile(_path);
+		if not Success then return false; end;
 
-			local decoded = HttpService:JSONDecode(info);
+		return Decoded.information or Decoded.__INFORMATION or false;
+	end;
 
-			return decoded.__INFORMATION;
+	function Args:RefreshConfigList(Path: string?)
+		local Directory = Path or ConfigDirectory;
+		if not FilesystemAvailable() or not isfolder(Directory) then
+			return {};
+		end;
+
+		local Names = {};
+
+		for _, File in next, listfiles(Directory) do
+			if File:sub(-#FileExtension) == FileExtension then
+				local Name = File:match("([^/\\]+)" .. FileExtension .. "$");
+				if Name and Name ~= "options" and Name ~= "autoload" then
+					table.insert(Names, Name);
+				end;
+			end;
+		end;
+
+		return Names;
+	end;
+
+	function Args:GetConfigs()
+		return Args:RefreshConfigList(ConfigDirectory);
+	end;
+
+	function Args:GetFullConfigs()
+		local Full = {};
+
+		for _, Name in next, Args:GetConfigs() do
+			table.insert(Full , {
+				Name = Name,
+				Info = Args:ReadInfo(Name) or {
+					Type = "Information",
+					Author = "Unknown",
+					Name = Name,
+					CreatedDate = "Unknown",
+				},
+			});
+		end;
+
+		return Full;
+	end;
+
+	function Args:DeleteConfig(ConfigName)
+		local _Path, Name = GetConfigPath(ConfigName);
+
+		if Args.EnableNotify then
+			notify.new({
+				Title = "Configs",
+				Icon = Compkiller:_GetIcon('settings'),
+				Content = "Delete config \""..Name.."\""
+			})
+		end
+
+		if isfile(_Path) then
+			delfile(_Path);
+			return true;
 		end;
 
 		return false;
 	end;
 
-	function Args:GetConfigs()
-		local names = {};
-
-		for i,v in next , listfiles(Args.Directory) do
-			local Name = string.sub(v , #Args.Directory + 2);
-
-			table.insert(names , Name);
-		end;
-
-		return names;
+	function Args:GetConfigCount()
+		return #Args:GetConfigs();
 	end;
 
-	function Args:GetFullConfigs()
-		local names = {};
-
-		for i,v in next , listfiles(Args.Directory) do
-			local Name = string.sub(v , #Args.Directory + 2);
-			local Info = Args:ReadInfo(Name);
-
-			table.insert(names , {
-				Name = Name,
-				Info = Info,
-			});
+	function Args:LoadConfig(ConfigName: string, Path: string?)
+		local _Path, Name = GetConfigPath(ConfigName);
+		if Path then
+			_Path = Path .. Name .. FileExtension;
 		end;
 
-		return names;
-	end;
+		local Success, Decoded = DecodeFile(_Path);
+		if not Success then return false, Decoded; end;
 
-	function Args:DeleteConfig(ConfigName)
-		local _path = Compkiller:_Path(Args.Directory,ConfigName);
+		local Flags = Compkiller:GetConfig("KV");
 
 		if Args.EnableNotify then
 			notify.new({
 				Title = "Configs",
 				Icon = Compkiller:_GetIcon('settings'),
-				Content = "Delete config \""..ConfigName.."\""
+				Content = "Load config \""..Name.."\""
 			})
 		end
 
-		if isfile(_path) then
-			delfile(_path);
-		end;
-	end;
-
-	function Args:GetConfigCount()
-		return #listfiles(Args.Directory);
-	end;
-
-	function Args:LoadConfig(ConfigName: string)
-		local _path = Compkiller:_Path(Args.Directory,ConfigName);
-
-		if isfile(_path) then
-			local info = readfile(_path);
-
-			local decoded = HttpService:JSONDecode(info);
-
-			local Flags = Compkiller:GetConfig("KV");
-
-			if Args.EnableNotify then
-				notify.new({
-					Title = "Configs",
-					Icon = Compkiller:_GetIcon('settings'),
-					Content = "Load config \""..ConfigName.."\""
-				})
-			end
-
-			for i,v in next , decoded do
-				if v and v.Flag then
-
-					local Value = Flags[v.Flag];
-
-					if Value then
-
-						if v.Value.Type == "NormalElement" then
-							Value.Functions:SetValue(v.Value.Value);
-
-						elseif v.Value.Type == "ColorPicker" then
-
-							local Color = Color3.new(v.Value.Color3.R,v.Value.Color3.G,v.Value.Color3.B);
-
-							local Transparency = v.Value.Transparency;
-
-							Value.Functions:SetValue(Color , Transparency);
-						end;
-
-						if Value.Functions.AutoKeybind then
-							if v.AutoKeybind then
-								Value.Functions.AutoKeybind:LoadSettings(v.AutoKeybind)
-							end;
-						end;
-					end;
-				end
+		if Decoded.objects then
+			for _, Object in next, Decoded.objects do
+				task.spawn(function()
+					ConfigMethods.Load(Object, Flags);
+				end);
+			end;
+		else
+			for _, Object in next, Decoded do
+				if typeof(Object) == "table" and Object.Flag then
+					task.spawn(function()
+						ConfigMethods.Load(Object, Flags);
+					end);
+				end;
 			end;
 		end;
+
+		return true;
+	end;
+
+	function Args:SetAutoload(ConfigName: string)
+		local Name = NormalizeConfigName(ConfigName);
+		writefile(Compkiller:_Path(OptionsDirectory, "autoload.txt"), Name);
+		return true;
+	end;
+
+	function Args:LoadAutoloadConfig()
+		local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+		if isfile(Path) then
+			return Args:LoadConfig(readfile(Path));
+		end;
+		return false;
+	end;
+
+	function Args:DisableAutoload()
+		local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+		if isfile(Path) then
+			delfile(Path);
+			return true;
+		end;
+		return false;
 	end;
 
 	return Args;
@@ -10745,7 +11017,6 @@ function Compkiller:Loader(IconId,Duration)
 	Loader.AnchorPoint = Vector2.new(0.5, 0.5)
 	Loader.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	Loader.BackgroundTransparency = 1
-	Loader.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	Loader.BorderSizePixel = 0
 	Loader.Position = UDim2.new(0.5, 0, 0.5, 0)
 	Loader.Size = UDim2.new(1, 0, 1, 0)
@@ -10753,19 +11024,34 @@ function Compkiller:Loader(IconId,Duration)
 	Icon.Name = Compkiller:_RandomString()
 	Icon.Parent = Loader
 	Icon.AnchorPoint = Vector2.new(0.5, 0.5)
-	Icon.BackgroundTransparency = 1.000
-	Icon.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Icon.BackgroundTransparency = 1
 	Icon.BorderSizePixel = 0
 	Icon.Position = UDim2.new(0.5, 0, 0.5, 0)
 	Icon.Size = UDim2.new(0, 750, 0, 750)
 	Icon.ZIndex = 100
-	Icon.Image = IconId or Compkiller.Logo;
+	Icon.Image = IconId or Compkiller.Logo
 	Icon.ImageTransparency = 1
+
+	-- TEXTO
+	local Text = Instance.new("TextLabel")
+	Text.Name = Compkiller:_RandomString()
+	Text.Parent = Loader
+	Text.AnchorPoint = Vector2.new(0.5, 0)
+	Text.BackgroundTransparency = 1
+	Text.BorderSizePixel = 0
+	Text.Position = UDim2.new(0.5, 0, 0.5, 110)
+	Text.Size = UDim2.new(0, 300, 0, 30)
+	Text.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
+	Text.Text = "Loading The Script."
+	Text.TextColor3 = Color3.fromRGB(255,255,255)
+	Text.TextSize = 16
+	Text.TextTransparency = 1
+	Text.TextXAlignment = Enum.TextXAlignment.Center
+	Text.ZIndex = 100
 
 	Vignette.Name = Compkiller:_RandomString()
 	Vignette.Parent = Loader
-	Vignette.BackgroundTransparency = 1.000
-	Vignette.BorderColor3 = Color3.fromRGB(27, 42, 53)
+	Vignette.BackgroundTransparency = 1
 	Vignette.BorderSizePixel = 0
 	Vignette.Size = UDim2.new(1, 0, 1, 0)
 	Vignette.Image = Compkiller:CacheImage("rbxassetid://18720640102")
@@ -10776,59 +11062,103 @@ function Compkiller:Loader(IconId,Duration)
 
 	Compkiller:_Animation(Loader,TweenInfo.new(0.55,Enum.EasingStyle.Quint),{
 		BackgroundTransparency = 0.5
-	});
+	})
 
-	local Event = Instance.new('BindableEvent');
+	local Event = Instance.new('BindableEvent')
+	local running = true
 
 	task.delay(0.5,function()
+
+		-- ICON
 		Compkiller:_Animation(Icon,TweenInfo.new(0.75,Enum.EasingStyle.Quint),{
 			ImageTransparency = 0.01,
 			Size = UDim2.new(0, 200, 0, 200)
-		});
+		})
+
+		-- TEXTO ENTRA
+		Compkiller:_Animation(Text,TweenInfo.new(0.75,Enum.EasingStyle.Quint),{
+			TextTransparency = 0
+		})
+
+		-- LOADING DINÂMICO + OPACIDADE + PULSE
+		task.spawn(function()
+			local dots = 1
+			local pulseUp = true
+
+			while running do
+				-- dots
+				local dotStr = string.rep(".", dots)
+				Text.Text = "Loading The Script" .. dotStr
+				Text.TextTransparency = 0.05 + (Vignette.ImageTransparency * 0.3)
+
+				-- pulse
+				if pulseUp then
+					Text.TextSize = Text.TextSize + 0.3
+					if Text.TextSize >= 17 then pulseUp = false end
+				else
+					Text.TextSize = Text.TextSize - 0.3
+					if Text.TextSize <= 15.5 then pulseUp = true end
+				end
+
+				dots += 1
+				if dots > 3 then dots = 1 end
+
+				task.wait(0.4)
+			end
+		end)
 
 		task.delay(0.25,function()
+
+			-- VIGNETTE ENTRA
 			Compkiller:_Animation(Vignette,TweenInfo.new(5),{
 				ImageTransparency = 0.2
-			});
+			})
 
 			task.wait(Duration or 4.5)
 
+			-- SAÍDA
+			running = false
+
 			Compkiller:_Animation(Vignette,TweenInfo.new(3,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
 				Size = UDim2.new(2, 0, 2, 0)
-			});
+			})
 
 			Compkiller:_Animation(Icon,TweenInfo.new(0.75,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
-				ImageTransparency = 1,
-			});
+				ImageTransparency = 1
+			})
+
+			Compkiller:_Animation(Text,TweenInfo.new(0.75,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
+				TextTransparency = 1
+			})
 
 			Compkiller:_Animation(Loader,TweenInfo.new(1.5,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
 				BackgroundTransparency = 1
-			});
+			})
 
 			task.delay(0.1,function()
 				Compkiller:_Animation(Vignette,TweenInfo.new(1,Enum.EasingStyle.Quint,Enum.EasingDirection.InOut),{
 					ImageTransparency = 1
-				});
+				})
 
 				task.wait(0.2)
 
 				task.delay(3,function()
-					CompKiller:Destroy();
+					CompKiller:Destroy()
 				end)
 			end)
 
 			task.delay(0.6,function()
-				Event:Fire();
+				Event:Fire()
 			end)
 		end)
-	end);
+	end)
 
 	return {
 		yield = function()
-			return Event.Event:Wait();
+			return Event.Event:Wait()
 		end	
-	};
-end;
+	}
+end
 
 function Compkiller.newNotify()
 	if Compkiller.NOTIFY_CACHE then
@@ -11083,6 +11413,365 @@ function Compkiller.newNotify()
 
 	return Compkiller.NOTIFY_CACHE;
 end;
+
+function Compkiller:AdvancedNotify(properties: {
+    Title: string,
+    Subtitle: string?,
+    Content: string?,
+    Duration: number?,
+    Icon: string?,
+    App: string?,
+    AppIcon: string?,
+    Callback: (() -> ())?,
+})
+    properties = properties or {}
+   
+    local tweenService = game:GetService("TweenService")
+    
+    local notificationContainer = self.NotificationContainer
+    if not notificationContainer then
+        notificationContainer = Instance.new("ScreenGui")
+        notificationContainer.Name = "CompkillerNotifications"
+        notificationContainer.ResetOnSpawn = false
+        notificationContainer.ZIndexBehavior = Enum.ZIndexBehavior.Global
+        notificationContainer.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+        self.NotificationContainer = notificationContainer
+        
+        local containerFrame = Instance.new("Frame")
+        containerFrame.Name = "Notifications"
+        containerFrame.BackgroundTransparency = 1
+        containerFrame.BorderSizePixel = 0
+        containerFrame.Size = UDim2.fromScale(1, 1)
+        containerFrame.Parent = notificationContainer
+        
+        local padding = Instance.new("UIPadding")
+        padding.PaddingBottom = UDim.new(0, 15)
+        padding.PaddingRight = UDim.new(0, 15)
+        padding.Parent = containerFrame
+        
+        self.NotificationFrame = containerFrame
+    end
+    
+    local MAX_NOTIFICATIONS = 4
+    local state = { Age = 0 }
+    
+    -- Criar notificação
+    local notification = self:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
+    notification.Parent = self.NotificationFrame
+        -- Animação de entrada
+    local enterTween = tweenService:Create(
+        notification,
+        TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+        {
+            Position = UDim2.new(1, -162.5, 1, 0)
+        }
+    )
+    enterTween:Play()
+    
+    -- Auto-close
+    local duration = properties.Duration or 6
+    if duration > 0 then
+        task.delay(duration, function()
+            self:_(notification, state, MAX_NOTIFICATIONS, properties.Callback)
+        end)
+    end
+    
+    return notification
+end
+
+function Compkiller:_CreateNotificationUI(properties, state, MAX_NOTIFICATIONS)
+    local tweenService = game:GetService("TweenService")
+    
+    -- Notification Container
+    local notification = Instance.new("Frame")
+    notification.Name = "Notification"
+    notification.AnchorPoint = Vector2.new(0.5, 1)
+    notification.AutomaticSize = Enum.AutomaticSize.Y
+    notification.BackgroundTransparency = 1
+    notification.BorderSizePixel = 0
+    notification.Position = UDim2.new(1, -140, 1, 50)
+    notification.Size = UDim2.fromOffset(280, 0)
+    
+    -- Canvas
+    local canvas = Instance.new("Frame")
+    canvas.Name = "Canvas"
+    canvas.AnchorPoint = Vector2.new(0, 0)
+    canvas.AutomaticSize = Enum.AutomaticSize.Y
+    canvas.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(39, 40, 47)
+    canvas.BackgroundTransparency = 0.1
+    canvas.BorderSizePixel = 0
+    canvas.Position = UDim2.fromScale(0, 0)
+    canvas.Size = UDim2.fromScale(1, 0)
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = canvas
+    
+    -- Main Layout
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 4)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.Parent = canvas
+    
+        -- Topbar Container
+    local topbar = Instance.new("Frame")
+    topbar.Name = "Topbar"
+    topbar.AutomaticSize = Enum.AutomaticSize.Y
+    topbar.BackgroundTransparency = 1
+    topbar.BorderSizePixel = 0
+    topbar.Size = UDim2.fromScale(1, 0)
+    topbar.Visible = (properties.App ~= nil) or (properties.AppIcon ~= nil) or properties.CloseButton ~= false
+    
+    -- Padding
+    local topbarPadding = Instance.new("UIPadding")
+    topbarPadding.PaddingLeft = UDim.new(0, 10)
+    topbarPadding.PaddingRight = UDim.new(0, 10)
+    topbarPadding.PaddingTop = UDim.new(0, 10)
+    topbarPadding.PaddingBottom = UDim.new(0, 4)
+    topbarPadding.Parent = topbar
+    
+    -- LEFT CONTAINER (App info)
+    local left = Instance.new("Frame")
+    left.Name = "Left"
+    left.BackgroundTransparency = 1
+    left.Size = UDim2.new(1, -40, 1, 0) -- espaço pro botão
+    left.Parent = topbar
+    
+    local leftLayout = Instance.new("UIListLayout")
+    leftLayout.FillDirection = Enum.FillDirection.Horizontal
+    leftLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    leftLayout.Padding = UDim.new(0, 5)
+    leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    leftLayout.Parent = left
+    
+    -- RIGHT CONTAINER (Exit button)
+    local right = Instance.new("Frame")
+    right.Name = "Right"
+    right.BackgroundTransparency = 1
+    right.Size = UDim2.fromOffset(15, 15)
+    right.AnchorPoint = Vector2.new(1, 0.5)
+    right.Position = UDim2.new(1, 14, 0.5, 2)
+    right.Parent = topbar
+    
+    -- App Info
+    if properties.App or properties.AppIcon then
+        if properties.AppIcon then
+            local appIcon = Instance.new("ImageLabel")
+            appIcon.Name = "AppIcon"
+            appIcon.BackgroundTransparency = 1
+            appIcon.BorderSizePixel = 0
+            appIcon.Image = properties.AppIcon
+            appIcon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+            appIcon.Size = UDim2.fromOffset(20, 20)
+            appIcon.Parent = left
+        end
+        
+        if properties.App then
+            local appLabel = Instance.new("TextLabel")
+            appLabel.Name = "App"
+            appLabel.AutomaticSize = Enum.AutomaticSize.X
+            appLabel.BackgroundTransparency = 1
+            appLabel.BorderSizePixel = 0
+            appLabel.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium, Enum.FontStyle.Normal)
+            appLabel.LineHeight = 0
+            appLabel.Size = UDim2.fromOffset(0, 14)
+            appLabel.Text = string.upper(properties.App)
+            appLabel.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+            appLabel.TextSize = 13
+            appLabel.TextTransparency = 0.5
+            appLabel.TextXAlignment = Enum.TextXAlignment.Left
+            appLabel.RichText = true
+            appLabel.Parent = left
+        end
+    end
+    
+    -- Exit Button
+    if properties.CloseButton ~= false then
+        local exitBtn = Instance.new("TextButton")
+        exitBtn.Name = "Exit"
+        exitBtn.AnchorPoint = Vector2.new(0.5, 0.5)
+        exitBtn.AutoButtonColor = false
+        exitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        exitBtn.BackgroundTransparency = 0.2
+        exitBtn.BorderSizePixel = 0
+        exitBtn.FontFace = Font.new("rbxassetid://12187365364")
+        exitBtn.Size = UDim2.fromOffset(14, 14)
+        exitBtn.Text = ""
+        exitBtn.ZIndex = 10
+        
+        local exitCorner = Instance.new("UICorner")
+        exitCorner.CornerRadius = UDim.new(1, 0)
+        exitCorner.Parent = exitBtn
+        
+        local exitStroke = Instance.new("UIStroke")
+        exitStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        exitStroke.Color = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+        exitStroke.Thickness = 0.5
+        exitStroke.Transparency = 0.5
+        exitStroke.Parent = exitBtn
+        
+        -- Hover
+        exitBtn.MouseEnter:Connect(function()
+            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0,
+                Size = UDim2.fromOffset(16, 16)
+            }):Play()
+        end)
+        
+        exitBtn.MouseLeave:Connect(function()
+            tweenService:Create(exitBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0.2,
+                Size = UDim2.fromOffset(14, 14)
+            }):Play()
+        end)
+        
+        exitBtn.MouseButton1Click:Connect(function()
+            self:_CloseNotification(notification, state, MAX_NOTIFICATIONS, properties.Callback)
+        end)
+        
+        exitBtn.Parent = right
+    end
+    
+    -- Content Container
+    local content = Instance.new("Frame")
+    content.Name = "Content"
+    content.AutomaticSize = Enum.AutomaticSize.Y
+    content.BackgroundTransparency = 1    
+    content.BorderSizePixel = 0
+    content.LayoutOrder = 1
+    content.Size = UDim2.fromScale(1, 0)
+    
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Parent = content
+    
+    -- Title Container
+    local titleContainer = Instance.new("Frame")
+    titleContainer.Name = "TitleContainer"
+    titleContainer.AutomaticSize = Enum.AutomaticSize.XY
+    titleContainer.BackgroundTransparency = 1
+    titleContainer.BorderSizePixel = 0
+    titleContainer.LayoutOrder = 1
+    
+    local titleLayout = Instance.new("UIListLayout")
+    titleLayout.FillDirection = Enum.FillDirection.Horizontal
+    titleLayout.Padding = UDim.new(0, 5)
+    titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    titleLayout.Parent = titleContainer
+    
+    -- Icon
+    if properties.Icon then
+        local icon = Instance.new("ImageLabel")
+        icon.Name = "Icon"
+        icon.BackgroundTransparency = 1
+        icon.LayoutOrder = 1
+        icon.Size = UDim2.fromOffset(13, 13)
+        icon.Image = properties.Icon
+        icon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+        icon.Parent = titleContainer
+    end
+    
+     -- Title
+     local title = Instance.new("TextLabel")
+     title.Name = "Title"
+     title.AutomaticSize = Enum.AutomaticSize.Y
+     title.BackgroundTransparency = 1
+     title.BorderSizePixel = 0
+     title.LayoutOrder = 2
+     title.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+     title.LineHeight = 0
+     title.Size = UDim2.new(1, 0, 0, 20)
+     title.Text = properties.Title or "Notification"
+     title.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+     title.TextSize = 13
+     title.TextWrapped = true
+     title.RichText = true    
+     title.TextXAlignment = Enum.TextXAlignment.Left
+     title.Parent = titleContainer
+    
+    -- Subtitle
+    if properties.Subtitle and properties.Subtitle ~= "" then
+        local subtitle = Instance.new("TextLabel")
+        subtitle.Name = "Subtitle"
+        subtitle.AutomaticSize = Enum.AutomaticSize.Y
+        subtitle.BackgroundTransparency = 1
+        subtitle.BorderSizePixel = 0
+        subtitle.FontFace = Font.new("rbxassetid://12187365364")
+        subtitle.LayoutOrder = 2
+        subtitle.RichText = true
+        subtitle.Size = UDim2.fromScale(1, 0)
+        subtitle.Text = properties.Subtitle
+        subtitle.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+        subtitle.TextSize = 13
+        subtitle.TextTransparency = 0.5
+        subtitle.TextWrapped = true
+        subtitle.TextXAlignment = Enum.TextXAlignment.Left
+        subtitle.Parent = content
+    end
+    
+    if properties.Content and properties.Content ~= "" then
+        local contentText = Instance.new("TextLabel")
+        contentText.Name = "ContentText"
+        contentText.AutomaticSize = Enum.AutomaticSize.Y
+        contentText.BackgroundTransparency = 1
+        contentText.BorderSizePixel = 0
+        contentText.FontFace = Font.new("rbxassetid://12187365364")
+        contentText.LayoutOrder = 3
+        contentText.RichText = true
+        contentText.Size = UDim2.fromScale(1, 0)
+        contentText.Text = properties.Content
+        contentText.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+        contentText.TextSize = 13
+        contentText.TextTransparency = 0.2
+        contentText.TextWrapped = true
+        contentText.TextXAlignment = Enum.TextXAlignment.Left
+        contentText.Parent = content
+    end
+    
+    local contentPadding = Instance.new("UIPadding")
+    contentPadding.PaddingBottom = UDim.new(0, 10)
+    contentPadding.PaddingLeft = UDim.new(0, 10)
+    contentPadding.PaddingRight = UDim.new(0, 10)
+    contentPadding.Parent = content
+    
+    -- Hierarchy
+    titleContainer.Parent = content
+    content.Parent = canvas
+    topbar.Parent = canvas
+    canvas.Parent = notification
+    
+    return notification
+end
+
+function Compkiller:_CloseNotification(notification, state, MAX_NOTIFICATIONS, callback)
+    local tweenService = game:GetService("TweenService")
+    
+    if not notification or not notification.Parent then
+        return
+    end
+    
+    -- Callback
+    if callback then
+        task.spawn(callback)
+    end
+    
+    -- Animação de saída
+    local fadeTween = tweenService:Create(
+        notification,
+        TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out),
+        {            Position = notification.Position + UDim2.fromOffset(350, 0),
+        }
+    )
+    
+    fadeTween:Play()
+    fadeTween.Completed:Connect(function()
+        if notification and notification.Parent then
+            notification:Destroy()
+        end
+    end)
+end
 
 Compkiller.NilFolder.Name = "Nil-Instances";
 
