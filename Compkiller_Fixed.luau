@@ -11249,335 +11249,426 @@ function Compkiller.newNotify()
 end;
 
  function Compkiller:AdvancedNotify(properties: {
-  	Title: string,
-  	Description: string?,
-  	Content: string?,
-  	Duration: number?,
-  	Icon: string?,
-  	Callback: (() -> ())?,
-  })
-  	properties = properties or {}
-  
-  	local TweenService = game:GetService("TweenService")
-  	local RunService = game:GetService("RunService")
-  	local CoreGui = game:GetService("CoreGui")
-  
-  	if not self.NotificationContainer then
-  		local gui = Instance.new("ScreenGui")
-  		gui.Name = "CompkillerNotifications"
-  		gui.ResetOnSpawn = false
-  		gui.IgnoreGuiInset = true
-  		gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
-  		gui.Parent = (gethui and gethui()) or CoreGui
-  		self.NotificationContainer = gui
-  
-  		local holder = Instance.new("Frame")
-  		holder.Name = "Notifications"
-  		holder.AnchorPoint = Vector2.new(1, 1)
-  		holder.BackgroundTransparency = 1
-  		holder.BorderSizePixel = 0
-  		holder.Position = UDim2.new(1, -16, 1, -16)
-  		holder.Size = UDim2.fromOffset(310, 500)
-  		holder.Parent = gui
-  
-  		local layout = Instance.new("UIListLayout")
-  		layout.SortOrder = Enum.SortOrder.LayoutOrder
-  		layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-  		layout.Padding = UDim.new(0, 10)
-  		layout.Parent = holder
-  
-  		self.NotificationFrame = holder
-  	end
-  
-  	local notification, api = self:_CreateNotificationUI(properties)
-  	notification.Parent = self.NotificationFrame
-  
-  	task.defer(function()
-  		api.Open()
-  	end)
-  
-  	local duration = properties.Duration
-  	if duration == nil then
-  		local text = tostring(properties.Description or properties.Content or "")
-  		duration = math.clamp((#text * 0.08) + 3, 3, 10)
-  	end
-  
-  	if duration > 0 then
-  		task.delay(duration, function()
-  			self:_CloseNotification(notification, api, properties.Callback)
-  		end)
-  	end
-  
-  	return notification
-  end
-  
- function Compkiller:_CreateNotificationUI(properties)
-  	local TweenService = game:GetService("TweenService")
-  	local RunService = game:GetService("RunService")
-  
-  	local notification = Instance.new("Frame")
-  	notification.Name = "AdvancedNotification"
-  	notification.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(28, 29, 34)
-  	notification.BackgroundTransparency = 1
-  	notification.BorderSizePixel = 0
-  	notification.ClipsDescendants = false
-  	notification.Size = UDim2.new(1, 0, 0, 0)
-  	notification.LayoutOrder = os.clock() * 1000
-  
-  	local corner = Instance.new("UICorner")
-  	corner.CornerRadius = UDim.new(0, 14)
-  	corner.Parent = notification
-  
-  	local stroke = Instance.new("UIStroke")
-  	stroke.Name = "UIStroke"
-  	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  	stroke.Color = self.Colors.Stroke or Color3.fromRGB(255, 255, 255)
-  	stroke.Thickness = 1
-  	stroke.Transparency = 1
-  	stroke.Parent = notification
-  
-  	local shadow = Instance.new("Folder")
-  	shadow.Name = "Shadow"
-  	shadow.Parent = notification
-  
-  	local function createShadow(name, sizeOffset, transparency, z)
-  		local image = Instance.new("ImageLabel")
-  		image.Name = name
-  		image.AnchorPoint = Vector2.new(0.5, 0.5)
-  		image.BackgroundTransparency = 1
-  		image.BorderSizePixel = 0
-  		image.Image = "rbxassetid://1316045217"
-  		image.ImageColor3 = Color3.fromRGB(0, 0, 0)
-  		image.ImageTransparency = 1
-  		image.Position = UDim2.fromScale(0.5, 0.5)
-  		image.Size = UDim2.new(1, sizeOffset, 1, sizeOffset)
-  		image.ScaleType = Enum.ScaleType.Slice
-  		image.SliceCenter = Rect.new(10, 10, 118, 118)
-  		image.ZIndex = z
-  		image.Parent = shadow
-  		image:SetAttribute("TargetTransparency", transparency)
-  		return image
-  	end
-  
-  	local antumbraShadow = createShadow("antumbraShadow", 34, 0.94, notification.ZIndex - 3)
-  	local penumbraShadow = createShadow("penumbraShadow", 26, 0.55, notification.ZIndex - 2)
-  	local umbraShadow = createShadow("umbraShadow", 18, 0.4, notification.ZIndex - 1)
-  
-  	local acrylic = Instance.new("Frame")
-  	acrylic.Name = "Acrylic"
-  	acrylic.BackgroundTransparency = 1
-  	acrylic.BorderSizePixel = 0
-  	acrylic.ClipsDescendants = true
-  	acrylic.Size = UDim2.fromScale(1, 1)
-  	acrylic.ZIndex = notification.ZIndex
-  	acrylic.Parent = notification
-  
-  	local acrylicCorner = Instance.new("UICorner")
-  	acrylicCorner.CornerRadius = UDim.new(0, 14)
-  	acrylicCorner.Parent = acrylic
-  
-  	local acrylicShadow = Instance.new("ImageLabel")
-  	acrylicShadow.Name = "shadow"
-  	acrylicShadow.BackgroundTransparency = 1
-  	acrylicShadow.Image = "rbxassetid://1316045217"
-  	acrylicShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-  	acrylicShadow.ImageTransparency = 1
-  	acrylicShadow.Position = UDim2.fromOffset(-18, -18)
-  	acrylicShadow.Size = UDim2.new(1, 36, 1, 36)
-  	acrylicShadow.ScaleType = Enum.ScaleType.Slice
-  	acrylicShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-  	acrylicShadow.ZIndex = acrylic.ZIndex
-  	acrylicShadow.Parent = acrylic
-  
-  	local tint = Instance.new("Frame")
-  	tint.Name = "tint"
-  	tint.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(35, 36, 42)
-  	tint.BackgroundTransparency = 1
-  	tint.BorderSizePixel = 0
-  	tint.Size = UDim2.fromScale(1, 1)
-  	tint.ZIndex = acrylic.ZIndex + 1
-  	tint.Parent = acrylic
-  
-  	local noise = Instance.new("ImageLabel")
-  	noise.Name = "Noise"
-  	noise.BackgroundTransparency = 1
-  	noise.BorderSizePixel = 0
-  	noise.Image = "rbxassetid://9968344105"
-  	noise.ImageTransparency = 1
-  	noise.ScaleType = Enum.ScaleType.Tile
-  	noise.TileSize = UDim2.fromOffset(128, 128)
-  	noise.Size = UDim2.fromScale(1, 1)
-  	noise.ZIndex = acrylic.ZIndex + 2
-  	noise.Parent = acrylic
-  
-  	local icon = Instance.new("ImageLabel")
-  	icon.Name = "Icon"
-  	icon.BackgroundTransparency = 1
-  	icon.Image = properties.Icon or ""
-  	icon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-  	icon.ImageTransparency = 1
-  	icon.Position = UDim2.fromOffset(15, 16)
-  	icon.Size = UDim2.fromOffset(20, 20)
-  	icon.ZIndex = acrylic.ZIndex + 4
-  	icon.Parent = notification
-  
-  	local title = Instance.new("TextLabel")
-  	title.Name = "Title"
-  	title.BackgroundTransparency = 1
-  	title.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold)
-  	title.Position = UDim2.fromOffset(45, 13)
-  	title.Size = UDim2.new(1, -95, 0, 22)
-  	title.Text = properties.Title or "Notification"
-  	title.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-  	title.TextSize = 14
-  	title.TextTransparency = 1
-  	title.TextXAlignment = Enum.TextXAlignment.Left
-  	title.TextYAlignment = Enum.TextYAlignment.Center
-  	title.RichText = true
-  	title.ZIndex = acrylic.ZIndex + 4
-  	title.Parent = notification
-  
-  	local timeText = Instance.new("TextLabel")
-  	timeText.Name = "Time"
-  	timeText.BackgroundTransparency = 1
-  	timeText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
-  	timeText.AnchorPoint = Vector2.new(1, 0)
-  	timeText.Position = UDim2.new(1, -14, 0, 16)
-  	timeText.Size = UDim2.fromOffset(48, 18)
-  	timeText.Text = "now"
-  	timeText.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-  	timeText.TextSize = 12
-  	timeText.TextTransparency = 1
-  	timeText.TextXAlignment = Enum.TextXAlignment.Right
-  	timeText.ZIndex = acrylic.ZIndex + 4
-  	timeText.Parent = notification
-  
-  	local description = Instance.new("TextLabel")
-  	description.Name = "Description"
-  	description.BackgroundTransparency = 1
-  	description.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular)
-  	description.Position = UDim2.fromOffset(45, 38)
-  	description.Size = UDim2.new(1, -60, 0, math.huge)
-  	description.Text = properties.Description or properties.Content or ""
-  	description.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
-  	description.TextSize = 13
-  	description.TextTransparency = 1
-  	description.TextWrapped = true
-  	description.TextXAlignment = Enum.TextXAlignment.Left
-  	description.TextYAlignment = Enum.TextYAlignment.Top
-  	description.RichText = true
-  	description.ZIndex = acrylic.ZIndex + 4
-  	description.Parent = notification
-  
-  	task.wait()
-  	local descHeight = math.max(description.TextBounds.Y + 2, 18)
-  	description.Size = UDim2.new(1, -60, 0, descHeight)
-  
-  	local finalHeight = descHeight + 58
-  	local creationTime = tick()
-  	local closed = false
-  
-  	local timeConnection
-  	timeConnection = RunService.RenderStepped:Connect(function()
-  		if closed or not notification.Parent then
-  			if timeConnection then timeConnection:Disconnect() end
-  			return
-  		end
-  
-  		local elapsed = tick() - creationTime
-  		if elapsed <= 4 then
-  			timeText.Text = "now"
-  		elseif elapsed < 60 then
-  			timeText.Text = math.floor(elapsed) .. "s ago"
-  		elseif elapsed < 3600 then
-  			timeText.Text = math.floor(elapsed / 60) .. "m ago"
-  		else
-  			timeText.Text = math.floor(elapsed / 3600) .. "h ago"
-  		end
-  	end)
-  
-  	local api = {}
-  
-  	function api.Open()
-  		TweenService:Create(notification, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {
-  			Size = UDim2.new(1, 0, 0, finalHeight),
-  			BackgroundTransparency = 0.38,
-  		}):Play()
-  
-  		task.wait(0.12)
-  
-  		TweenService:Create(acrylicShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = 0.7 }):Play()
-  		TweenService:Create(tint, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { BackgroundTransparency = 0.18 }):Play()
-  		TweenService:Create(noise, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = 0.9 }):Play()
-  
-  		TweenService:Create(antumbraShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = antumbraShadow:GetAttribute("TargetTransparency") }):Play()
-  		TweenService:Create(penumbraShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = penumbraShadow:GetAttribute("TargetTransparency") }):Play()
-  		TweenService:Create(umbraShadow, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { ImageTransparency = umbraShadow:GetAttribute("TargetTransparency") }):Play()
-  
-  		task.wait(0.05)
-  		TweenService:Create(title, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { TextTransparency = 0 }):Play()
-  
-  		task.wait(0.05)
-  		TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { ImageTransparency = properties.Icon and 0 or 1 }):Play()
-  
-  		task.wait(0.05)
-  		TweenService:Create(description, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { TextTransparency = 0.35 }):Play()
-  		TweenService:Create(timeText, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), { TextTransparency = 0.35 }):Play()
-  		TweenService:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), { Transparency = 0.88 }):Play()
-  	end
-  
-  	function api.Close(callback)
-  		if closed then return end
-  		closed = true
-  
-  		if callback then
-  			task.spawn(callback)
-  		end
-  
-  		if timeConnection then
-  			timeConnection:Disconnect()
-  		end
-  
-  		TweenService:Create(notification, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
-  			BackgroundTransparency = 1,
-  		}):Play()
-  
-  		TweenService:Create(stroke, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { Transparency = 1 }):Play()
-  		TweenService:Create(acrylicShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
-  		TweenService:Create(tint, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { BackgroundTransparency = 1 }):Play()
-  		TweenService:Create(noise, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
-  
-  		TweenService:Create(antumbraShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
-  		TweenService:Create(penumbraShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
-  		TweenService:Create(umbraShadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
-  
-  		TweenService:Create(title, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { TextTransparency = 1 }):Play()
-  		TweenService:Create(icon, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { ImageTransparency = 1 }):Play()
-  		TweenService:Create(description, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { TextTransparency = 1 }):Play()
-  		TweenService:Create(timeText, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), { TextTransparency = 1 }):Play()
-  
-  		local closeTween = TweenService:Create(notification, TweenInfo.new(0.55, Enum.EasingStyle.Exponential), {
-  			Size = UDim2.new(1, 0, 0, 0),
-  		})
-  
-  		closeTween:Play()
-  		closeTween.Completed:Connect(function()
-  			if notification then
-  				notification:Destroy()
-  			end
-  		end)
-  	end
-  
-  	return notification, api
-  end
-  
-  function Compkiller:_CloseNotification(notification, api, callback)
-  	if api and api.Close then
-  		api.Close(callback)
-  	elseif notification and notification.Parent then
-  		notification:Destroy()
-  	end
-  end
+	Title: string,
+	Description: string?,
+	Content: string?,
+	Duration: number?,
+	Icon: string?,
+	Callback: (() -> ())?,
+})
+	properties = properties or {}
+
+	local CoreGui = game:GetService("CoreGui")
+
+	if not self.NotificationContainer then
+		local gui = Instance.new("ScreenGui")
+		gui.Name = "CompkillerNotifications"
+		gui.ResetOnSpawn = false
+		gui.IgnoreGuiInset = true
+		gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+		gui.Parent = (gethui and gethui()) or CoreGui
+		self.NotificationContainer = gui
+
+		local holder = Instance.new("Frame")
+		holder.Name = "Notifications"
+		holder.AnchorPoint = Vector2.new(1, 1)
+		holder.BackgroundTransparency = 1
+		holder.BorderSizePixel = 0
+		holder.Position = UDim2.new(1, -16, 1, -16)
+		holder.Size = UDim2.fromOffset(330, 520)
+		holder.Parent = gui
+
+		local layout = Instance.new("UIListLayout")
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+		layout.Padding = UDim.new(0, 10)
+		layout.Parent = holder
+
+		self.NotificationFrame = holder
+	end
+
+	self.ActiveAdvancedNotifications = self.ActiveAdvancedNotifications or {}
+
+	while #self.ActiveAdvancedNotifications >= 4 do
+		local oldest = table.remove(self.ActiveAdvancedNotifications, 1)
+		if oldest and oldest.Api then
+			oldest.Api.Close()
+		elseif oldest and oldest.Frame then
+			oldest.Frame:Destroy()
+		end
+	end
+
+	local notification, api = self:_CreateNotificationUI(properties)
+	notification.Parent = self.NotificationFrame
+
+	table.insert(self.ActiveAdvancedNotifications, {
+		Frame = notification,
+		Api = api,
+	})
+
+	task.defer(function()
+		api.Open()
+	end)
+
+	local duration = properties.Duration
+	if duration == nil then
+		local text = tostring(properties.Description or properties.Content or "")
+		duration = math.clamp((#text * 0.08) + 3, 3, 10)
+	end
+
+	if duration > 0 then
+		task.delay(duration, function()
+			self:_CloseNotification(notification, api, properties.Callback)
+		end)
+	end
+
+	return notification
+end
+
+function Compkiller:_CreateNotificationUI(properties)
+	local TweenService = game:GetService("TweenService")
+
+	local baseZ = 100
+
+	local notification = Instance.new("Frame")
+	notification.Name = "AdvancedNotification"
+	notification.BackgroundTransparency = 1
+	notification.BorderSizePixel = 0
+	notification.ClipsDescendants = false
+	notification.Size = UDim2.new(1, 0, 0, 0)
+	notification.LayoutOrder = math.floor(os.clock() * 1000)
+	notification.ZIndex = baseZ
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 14)
+	corner.Parent = notification
+
+	local shadowHolder = Instance.new("Frame")
+	shadowHolder.Name = "Shadow"
+	shadowHolder.BackgroundTransparency = 1
+	shadowHolder.BorderSizePixel = 0
+	shadowHolder.Size = UDim2.fromScale(1, 1)
+	shadowHolder.ZIndex = baseZ - 3
+	shadowHolder.Parent = notification
+
+	local function createShadow(name, sizeOffset, targetTransparency, zIndex)
+		local image = Instance.new("ImageLabel")
+		image.Name = name
+		image.AnchorPoint = Vector2.new(0.5, 0.5)
+		image.BackgroundTransparency = 1
+		image.BorderSizePixel = 0
+		image.Image = "rbxassetid://1316045217"
+		image.ImageColor3 = Color3.fromRGB(0, 0, 0)
+		image.ImageTransparency = 1
+		image.Position = UDim2.fromScale(0.5, 0.5)
+		image.Size = UDim2.new(1, sizeOffset, 1, sizeOffset)
+		image.ScaleType = Enum.ScaleType.Slice
+		image.SliceCenter = Rect.new(10, 10, 118, 118)
+		image.ZIndex = zIndex
+		image:SetAttribute("TargetTransparency", targetTransparency)
+		image.Parent = shadowHolder
+		return image
+	end
+
+	local antumbraShadow = createShadow("antumbraShadow", 34, 0.985, baseZ - 3)
+	local penumbraShadow = createShadow("penumbraShadow", 26, 0.94, baseZ - 2)
+	local umbraShadow = createShadow("umbraShadow", 18, 0.9, baseZ - 1)
+
+	local acrylic = Instance.new("Frame")
+	acrylic.Name = "Acrylic"
+	acrylic.BackgroundTransparency = 1
+	acrylic.BorderSizePixel = 0
+	acrylic.ClipsDescendants = true
+	acrylic.Size = UDim2.fromScale(1, 1)
+	acrylic.ZIndex = baseZ
+	acrylic.Parent = notification
+
+	local acrylicCorner = Instance.new("UICorner")
+	acrylicCorner.CornerRadius = UDim.new(0, 14)
+	acrylicCorner.Parent = acrylic
+
+	local tint = Instance.new("Frame")
+	tint.Name = "tint"
+	tint.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(28, 29, 34)
+	tint.BackgroundTransparency = 1
+	tint.BorderSizePixel = 0
+	tint.Size = UDim2.fromScale(1, 1)
+	tint.ZIndex = baseZ + 1
+	tint.Parent = acrylic
+
+	local noise = Instance.new("ImageLabel")
+	noise.Name = "Noise"
+	noise.BackgroundTransparency = 1
+	noise.BorderSizePixel = 0
+	noise.Image = "rbxassetid://9968344105"
+	noise.ImageTransparency = 1
+	noise.ScaleType = Enum.ScaleType.Tile
+	noise.TileSize = UDim2.fromOffset(128, 128)
+	noise.Size = UDim2.fromScale(1, 1)
+	noise.ZIndex = baseZ + 2
+	noise.Parent = acrylic
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Name = "UIStroke"
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Color = self.Colors.Stroke or Color3.fromRGB(255, 255, 255)
+	stroke.Thickness = 1
+	stroke.Transparency = 1
+	stroke.Parent = acrylic
+
+	local icon = Instance.new("ImageLabel")
+	icon.Name = "Icon"
+	icon.BackgroundTransparency = 1
+	icon.Image = properties.Icon or ""
+	icon.ImageColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+	icon.ImageTransparency = 1
+	icon.Position = UDim2.fromOffset(16, 18)
+	icon.Size = UDim2.fromOffset(24, 24)
+	icon.ZIndex = baseZ + 5
+	icon.Parent = notification
+
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.BackgroundTransparency = 1
+	title.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold)
+	title.Position = UDim2.fromOffset(52, 15)
+	title.Size = UDim2.new(1, -130, 0, 24)
+	title.Text = properties.Title or "Notify"
+	title.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+	title.TextSize = 15
+	title.TextTransparency = 1
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.TextYAlignment = Enum.TextYAlignment.Center
+	title.RichText = true
+	title.ZIndex = baseZ + 5
+	title.Parent = notification
+
+	local exitButton = Instance.new("TextButton")
+	exitButton.Name = "Exit"
+	exitButton.AnchorPoint = Vector2.new(1, 0)
+	exitButton.BackgroundTransparency = 1
+	exitButton.BorderSizePixel = 0
+	exitButton.Position = UDim2.new(1, -10, 0, 8)
+	exitButton.Size = UDim2.fromOffset(24, 24)
+	exitButton.Text = "×"
+	exitButton.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+	exitButton.TextSize = 19
+	exitButton.TextTransparency = 1
+	exitButton.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
+	exitButton.ZIndex = baseZ + 7
+	exitButton.Parent = notification
+
+	local timeText = Instance.new("TextLabel")
+	timeText.Name = "Time"
+	timeText.BackgroundTransparency = 1
+	timeText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
+	timeText.AnchorPoint = Vector2.new(1, 0)
+	timeText.Position = UDim2.new(1, -40, 0, 18)
+	timeText.Size = UDim2.fromOffset(64, 18)
+	timeText.Text = "now"
+	timeText.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+	timeText.TextSize = 12
+	timeText.TextTransparency = 1
+	timeText.TextXAlignment = Enum.TextXAlignment.Right
+	timeText.ZIndex = baseZ + 5
+	timeText.Parent = notification
+
+	local description = Instance.new("TextLabel")
+	description.Name = "Description"
+	description.BackgroundTransparency = 1
+	description.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular)
+	description.Position = UDim2.fromOffset(52, 45)
+	description.Size = UDim2.new(1, -68, 0, 1000)
+	description.Text = properties.Description or properties.Content or ""
+	description.TextColor3 = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+	description.TextSize = 13
+	description.TextTransparency = 1
+	description.TextWrapped = true
+	description.TextXAlignment = Enum.TextXAlignment.Left
+	description.TextYAlignment = Enum.TextYAlignment.Top
+	description.RichText = true
+	description.ZIndex = baseZ + 5
+	description.Parent = notification
+
+	task.wait()
+
+	local descHeight = math.max(description.TextBounds.Y + 2, 18)
+	description.Size = UDim2.new(1, -68, 0, descHeight)
+
+	local finalHeight = math.clamp(descHeight + 66, 86, 180)
+	local creationTime = os.clock()
+	local closed = false
+	local timeAlive = true
+
+	local function formatTime(seconds)
+		seconds = math.floor(seconds)
+
+		if seconds < 5 then
+			return "now"
+		elseif seconds < 60 then
+			return tostring(seconds) .. "s ago"
+		elseif seconds < 3600 then
+			return tostring(math.floor(seconds / 60)) .. "m ago"
+		else
+			return tostring(math.floor(seconds / 3600)) .. "h ago"
+		end
+	end
+
+	task.spawn(function()
+		while timeAlive and notification.Parent do
+			timeText.Text = formatTime(os.clock() - creationTime)
+			task.wait(1)
+		end
+	end)
+
+	local api = {}
+
+	exitButton.MouseButton1Click:Connect(function()
+		api.Close()
+	end)
+
+	function api.Open()
+		TweenService:Create(notification, TweenInfo.new(0.55, Enum.EasingStyle.Exponential), {
+			Size = UDim2.new(1, 0, 0, finalHeight),
+		}):Play()
+
+		task.wait(0.08)
+
+		TweenService:Create(tint, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+			BackgroundTransparency = 0.18,
+		}):Play()
+
+		TweenService:Create(noise, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 0.91,
+		}):Play()
+
+		TweenService:Create(stroke, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
+			Transparency = 0.88,
+		}):Play()
+
+		TweenService:Create(antumbraShadow, TweenInfo.new(0.45, Enum.EasingStyle.Exponential), {
+			ImageTransparency = antumbraShadow:GetAttribute("TargetTransparency"),
+		}):Play()
+
+		TweenService:Create(penumbraShadow, TweenInfo.new(0.45, Enum.EasingStyle.Exponential), {
+			ImageTransparency = penumbraShadow:GetAttribute("TargetTransparency"),
+		}):Play()
+
+		TweenService:Create(umbraShadow, TweenInfo.new(0.45, Enum.EasingStyle.Exponential), {
+			ImageTransparency = umbraShadow:GetAttribute("TargetTransparency"),
+		}):Play()
+
+		task.wait(0.04)
+
+		TweenService:Create(title, TweenInfo.new(0.28, Enum.EasingStyle.Exponential), {
+			TextTransparency = 0,
+		}):Play()
+
+		task.wait(0.04)
+
+		TweenService:Create(icon, TweenInfo.new(0.28, Enum.EasingStyle.Exponential), {
+			ImageTransparency = properties.Icon and 0 or 1,
+		}):Play()
+
+		task.wait(0.04)
+
+		TweenService:Create(description, TweenInfo.new(0.28, Enum.EasingStyle.Exponential), {
+			TextTransparency = 0.35,
+		}):Play()
+
+		TweenService:Create(timeText, TweenInfo.new(0.28, Enum.EasingStyle.Exponential), {
+			TextTransparency = 0.38,
+		}):Play()
+
+		TweenService:Create(exitButton, TweenInfo.new(0.28, Enum.EasingStyle.Exponential), {
+			TextTransparency = 0.45,
+		}):Play()
+	end
+
+	function api.Close(callback)
+		if closed then return end
+		closed = true
+		timeAlive = false
+
+		if callback then
+			task.spawn(callback)
+		end
+
+		if self.ActiveAdvancedNotifications then
+			for i = #self.ActiveAdvancedNotifications, 1, -1 do
+				if self.ActiveAdvancedNotifications[i].Frame == notification then
+					table.remove(self.ActiveAdvancedNotifications, i)
+					break
+				end
+			end
+		end
+
+		TweenService:Create(tint, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			BackgroundTransparency = 1,
+		}):Play()
+
+		TweenService:Create(noise, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 1,
+		}):Play()
+
+		TweenService:Create(stroke, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			Transparency = 1,
+		}):Play()
+
+		TweenService:Create(antumbraShadow, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 1,
+		}):Play()
+
+		TweenService:Create(penumbraShadow, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 1,
+		}):Play()
+
+		TweenService:Create(umbraShadow, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 1,
+		}):Play()
+
+		TweenService:Create(title, TweenInfo.new(0.22, Enum.EasingStyle.Exponential), {
+			TextTransparency = 1,
+		}):Play()
+
+		TweenService:Create(icon, TweenInfo.new(0.22, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 1,
+		}):Play()
+
+		TweenService:Create(description, TweenInfo.new(0.22, Enum.EasingStyle.Exponential), {
+			TextTransparency = 1,
+		}):Play()
+
+		TweenService:Create(timeText, TweenInfo.new(0.22, Enum.EasingStyle.Exponential), {
+			TextTransparency = 1,
+		}):Play()
+
+		TweenService:Create(exitButton, TweenInfo.new(0.22, Enum.EasingStyle.Exponential), {
+			TextTransparency = 1,
+		}):Play()
+
+		local closeTween = TweenService:Create(notification, TweenInfo.new(0.45, Enum.EasingStyle.Exponential), {
+			Size = UDim2.new(1, 0, 0, 0),
+		})
+
+		closeTween:Play()
+		closeTween.Completed:Once(function()
+			if notification then
+				notification:Destroy()
+			end
+		end)
+	end
+
+	return notification, api
+end
+
+function Compkiller:_CloseNotification(notification, api, callback)
+	if api and api.Close then
+		api.Close(callback)
+	elseif notification and notification.Parent then
+		notification:Destroy()
+	end
+end
 
 Compkiller.NilFolder.Name = "Nil-Instances";
 
