@@ -11327,7 +11327,7 @@ function Compkiller:_CreateNotificationUI(properties)
 	notification.ZIndex = baseZ
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 12)
+	corner.CornerRadius = UDim.new(0, 13)
 	corner.Parent = notification
 
 	-- SHADOW SUAVE AO REDOR
@@ -11339,7 +11339,7 @@ function Compkiller:_CreateNotificationUI(properties)
 	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
 	shadow.ImageTransparency = 1
 	shadow.Position = UDim2.fromScale(0.5, 0.5)
-	shadow.Size = UDim2.new(1, 26, 1, 26)
+	shadow.Size = UDim2.new(1, 20, 1, 20)
 	shadow.ScaleType = Enum.ScaleType.Slice
 	shadow.SliceCenter = Rect.new(10, 10, 118, 118)
 	shadow.ZIndex = baseZ - 1
@@ -11448,7 +11448,7 @@ function Compkiller:_CreateNotificationUI(properties)
 	exit.BackgroundColor3 = textColor
 	exit.BackgroundTransparency = 1
 	exit.BorderSizePixel = 0
-	exit.Position = UDim2.new(1, -10, 0, 10)
+	exit.Position = UDim2.new(1, -10, 0, 8.5)
 	exit.Size = UDim2.fromOffset(10, 10)
 	exit.ZIndex = baseZ + 6
 	exit.Parent = clipper
