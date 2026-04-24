@@ -8530,6 +8530,9 @@ function Compkiller.new(Config : Window)
 			local UICorner_2 = Instance.new("UICorner")
 			local TextLabel_2 = Instance.new("TextLabel")
 			local Icon_2 = Instance.new("ImageLabel")
+			local AutoLoadButton, AutoLoadFrame, AutoLoadStroke, AutoLoadText, AutoLoadIcon
+			local OverwriteButton, OverwriteFrame, OverwriteStroke, OverwriteText, OverwriteIcon
+			local ActionAnimations = {}
 			local UIStroke_3 = Instance.new("UIStroke")
 			local UICorner_3 = Instance.new("UICorner")
 			local AuthorText = Instance.new("TextLabel")
@@ -8744,7 +8747,99 @@ function Compkiller.new(Config : Window)
 			Icon_2.ZIndex = 15
 			Icon_2.Image = Compkiller:CacheImage("rbxassetid://10723344270")
 			Icon_2.ImageTransparency = 1
+
+			local function CreateConfigActionButton(Text, Image, Width)
+				local ActionButton = Instance.new("Frame")
+				local ActionFrame = Instance.new("Frame")
+				local ActionStroke = Instance.new("UIStroke")
+				local ActionCorner = Instance.new("UICorner")
+				local ActionText = Instance.new("TextLabel")
+				local ActionIcon = Instance.new("ImageLabel")
+
+				ActionButton.Name = Compkiller:_RandomString()
+				ActionButton.Parent = LinkValues
+				ActionButton.BackgroundTransparency = 1.000
+				ActionButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				ActionButton.BorderSizePixel = 0
+				ActionButton.Size = UDim2.new(0, Width or 90, 0, 30)
+				ActionButton.ZIndex = 14
+
+				ActionFrame.Parent = ActionButton
+				ActionFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+				ActionFrame.BackgroundColor3 = Compkiller.Colors.Highlight
+				ActionFrame.BackgroundTransparency = 1
+				ActionFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				ActionFrame.BorderSizePixel = 0
+				ActionFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+				ActionFrame.Size = UDim2.new(1, -15, 1, -5)
+				ActionFrame.ZIndex = 14
+
+				table.insert(Compkiller.Elements.Highlight,{
+					Element = ActionFrame,
+					Property = "BackgroundColor3"
+				});
+
+				ActionStroke.Transparency = 1
+				ActionStroke.Color = Compkiller.Colors.StrokeColor
+				ActionStroke.Parent = ActionFrame
+
+				table.insert(Compkiller.Elements.StrokeColor,{
+					Element = ActionStroke,
+					Property = "Color"
+				});
+
+				ActionCorner.CornerRadius = UDim.new(0, 3)
+				ActionCorner.Parent = ActionFrame
+
+				ActionText.Parent = ActionFrame
+				ActionText.AnchorPoint = Vector2.new(0.5, 0.5)
+				ActionText.BackgroundTransparency = 1.000
+				ActionText.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				ActionText.BorderSizePixel = 0
+				ActionText.Position = UDim2.new(0.5, 24, 0.5, 0)
+				ActionText.Size = UDim2.new(1, 0, 1, 0)
+				ActionText.ZIndex = 14
+				ActionText.Font = Enum.Font.GothamMedium
+				ActionText.Text = Text
+				ActionText.TextColor3 = Compkiller.Colors.SwitchColor
+				ActionText.TextSize = 12.000
+				ActionText.TextStrokeTransparency = 1
+				ActionText.TextXAlignment = Enum.TextXAlignment.Left
+				ActionText.TextTransparency = 1
+
+				table.insert(Compkiller.Elements.SwitchColor , {
+					Element = ActionText,
+					Property = 'TextColor3'
+				});
+
+				ActionIcon.Name = Compkiller:_RandomString()
+				ActionIcon.Parent = ActionFrame
+				ActionIcon.AnchorPoint = Vector2.new(0, 0.5)
+				ActionIcon.BackgroundTransparency = 1.000
+				ActionIcon.BorderColor3 = Color3.fromRGB(0, 0, 0)
+				ActionIcon.BorderSizePixel = 0
+				ActionIcon.Position = UDim2.new(0, 5, 0.5, 0)
+				ActionIcon.Size = UDim2.new(0.699999988, 0, 0.699999988, 0)
+				ActionIcon.SizeConstraint = Enum.SizeConstraint.RelativeYY
+				ActionIcon.ZIndex = 15
+				ActionIcon.Image = Compkiller:CacheImage(Image)
+				ActionIcon.ImageTransparency = 1
+
+				table.insert(ActionAnimations,{
+					Frame = ActionFrame,
+					Stroke = ActionStroke,
+					Text = ActionText,
+					Icon = ActionIcon,
+				});
+
+				return ActionButton, ActionFrame, ActionStroke, ActionText, ActionIcon
+			end
+
+			AutoLoadButton, AutoLoadFrame, AutoLoadStroke, AutoLoadText, AutoLoadIcon = CreateConfigActionButton("Auto", "rbxassetid://10734884606", 78)
+			OverwriteButton, OverwriteFrame, OverwriteStroke, OverwriteText, OverwriteIcon = CreateConfigActionButton("Overwrite", "rbxassetid://10734950309", 105)
+
 			UIStroke_3.Transparency = 1
+
 
 			UIStroke_3.Color = Compkiller.Colors.StrokeColor
 			UIStroke_3.Parent = ConfigBlock
@@ -8843,6 +8938,13 @@ function Compkiller.new(Config : Window)
 						TextStrokeTransparency = 0.900,
 						TextTransparency = 0
 					});
+
+					for _,Action in next, ActionAnimations do
+						Compkiller:_Animation(Action.Frame,Tween,{ BackgroundTransparency = 0.100 });
+						Compkiller:_Animation(Action.Stroke,Tween,{ Transparency = 0 });
+						Compkiller:_Animation(Action.Text,Tween,{ TextStrokeTransparency = 0.900, TextTransparency = 0 });
+						Compkiller:_Animation(Action.Icon,Tween,{ ImageTransparency = 0 });
+					end;
 				else
 					Compkiller:_Animation(AuthorText,Tween,{
 						TextTransparency = 1,
@@ -8895,6 +8997,13 @@ function Compkiller.new(Config : Window)
 						TextStrokeTransparency = 1,
 						TextTransparency = 1
 					});
+
+					for _,Action in next, ActionAnimations do
+						Compkiller:_Animation(Action.Frame,Tween,{ BackgroundTransparency = 1 });
+						Compkiller:_Animation(Action.Stroke,Tween,{ Transparency = 1 });
+						Compkiller:_Animation(Action.Text,Tween,{ TextStrokeTransparency = 1, TextTransparency = 1 });
+						Compkiller:_Animation(Action.Icon,Tween,{ ImageTransparency = 1 });
+					end;
 				end;
 			end;
 
@@ -8912,6 +9021,8 @@ function Compkiller.new(Config : Window)
 			-- Agora inicializamos com funções vazias e adicionamos verificação de segurança
 			ConfigButton.OnLoad = nil;
 			ConfigButton.OnSave = nil;
+			ConfigButton.OnOverwrite = nil;
+			ConfigButton.OnAutoLoad = nil;
 			ConfigButton.OnDelete = nil;
 
 			Compkiller:_Input(LoadButton,function()
@@ -8923,6 +9034,18 @@ function Compkiller.new(Config : Window)
 			Compkiller:_Input(SaveButton,function()
 				if ConfigButton.OnSave and type(ConfigButton.OnSave) == "function" then
 					task.spawn(ConfigButton.OnSave);
+				end
+			end);
+
+			Compkiller:_Input(OverwriteButton,function()
+				if ConfigButton.OnOverwrite and type(ConfigButton.OnOverwrite) == "function" then
+					task.spawn(ConfigButton.OnOverwrite);
+				end
+			end);
+
+			Compkiller:_Input(AutoLoadButton,function()
+				if ConfigButton.OnAutoLoad and type(ConfigButton.OnAutoLoad) == "function" then
+					task.spawn(ConfigButton.OnAutoLoad);
 				end
 			end);
 
@@ -9001,7 +9124,37 @@ function Compkiller.new(Config : Window)
 						});
 					end
 
+					Button.OnOverwrite = function()
+						WindowArgs.Notify.new({
+							Title = "Configs",
+							Icon = Compkiller:CacheImage(Config.Logo),
+							Content = "Overwrite config \""..v.Name.."\""
+						})
+
+						Button:SetInfo(WindowArgs.Username,v.Name);
+
+						Configuration.Config:WriteConfig({
+							Name = v.Name,
+							Author = WindowArgs.Username;
+						});
+					end
+
+					Button.OnAutoLoad = function()
+						WindowArgs.Notify.new({
+							Title = "Configs",
+							Icon = Compkiller:CacheImage(Config.Logo),
+							Content = "Auto load set to \""..v.Name.."\""
+						})
+
+						if Configuration.Config.SetAutoload then
+							Configuration.Config:SetAutoload(v.Name);
+						elseif Configuration.Config.SetAutoLoad then
+							Configuration.Config:SetAutoLoad(v.Name);
+						end;
+					end
+
 					Button.OnDelete = function()
+
 						WindowArgs.Notify.new({
 							Title = "Configs",
 							Icon = Compkiller:CacheImage(Config.Logo),
