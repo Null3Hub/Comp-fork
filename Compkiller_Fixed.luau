@@ -11362,7 +11362,11 @@ function Compkiller:_CreateNotificationUI(properties)
 	shadow.ScaleType = Enum.ScaleType.Slice  
 	shadow.SliceCenter = Rect.new(10, 10, 118, 118)  
 	shadow.ZIndex = baseZ - 1  
-	shadow.Parent = clipper  
+	shadow.Parent = notification 
+	
+	local shadowcorner = Instance.new("UICorner")
+	shadowcorner.CornerRadius = UDim.new(0, 13)
+	shadowcorner.Parent = shadow
 
 	-- ACRYLIC VISUAL
 	local acrylic = Instance.new("Frame")
