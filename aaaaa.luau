@@ -8938,12 +8938,6 @@ function Compkiller.new(Config : Window)
      	task.defer(Refresh);
      end;
 
-			 task.defer(function()
-				if Configuration.Config and Configuration.Config.LoadAutoloadConfig then
-					Configuration.Config:LoadAutoloadConfig();
-				end
-			end)
-
 			Init.THREAD = task.spawn(function()
 				local OldIndex = Configuration.Config:GetConfigCount();
 
@@ -10864,93 +10858,95 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 	end;
 
  function Args:SetAutoload(ConfigName: string)
- 	local Built, BuildError = BuildFolderTree();
- 	if not Built then return false, BuildError; end;
- 
- 	local Name = NormalizeConfigName(ConfigName);
- 	if Name == "" then return false, "empty_name"; end;
- 
- 	local ConfigPath = GetConfigPath(Name);
- 	if not isfile(ConfigPath) then
- 		return false, "config_not_found";
- 	end;
- 
- 	writefile(Compkiller:_Path(OptionsDirectory, "autoload.txt"), Name);
- 
- 	Args.AutoloadConfig = Name;
- 	Compkiller.AutoloadConfig = Name;
- 
- 	return true, Name;
- end;
- 
- function Args:SetAutoLoad(ConfigName: string)
- 	return Args:SetAutoload(ConfigName);
- end;
- 
- function Args:GetAutoload()
- 	BuildFolderTree();
- 
- 	local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
- 
- 	if isfile(Path) then
- 		local Name = NormalizeConfigName(readfile(Path));
- 
- 		if Name ~= "" then
- 			Args.AutoloadConfig = Name;
- 			Compkiller.AutoloadConfig = Name;
- 			return Name;
- 		end;
- 	end;
- 
- 	return nil;
- end;
- 
- function Args:LoadAutoloadConfig()
- 	local Name = Args:GetAutoload();
- 
- 	if not Name or Name == "" then
- 		return false, "no_autoload";
- 	end;
- 
- 	local Success, Result = Args:LoadConfig(Name);
- 
- 	if Success then
- 		notify.new({
- 			Title = "Configs",
- 			Icon = Compkiller:_GetIcon("settings"),
- 			Content = 'Auto Loaded : "' .. Name .. '" successfully.'
- 		});
- 
- 		return true, Name;
- 	end;
- 
- 	return false, Result;
- end;
- 
- function Args:DisableAutoload()
- 	BuildFolderTree();
- 
- 	local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
- 
- 	if isfile(Path) then
- 		delfile(Path);
- 	end;
- 
- 	Args.AutoloadConfig = nil;
- 	Compkiller.AutoloadConfig = nil;
- 
- 	return true;
- end;
- 
- Compkiller.RuntimeConfigManager = Args;
- 
- function Compkiller:LoadAutoLoadConfig()
- 	if not Compkiller.RuntimeConfigManager then
- 		return false, "runtime_config_manager_not_found";
- 	end;
- 
- 	return Compkiller.RuntimeConfigManager:LoadAutoloadConfig();
- end;
+	local Built, BuildError = BuildFolderTree();
+	if not Built then return false, BuildError; end;
+
+	local Name = NormalizeConfigName(ConfigName);
+	if Name == "" then return false, "empty_name"; end;
+
+	local ConfigPath = GetConfigPath(Name);
+	if not isfile(ConfigPath) then
+		return false, "config_not_found";
+	end;
+
+	writefile(Compkiller:_Path(OptionsDirectory, "autoload.txt"), Name);
+
+	Args.AutoloadConfig = Name;
+	Compkiller.AutoloadConfig = Name;
+
+	return true, Name;
+end;
+
+function Args:SetAutoLoad(ConfigName: string)
+	return Args:SetAutoload(ConfigName);
+end;
+
+function Args:GetAutoload()
+	BuildFolderTree();
+
+	local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+
+	if isfile(Path) then
+		local Name = NormalizeConfigName(readfile(Path));
+
+		if Name ~= "" then
+			Args.AutoloadConfig = Name;
+			Compkiller.AutoloadConfig = Name;
+			return Name;
+		end;
+	end;
+
+	return nil;
+end;
+
+function Args:LoadAutoloadConfig()
+	local Name = Args:GetAutoload();
+
+	if not Name or Name == "" then
+		return false, "no_autoload";
+	end;
+
+	local Success, Result = Args:LoadConfig(Name);
+
+	if Success then
+		local Notifier = Compkiller.newNotify();
+
+		Notifier.new({
+			Title = "Configs",
+			Icon = Compkiller:_GetIcon("settings"),
+			Content = 'Auto Loaded : "' .. Name .. '" successfully.'
+		});
+
+		return true, Name;
+	end;
+
+	return false, Result;
+end;
+
+function Args:DisableAutoload()
+	BuildFolderTree();
+
+	local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+
+	if isfile(Path) then
+		delfile(Path);
+	end;
+
+	Args.AutoloadConfig = nil;
+	Compkiller.AutoloadConfig = nil;
+
+	return true;
+end;
+
+Compkiller.RuntimeConfigManager = Args;
+
+function Compkiller:LoadAutoLoadConfig()
+	if not Compkiller.RuntimeConfigManager then
+		return false, "runtime_config_manager_not_found";
+	end;
+
+	return Compkiller.RuntimeConfigManager:LoadAutoloadConfig();
+end;
 
 	return Args;
 end;
