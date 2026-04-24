@@ -11286,10 +11286,15 @@ end;
 
 	self.ActiveAdvancedNotifications = self.ActiveAdvancedNotifications or {}
 
-	while #self.ActiveAdvancedNotifications >= 4 do
-		local old = table.remove(self.ActiveAdvancedNotifications, 1)
-		if old and old.Api then old.Api.Close() end
-	end
+	local MAX_NOTIFICATIONS = 3
+ while #self.ActiveAdvancedNotifications >= MAX_NOTIFICATIONS do
+ 	local old = table.remove(self.ActiveAdvancedNotifications, 1)
+ 	if old and old.Api and old.Api.ForceClose then
+ 		old.Api.ForceClose()
+ 	elseif old and old.Frame then
+ 		old.Frame:Destroy()
+ 	end
+ end
 
 	local notification, api = self:_CreateNotificationUI(properties)
 	notification.Parent = self.NotificationFrame
@@ -11323,27 +11328,12 @@ function Compkiller:_CreateNotificationUI(properties)
 	notification.BackgroundTransparency = 1
 	notification.BorderSizePixel = 0
 	notification.Size = UDim2.new(1, 0, 0, 0)
-	notification.ClipsDescendants = false
+	notification.ClipsDescendants = true
 	notification.ZIndex = baseZ
 
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 13)
 	corner.Parent = notification
-
-	-- SHADOW SUAVE AO REDOR
-	local shadow = Instance.new("ImageLabel")
-	shadow.Name = "SoftShadow"
-	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-	shadow.BackgroundTransparency = 1
-	shadow.Image = "rbxassetid://1316045217"
-	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-	shadow.ImageTransparency = 1
-	shadow.Position = UDim2.fromScale(0.5, 0.5)
-	shadow.Size = UDim2.new(1, 20, 1, 20)
-	shadow.ScaleType = Enum.ScaleType.Slice
-	shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-	shadow.ZIndex = baseZ - 1
-	shadow.Parent = notification
 
 	-- CLIP INTERNO
 	local clipper = Instance.new("Frame")
@@ -11358,6 +11348,19 @@ function Compkiller:_CreateNotificationUI(properties)
 	local clipCorner = Instance.new("UICorner")
 	clipCorner.CornerRadius = UDim.new(0, 12)
 	clipCorner.Parent = clipper
+	
+ local shadow = Instance.new("ImageLabel")
+ shadow.Name = "SoftShadow"
+ shadow.BackgroundTransparency = 1
+ shadow.Image = "rbxassetid://1316045217"
+ shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+ shadow.ImageTransparency = 1
+ shadow.Position = UDim2.fromOffset(-6, -6)
+ shadow.Size = UDim2.new(1, 12, 1, 12)
+ shadow.ScaleType = Enum.ScaleType.Slice
+ shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+ shadow.ZIndex = baseZ
+ shadow.Parent = clipper
 
 	-- ACRYLIC VISUAL
 	local acrylic = Instance.new("Frame")
@@ -11539,8 +11542,8 @@ function Compkiller:_CreateNotificationUI(properties)
 		}):Play()
 
 		TweenService:Create(shadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
-			ImageTransparency = 0.86,
-		}):Play()
+   ImageTransparency = 0.93,
+  }):Play()
 
 		TweenService:Create(stroke, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
 			Transparency = 0.9,
@@ -11607,7 +11610,23 @@ function Compkiller:_CreateNotificationUI(properties)
 			end
 		end)
 	end
-
+ 
+  function api.ForceClose()
+ 	if closed then return end
+ 	closed = true
+ 	timerRunning = false
+ 
+ 	TweenService:Create(notification, TweenInfo.new(0.22, Enum.EasingStyle.Exponential), {
+ 		Size = UDim2.new(1, 0, 0, 0),
+ 	}):Play()
+ 
+ 	task.delay(0.22, function()
+ 		if notification then
+ 			notification:Destroy()
+ 		end
+ 	end)
+ end
+ 
 	return notification, api
 end
 
