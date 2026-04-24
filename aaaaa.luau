@@ -8801,26 +8801,25 @@ function Compkiller.new(Config : Window)
 			end;
 
 			Compkiller:_Input(SelectButton,function()
-  	if SelectedConfigButton and SelectedConfigButton ~= ConfigButton then
-  		SelectedConfigButton:SetSelected(false)
-  	end
-  
-  	SelectedConfigName = ConfigButton.Name
-  	SelectedConfigAuthor = ConfigButton.Author
-  	SelectedConfigButton = ConfigButton
-  
-  	ConfigButton:SetSelected(true)
-  
-  	NotifyConfig("Selected config \"" .. tostring(ConfigButton.Name) .. "\"")
-  end);
-  
-  Compkiller:_Input(DeleteButton,function()
-  	if ConfigButton.OnDelete then
-  		ConfigButton.OnDelete();
-  	end;
-  end);
-  
-return ConfigButton;
+				if SelectedConfigButton and SelectedConfigButton ~= ConfigButton then
+					SelectedConfigButton:SetSelected(false)
+				end
+				
+				Compkiller:_Input(DeleteButton,function()
+   	if ConfigButton.OnDelete then
+   		ConfigButton.OnDelete();
+   	end;
+   end);
+
+				SelectedConfigName = ConfigButton.Name
+				SelectedConfigAuthor = ConfigButton.Author
+				SelectedConfigButton = ConfigButton
+				ConfigButton:SetSelected(true)
+				NotifyConfig("Selected config \"" .. tostring(ConfigButton.Name) .. "\"")
+			end);
+
+			return ConfigButton;
+		end;
 
 		function TabArgs:Init()
 			local __signals = {};
@@ -10669,10 +10668,12 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 			if not Target or not Target.Functions then return; end;
 
 			if Data.Type == "NormalElement" then
-				Target.Functions:SetValue(Data.Value);
+				if Target.Functions.SetValue then
+					Target.Functions:SetValue(Data.Value);
+				end;
 			elseif Data.Type == "ColorPicker" then
 				local SavedColor = Data.Color3;
-				if SavedColor then
+				if SavedColor and Target.Functions.SetValue then
 					Target.Functions:SetValue(Color3.new(SavedColor.R, SavedColor.G, SavedColor.B), Data.Transparency);
 				end;
 			end;
@@ -10770,6 +10771,44 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 		end;
 
 		return true;
+	end;
+
+	function Args:LoadConfig(ConfigName: string)
+		local Built, BuildError = BuildFolderTree();
+		if not Built then
+			return false, BuildError;
+		end;
+
+		local _Path, Name = GetConfigPath(ConfigName);
+		if Name == "" then
+			return false, "empty_name";
+		end;
+
+		if not isfile(_Path) then
+			return false, "config_not_found";
+		end;
+
+		local Raw = readfile(_Path);
+		local LoadSuccess, LoadResult = Args:LoadConfigFromString(Raw);
+		if not LoadSuccess then
+			return false, LoadResult;
+		end;
+
+		if Args.EnableNotify then
+			pcall(function()
+				notify.new({
+					Title = "Configs",
+					Icon = Compkiller:_GetIcon("settings"),
+					Content = "Load config \"" .. Name .. "\""
+				});
+			end);
+		end;
+
+		return true, Name;
+	end;
+
+	function Args:Load(ConfigName: string)
+		return Args:LoadConfig(ConfigName);
 	end;
 
 	function Args:GetCurrentConfig()
@@ -10900,35 +10939,6 @@ function Args:GetAutoload()
 	return nil;
 end;
 
-function Args:LoadConfig(ConfigName: string)
-	local _Path, Name = GetConfigPath(ConfigName);
-
-	if not isfile(_Path) then
-		return false, "config_not_found";
-	end;
-
-	local Success, Data = DecodeFile(_Path);
-	if not Success then
-		return false, Data;
-	end;
-
-	local LoadSuccess, LoadResult = Args:LoadConfigFromString(readfile(_Path));
-
-	if not LoadSuccess then
-		return false, LoadResult;
-	end;
-
-	if Args.EnableNotify then
-		notify.new({
-			Title = "Configs",
-			Icon = Compkiller:_GetIcon("settings"),
-			Content = "Load config \"" .. Name .. "\""
-		});
-	end;
-
-	return true, Name;
-end;
-
 function Args:LoadAutoloadConfig()
 	local Name = Args:GetAutoload();
 
@@ -10943,20 +10953,22 @@ function Args:LoadAutoloadConfig()
 	local Success, Result = Args:LoadConfig(Name);
 
 	if Success then
-		local Notifier = Compkiller.newNotify();
-
-		Notifier.new({
-			Title = "Configs",
-			Icon = Compkiller:_GetIcon("settings"),
-			Content = 'Auto Loaded : "' .. Name .. '" successfully.'
-		});
+		pcall(function()
+			local Notifier = Compkiller.newNotify();
+			if Notifier and Notifier.new then
+				Notifier.new({
+					Title = "Configs",
+					Icon = Compkiller:_GetIcon("settings"),
+					Content = 'Auto Loaded : "' .. Name .. '" successfully.'
+				});
+			end;
+		end);
 
 		return true, Name;
 	end;
 
 	return false, Result;
 end;
-
 function Args:DisableAutoload()
 	BuildFolderTree();
 
@@ -10977,6 +10989,10 @@ Compkiller.RuntimeConfigManager = Args;
 function Compkiller:LoadAutoLoadConfig()
 	if not Compkiller.RuntimeConfigManager then
 		return false, "runtime_config_manager_not_found";
+	end;
+
+	if not Compkiller.RuntimeConfigManager.LoadAutoloadConfig then
+		return false, "LoadAutoloadConfig_missing";
 	end;
 
 	return Compkiller.RuntimeConfigManager:LoadAutoloadConfig();
