@@ -11299,7 +11299,9 @@ end;
 		Api = api,
 	})
 
-	task.defer(api.Open)
+	task.defer(function()
+	api.Open()
+ end)
 
 	local duration = properties.Duration or 5
 
@@ -11314,177 +11316,295 @@ function Compkiller:_CreateNotificationUI(properties)
 	local TweenService = game:GetService("TweenService")
 
 	local baseZ = 100
+	local duration = properties.Duration or 5
 
 	local notification = Instance.new("Frame")
+	notification.Name = "AdvancedNotification"
 	notification.BackgroundTransparency = 1
+	notification.BorderSizePixel = 0
 	notification.Size = UDim2.new(1, 0, 0, 0)
-	notification.ClipsDescendants = true
+	notification.ClipsDescendants = false
 	notification.ZIndex = baseZ
 
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 12)
 	corner.Parent = notification
 
-	-- ACRYLIC (FIXED - sem frame bugado)
-	local acrylic = Instance.new("Frame")
-	acrylic.BackgroundColor3 = Color3.fromRGB(30,30,35)
-	acrylic.BackgroundTransparency = 0.25
-	acrylic.Size = UDim2.fromScale(1,1)
-	acrylic.ZIndex = baseZ
-	acrylic.Parent = notification
-
-	local acCorner = Instance.new("UICorner")
-	acCorner.CornerRadius = UDim.new(0, 12)
-	acCorner.Parent = acrylic
-
-	-- NOISE
-	local noise = Instance.new("ImageLabel")
-	noise.Image = "rbxassetid://9968344105"
-	noise.ImageTransparency = 0.92
-	noise.BackgroundTransparency = 1
-	noise.Size = UDim2.fromScale(1,1)
-	noise.ZIndex = baseZ+1
-	noise.Parent = acrylic
-
-	-- SHADOW (leve)
+	-- SHADOW SUAVE AO REDOR
 	local shadow = Instance.new("ImageLabel")
-	shadow.Image = "rbxassetid://1316045217"
-	shadow.ImageTransparency = 0.92
+	shadow.Name = "SoftShadow"
+	shadow.AnchorPoint = Vector2.new(0.5, 0.5)
 	shadow.BackgroundTransparency = 1
-	shadow.Size = UDim2.new(1,20,1,20)
-	shadow.Position = UDim2.fromOffset(-10,-10)
-	shadow.ZIndex = baseZ-1
+	shadow.Image = "rbxassetid://1316045217"
+	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+	shadow.ImageTransparency = 1
+	shadow.Position = UDim2.fromScale(0.5, 0.5)
+	shadow.Size = UDim2.new(1, 26, 1, 26)
+	shadow.ScaleType = Enum.ScaleType.Slice
+	shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+	shadow.ZIndex = baseZ - 1
 	shadow.Parent = notification
 
-	-- ICON
-	local icon = Instance.new("ImageLabel")
-	icon.Image = properties.Icon or ""
-	icon.BackgroundTransparency = 1
-	icon.Size = UDim2.fromOffset(22,22)
-	icon.Position = UDim2.fromOffset(14,14)
-	icon.ImageTransparency = 1
-	icon.ZIndex = baseZ+3
-	icon.Parent = notification
+	-- CLIP INTERNO
+	local clipper = Instance.new("Frame")
+	clipper.Name = "Clipper"
+	clipper.BackgroundTransparency = 1
+	clipper.BorderSizePixel = 0
+	clipper.ClipsDescendants = true
+	clipper.Size = UDim2.fromScale(1, 1)
+	clipper.ZIndex = baseZ
+	clipper.Parent = notification
 
-	-- TITLE
+	local clipCorner = Instance.new("UICorner")
+	clipCorner.CornerRadius = UDim.new(0, 12)
+	clipCorner.Parent = clipper
+
+	-- ACRYLIC VISUAL
+	local acrylic = Instance.new("Frame")
+	acrylic.Name = "Acrylic"
+	acrylic.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(28, 29, 34)
+	acrylic.BackgroundTransparency = 1
+	acrylic.BorderSizePixel = 0
+	acrylic.Size = UDim2.fromScale(1, 1)
+	acrylic.ZIndex = baseZ
+	acrylic.Parent = clipper
+
+	local tint = Instance.new("Frame")
+	tint.Name = "Tint"
+	tint.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(28, 29, 34)
+	tint.BackgroundTransparency = 1
+	tint.BorderSizePixel = 0
+	tint.Size = UDim2.fromScale(1, 1)
+	tint.ZIndex = baseZ + 1
+	tint.Parent = clipper
+
+	local noise = Instance.new("ImageLabel")
+	noise.Name = "Noise"
+	noise.BackgroundTransparency = 1
+	noise.BorderSizePixel = 0
+	noise.Image = "rbxassetid://9968344105"
+	noise.ImageTransparency = 1
+	noise.ScaleType = Enum.ScaleType.Tile
+	noise.TileSize = UDim2.fromOffset(128, 128)
+	noise.Size = UDim2.fromScale(1, 1)
+	noise.ZIndex = baseZ + 2
+	noise.Parent = clipper
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Name = "UIStroke"
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Color = self.Colors.Stroke or Color3.fromRGB(255, 255, 255)
+	stroke.Thickness = 1
+	stroke.Transparency = 1
+	stroke.Parent = clipper
+
+	local textColor = self.Colors.SwitchColor or Color3.fromRGB(255, 255, 255)
+
+	local icon = Instance.new("ImageLabel")
+	icon.Name = "Icon"
+	icon.BackgroundTransparency = 1
+	icon.Image = properties.Icon or ""
+	icon.ImageColor3 = textColor
+	icon.ImageTransparency = 1
+	icon.Position = UDim2.fromOffset(14, 14)
+	icon.Size = UDim2.fromOffset(22, 22)
+	icon.ZIndex = baseZ + 5
+	icon.Parent = clipper
+
 	local title = Instance.new("TextLabel")
+	title.Name = "Title"
 	title.BackgroundTransparency = 1
+	title.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Bold)
+	title.Position = UDim2.fromOffset(44, 11)
+	title.Size = UDim2.new(1, -110, 0, 22)
 	title.Text = properties.Title or "Notify"
-	title.Font = Enum.Font.GothamBold
-	title.TextSize = 14
+	title.TextColor3 = textColor
+	title.TextSize = 15
 	title.TextTransparency = 1
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	title.Position = UDim2.fromOffset(44,12)
-	title.Size = UDim2.new(1,-90,0,20)
-	title.ZIndex = baseZ+3
-	title.Parent = notification
+	title.TextYAlignment = Enum.TextYAlignment.Center
+	title.RichText = true
+	title.ZIndex = baseZ + 5
+	title.Parent = clipper
 
-	-- CONTENT
+	local timeText = Instance.new("TextLabel")
+	timeText.Name = "Time"
+	timeText.BackgroundTransparency = 1
+	timeText.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Medium)
+	timeText.AnchorPoint = Vector2.new(1, 0)
+	timeText.Position = UDim2.new(1, -28, 0, 14)
+	timeText.Size = UDim2.fromOffset(54, 18)
+	timeText.Text = "now"
+	timeText.TextColor3 = textColor
+	timeText.TextSize = 12
+	timeText.TextTransparency = 1
+	timeText.TextXAlignment = Enum.TextXAlignment.Right
+	timeText.ZIndex = baseZ + 5
+	timeText.Parent = clipper
+
+	local exit = Instance.new("Frame")
+	exit.Name = "Exit"
+	exit.AnchorPoint = Vector2.new(1, 0)
+	exit.BackgroundColor3 = textColor
+	exit.BackgroundTransparency = 1
+	exit.BorderSizePixel = 0
+	exit.Position = UDim2.new(1, -10, 0, 10)
+	exit.Size = UDim2.fromOffset(10, 10)
+	exit.ZIndex = baseZ + 6
+	exit.Parent = clipper
+
+	local exitCorner = Instance.new("UICorner")
+	exitCorner.CornerRadius = UDim.new(1, 0)
+	exitCorner.Parent = exit
+
+	local exitButton = Instance.new("TextButton")
+	exitButton.BackgroundTransparency = 1
+	exitButton.Text = ""
+	exitButton.Size = UDim2.fromScale(1, 1)
+	exitButton.ZIndex = baseZ + 7
+	exitButton.Parent = exit
+
 	local content = Instance.new("TextLabel")
+	content.Name = "Content"
 	content.BackgroundTransparency = 1
+	content.FontFace = Font.new("rbxassetid://12187365364", Enum.FontWeight.Regular)
+	content.Position = UDim2.fromOffset(44, 35)
+	content.Size = UDim2.new(1, -58, 0, 1000)
 	content.Text = properties.Content or ""
-	content.Font = Enum.Font.Gotham
+	content.TextColor3 = textColor
 	content.TextSize = 13
-	content.TextWrapped = true
 	content.TextTransparency = 1
+	content.TextWrapped = true
 	content.TextXAlignment = Enum.TextXAlignment.Left
-	content.Position = UDim2.fromOffset(44,32)
-	content.Size = UDim2.new(1,-60,0,1000)
-	content.ZIndex = baseZ+3
-	content.Parent = notification
+	content.TextYAlignment = Enum.TextYAlignment.Top
+	content.RichText = true
+	content.ZIndex = baseZ + 5
+	content.Parent = clipper
 
 	task.wait()
 
-	local h = math.clamp(content.TextBounds.Y + 2, 16, 80)
-	content.Size = UDim2.new(1,-60,0,h)
+	local contentHeight = math.clamp(content.TextBounds.Y + 2, 16, 70)
+	content.Size = UDim2.new(1, -58, 0, contentHeight)
 
-	local finalHeight = h + 46
-
-	-- TIME (COUNTDOWN)
-	local duration = properties.Duration or 5
-	local start = tick()
-
-	local timeText = Instance.new("TextLabel")
-	timeText.BackgroundTransparency = 1
-	timeText.Font = Enum.Font.Gotham
-	timeText.TextSize = 12
-	timeText.TextTransparency = 1
-	timeText.AnchorPoint = Vector2.new(1,0)
-	timeText.Position = UDim2.new(1,-34,0,12)
-	timeText.Size = UDim2.fromOffset(50,16)
-	timeText.ZIndex = baseZ+3
-	timeText.Parent = notification
-
-	task.spawn(function()
-		while notification.Parent do
-			local left = math.max(0, duration - (tick() - start))
-
-			if left <= 0 then break end
-
-			if left > 1 then
-				timeText.Text = tostring(math.ceil(left)).."s"
-			else
-				timeText.Text = "now"
-			end
-
-			task.wait(0.25)
-		end
-	end)
-
-	-- EXIT BUTTON (bolinha)
-	local exit = Instance.new("Frame")
-	exit.Size = UDim2.fromOffset(10,10)
-	exit.Position = UDim2.new(1,-12,0,10)
-	exit.BackgroundColor3 = Color3.fromRGB(255,255,255)
-	exit.BackgroundTransparency = 1
-	exit.ZIndex = baseZ+4
-	exit.Parent = notification
-
-	local ec = Instance.new("UICorner")
-	ec.CornerRadius = UDim.new(1,0)
-	ec.Parent = exit
-
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.fromScale(1,1)
-	btn.BackgroundTransparency = 1
-	btn.Text = ""
-	btn.Parent = exit
+	local finalHeight = math.clamp(contentHeight + 52, 72, 125)
 
 	local api = {}
 	local closed = false
+	local timerRunning = false
+	local startTime = 0
 
-	btn.MouseButton1Click:Connect(function()
+	local function updateTimer()
+		local elapsed = os.clock() - startTime
+
+		if elapsed < 1 then
+			timeText.Text = "now"
+		else
+			local left = math.max(0, math.ceil(duration - elapsed))
+			timeText.Text = tostring(left) .. "s"
+		end
+	end
+
+	exitButton.MouseButton1Click:Connect(function()
 		api.Close()
 	end)
 
 	function api.Open()
-		TweenService:Create(notification, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {
-			Size = UDim2.new(1,0,0,finalHeight)
+		startTime = os.clock()
+		timerRunning = true
+		timeText.Text = "now"
+
+		task.spawn(function()
+			while timerRunning and not closed do
+				updateTimer()
+				task.wait(0.25)
+			end
+		end)
+
+		TweenService:Create(notification, TweenInfo.new(0.42, Enum.EasingStyle.Exponential), {
+			Size = UDim2.new(1, 0, 0, finalHeight),
 		}):Play()
 
 		task.wait(0.05)
 
-		TweenService:Create(icon, TweenInfo.new(0.25), {ImageTransparency = 0}):Play()
-		TweenService:Create(title, TweenInfo.new(0.25), {TextTransparency = 0}):Play()
+		TweenService:Create(acrylic, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			BackgroundTransparency = 0.18,
+		}):Play()
 
-		task.wait(0.05)
+		TweenService:Create(tint, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			BackgroundTransparency = 0.35,
+		}):Play()
 
-		TweenService:Create(content, TweenInfo.new(0.25), {TextTransparency = 0.3}):Play()
-		TweenService:Create(timeText, TweenInfo.new(0.25), {TextTransparency = 0.4}):Play()
-		TweenService:Create(exit, TweenInfo.new(0.25), {BackgroundTransparency = 0.3}):Play()
+		TweenService:Create(noise, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 0.91,
+		}):Play()
+
+		TweenService:Create(shadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
+			ImageTransparency = 0.86,
+		}):Play()
+
+		TweenService:Create(stroke, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
+			Transparency = 0.9,
+		}):Play()
+
+		task.wait(0.04)
+
+		TweenService:Create(icon, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+			ImageTransparency = properties.Icon and 0 or 1,
+		}):Play()
+
+		TweenService:Create(title, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+			TextTransparency = 0,
+		}):Play()
+
+		task.wait(0.04)
+
+		TweenService:Create(content, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+			TextTransparency = 0.25,
+		}):Play()
+
+		TweenService:Create(timeText, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+			TextTransparency = 0.32,
+		}):Play()
+
+		TweenService:Create(exit, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+			BackgroundTransparency = 0.18,
+		}):Play()
 	end
 
 	function api.Close(callback)
 		if closed then return end
 		closed = true
+		timerRunning = false
 
-		TweenService:Create(notification, TweenInfo.new(0.35), {
-			Size = UDim2.new(1,0,0,0)
-		}):Play()
+		if self.ActiveAdvancedNotifications then
+			for i = #self.ActiveAdvancedNotifications, 1, -1 do
+				if self.ActiveAdvancedNotifications[i].Frame == notification then
+					table.remove(self.ActiveAdvancedNotifications, i)
+					break
+				end
+			end
+		end
 
-		task.delay(0.35, function()
-			if notification then notification:Destroy() end
-			if callback then callback() end
+		TweenService:Create(icon, TweenInfo.new(0.2), { ImageTransparency = 1 }):Play()
+		TweenService:Create(title, TweenInfo.new(0.2), { TextTransparency = 1 }):Play()
+		TweenService:Create(content, TweenInfo.new(0.2), { TextTransparency = 1 }):Play()
+		TweenService:Create(timeText, TweenInfo.new(0.2), { TextTransparency = 1 }):Play()
+		TweenService:Create(exit, TweenInfo.new(0.2), { BackgroundTransparency = 1 }):Play()
+		TweenService:Create(shadow, TweenInfo.new(0.25), { ImageTransparency = 1 }):Play()
+
+		local closeTween = TweenService:Create(notification, TweenInfo.new(0.38, Enum.EasingStyle.Exponential), {
+			Size = UDim2.new(1, 0, 0, 0),
+		})
+
+		closeTween:Play()
+		closeTween.Completed:Once(function()
+			if notification then
+				notification:Destroy()
+			end
+
+			if callback then
+				task.spawn(callback)
+			end
 		end)
 	end
 
