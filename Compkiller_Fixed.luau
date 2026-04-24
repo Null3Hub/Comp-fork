@@ -11349,18 +11349,20 @@ function Compkiller:_CreateNotificationUI(properties)
 	clipCorner.CornerRadius = UDim.new(0, 12)
 	clipCorner.Parent = clipper
 	
- local shadow = Instance.new("ImageLabel")
- shadow.Name = "SoftShadow"
- shadow.BackgroundTransparency = 1
- shadow.Image = "rbxassetid://1316045217"
- shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
- shadow.ImageTransparency = 1
- shadow.Position = UDim2.fromOffset(-6, -6)
- shadow.Size = UDim2.new(1, 12, 1, 12)
- shadow.ScaleType = Enum.ScaleType.Slice
- shadow.SliceCenter = Rect.new(10, 10, 118, 118)
- shadow.ZIndex = baseZ
- shadow.Parent = clipper
+ 	-- SHADOW SUAVE AO REDOR  
+	local shadow = Instance.new("ImageLabel")  
+	shadow.Name = "SoftShadow"  
+	shadow.AnchorPoint = Vector2.new(0.5, 0.5)  
+	shadow.BackgroundTransparency = 1  
+	shadow.Image = "rbxassetid://1316045217"  
+	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)  
+	shadow.ImageTransparency = 1  
+	shadow.Position = UDim2.fromScale(0.5, 0.5)  
+	shadow.Size = UDim2.new(1, 20, 1, 20)  
+	shadow.ScaleType = Enum.ScaleType.Slice  
+	shadow.SliceCenter = Rect.new(10, 10, 118, 118)  
+	shadow.ZIndex = baseZ - 1  
+	shadow.Parent = clipper  
 
 	-- ACRYLIC VISUAL
 	local acrylic = Instance.new("Frame")
