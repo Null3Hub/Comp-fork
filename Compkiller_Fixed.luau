@@ -7882,7 +7882,7 @@ function Compkiller.new(Config : Window)
 		Icon.Position = UDim2.new(0, 15, 0.5, 0)
 		Icon.Size = UDim2.new(0, 15, 0, 15)
 		Icon.ZIndex = 3
-		Icon.Image = Compkiller:_GetIcon(Configuration.Icon);
+		Icon.Image = Compkiller:_GetIcon(uration.Icon);
 		Icon.ImageColor3 = Compkiller.Colors.Highlight
 
 		table.insert(Compkiller.Elements.Highlight,{
@@ -8242,7 +8242,7 @@ function Compkiller.new(Config : Window)
 
 		local Tween = TweenInfo.new(0.35,Enum.EasingStyle.Quint);
 
-		Highlight:GetPropertyChangedSignal('BackgroundTransparency'):Connect(function()
+		Highlight:GetPropertyChangedSignal('BackgroundTransparency'):Connectfunction()
 			if Highlight.BackgroundTransparency <= 0.99 then
 				TabConfig.Visible = true;
 			else
@@ -8779,7 +8779,7 @@ function Compkiller.new(Config : Window)
 				Property = 'TextColor3'
 			});
 
-			function ConfigButton:SetInfo(Author , ConfigName)
+function ConfigButton:SetInfo(Author , ConfigName)
 				local R,G,B = tostring(math.floor(Compkiller.Colors.Highlight.R * 255)) , tostring(math.floor(Compkiller.Colors.Highlight.G * 255)) , tostring(math.floor(Compkiller.Colors.Highlight.B * 255));
 
 				AuthorText.Text = string.format("Author: <font color=\"rgb(%s, %s, %s)\">%s</font>" ,R,G,B , tostring(Author));
@@ -10646,20 +10646,149 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 		Config = "Software"
 	});
 
-	if not isfolder(ConfigManager.Directory) then
-		makefolder(ConfigManager.Directory);
-	end;
-
-	if not isfolder(Compkiller:_Path(ConfigManager.Directory , ConfigManager.Config)) then
-		makefolder(Compkiller:_Path(ConfigManager.Directory , ConfigManager.Config));
-	end;
+	local FileExtension = ".json";
+	local RootDirectory = ConfigManager.Directory;
+	local ConfigFolder = ConfigManager.Config;
+	local BaseDirectory = Compkiller:_Path(RootDirectory , ConfigFolder);
+	local ConfigDirectory = Compkiller:_Path(BaseDirectory , "configs");
+	local OptionsDirectory = Compkiller:_Path(BaseDirectory , "options");
 
 	local Args = {
-		Directory = Compkiller:_Path(ConfigManager.Directory , ConfigManager.Config);
+		Directory = ConfigDirectory,
+		RootDirectory = RootDirectory,
+		BaseDirectory = BaseDirectory,
+		ConfigDirectory = ConfigDirectory,
+		OptionsDirectory = OptionsDirectory,
+		FileExtension = FileExtension,
 		EnableNotify = false,
 	};
 
 	local notify = Compkiller.newNotify();
+
+	local function FilesystemAvailable()
+		return isfolder and makefolder and isfile and writefile and readfile and listfiles and delfile;
+	end;
+
+	local function BuildFolderTree()
+		if not FilesystemAvailable() then
+			return false, "Config system unavailable.";
+		end;
+
+		for _, Path in next, { RootDirectory, BaseDirectory, ConfigDirectory, OptionsDirectory } do
+			if not isfolder(Path) then
+				makefolder(Path);
+			end;
+		end;
+
+		return true;
+	end;
+
+	local function NormalizeConfigName(Name: string)
+		Name = tostring(Name or "");
+		Name = Name:gsub("[/\\]", "");
+
+		if Name:sub(-#FileExtension) == FileExtension then
+			Name = Name:sub(1, #Name - #FileExtension);
+		end;
+
+		return Name;
+	end;
+
+	local function GetConfigPath(Name: string)
+		Name = NormalizeConfigName(Name);
+		return Compkiller:_Path(ConfigDirectory, Name .. FileExtension), Name;
+	end;
+
+	local function DecodeFile(Path: string)
+		if not isfile(Path) then
+			return false, "Invalid file.";
+		end;
+
+		local Success, Decoded = pcall(HttpService.JSONDecode, HttpService, readfile(Path));
+		if not Success then
+			return false, "Unable to decode JSON data.";
+		end;
+
+		return true, Decoded;
+	end;
+
+	local function EncodeAndWrite(Path: string, Data)
+		local Success, Encoded = pcall(HttpService.JSONEncode, HttpService, Data);
+		if not Success then
+			return false, "Unable to encode into JSON data.";
+		end;
+
+		writefile(Path, Encoded);
+		return true;
+	end;
+
+	local ConfigMethods = {
+		Save = function(Flag: string, Object)
+			return {
+				type = Object.Value.Type,
+				idx = Flag,
+				flag = Flag,
+				data = Object.Value,
+				autoKeybind = Object.AutoKeybind,
+			};
+		end,
+		Load = function(Object, Flags)
+			if not Object then return; end;
+
+			local Flag = Object.flag or Object.idx or Object.Flag;
+			local Data = Object.data or Object.Value;
+			local AutoKeybind = Object.autoKeybind or Object.AutoKeybind;
+
+			if not Flag or not Data then return; end;
+
+			local Target = Flags[Flag];
+			if not Target or not Target.Functions then return; end;
+
+			if Data.Type == "NormalElement" then
+				Target.Functions:SetValue(Data.Value);
+			elseif Data.Type == "ColorPicker" then
+				local SavedColor = Data.Color3;
+				if SavedColor then
+					Target.Functions:SetValue(Color3.new(SavedColor.R, SavedColor.G, SavedColor.B), Data.Transparency);
+				end;
+			end;
+
+			if Target.Functions.AutoKeybind and AutoKeybind then
+				Target.Functions.AutoKeybind:LoadSettings(AutoKeybind);
+			end;
+		end,
+	};
+
+	BuildFolderTree();
+
+	function Args:BuildFolderTree()
+		return BuildFolderTree();
+	end;
+
+	function Args:SaveConfig(ConfigName: string, Path: string?)
+		local _Path, Name = GetConfigPath(ConfigName);
+		if Path then
+			_Path = Path .. Name .. FileExtension;
+		end;
+
+		local Data = {
+			information = {
+				Type = "Information",
+				Author = LocalPlayer.Name,
+				Name = Name,
+				CreatedDate = Compkiller:GetDate(),
+			},
+			objects = {},
+		};
+
+		for Flag, Object in next, Compkiller:GetConfig("MK") do
+			if Flag ~= "__INFORMATION" and Object and Object.Flag then
+				table.insert(Data.objects, ConfigMethods.Save(Flag, Object));
+			end;
+		end;
+
+		return EncodeAndWrite(_Path, Data);
+	end;
 
 	function Args:WriteConfig(Config: WriteConfig)
 		Config = Compkiller.__CONFIG(Config , {
@@ -10667,166 +10796,203 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 			Author = LocalPlayer.Name,
 		});
 
-		local Flags = Compkiller:GetConfig("MK");
-
-		Flags["__INFORMATION"] = {
-			Type = "Information",
-			Author = Config.Author,
-			Name = Config.Name,
-			CreatedDate = Compkiller:GetDate()
+		local _Path, Name = GetConfigPath(Config.Name);
+		local Data = {
+			information = {
+				Type = "Information",
+				Author = Config.Author,
+				Name = Name,
+				CreatedDate = Compkiller:GetDate(),
+			},
+			objects = {},
 		};
+
+		for Flag, Object in next, Compkiller:GetConfig("MK") do
+			if Flag ~= "__INFORMATION" and Object and Object.Flag then
+				table.insert(Data.objects, ConfigMethods.Save(Flag, Object));
+			end;
+		end;
 
 		if Args.EnableNotify then
 			notify.new({
 				Title = "Configs",
 				Icon = Compkiller:_GetIcon('settings'),
-				Content = "Create config \""..Config.Name.."\""
+				Content = "Create config \""..Name.."\""
 			})
 		end
 
-		writefile(Compkiller:_Path(Args.Directory , Config.Name) , HttpService:JSONEncode(Flags));
+		return EncodeAndWrite(_Path, Data);
 	end;
 
 	function Args:LoadConfigFromString(str: string)
-		local decoded = HttpService:JSONDecode(str);
+		local Success, Decoded = pcall(HttpService.JSONDecode, HttpService, str);
+		if not Success then
+			return false, "Unable to decode JSON data.";
+		end;
 
 		local Flags = Compkiller:GetConfig("KV");
 
-		for i,v in next , decoded do
-			if v and v.Flag then
-
-				local Value = Flags[v.Flag];
-
-				if Value then
-
-					if v.Value.Type == "NormalElement" then
-						Value.Functions:SetValue(v.Value.Value);
-
-					elseif v.Value.Type == "ColorPicker" then
-
-						local Color = Color3.new(v.Value.Color3.R,v.Value.Color3.G,v.Value.Color3.B);
-
-						local Transparency = v.Value.Transparency;
-
-						Value.Functions:SetValue(Color , Transparency);
-					end;
-				end;
-			end
+		if Decoded.objects then
+			for _, Object in next, Decoded.objects do
+				ConfigMethods.Load(Object, Flags);
+			end;
+			return true;
 		end;
+
+		for _, Object in next, Decoded do
+			if typeof(Object) == "table" and Object.Flag then
+				ConfigMethods.Load(Object, Flags);
+			end;
+		end;
+
+		return true;
 	end;
 
 	function Args:GetCurrentConfig()
-		return Compkiller:GetConfig("MK")
+		local Data = { objects = {} };
+
+		for Flag, Object in next, Compkiller:GetConfig("MK") do
+			if Flag ~= "__INFORMATION" and Object and Object.Flag then
+				table.insert(Data.objects, ConfigMethods.Save(Flag, Object));
+			end;
+		end;
+
+		return Data;
 	end;
 
 	function Args:ReadInfo(ConfigName: string)
-		local _path = Compkiller:_Path(Args.Directory , ConfigName);
+		local _Path = GetConfigPath(ConfigName);
+		local Success, Decoded = DecodeFile(_Path);
 
-		if isfile(_path) then
-			local info = readfile(_path);
+		if not Success then return false; end;
 
-			local decoded = HttpService:JSONDecode(info);
+		return Decoded.information or Decoded.__INFORMATION or false;
+	end;
 
-			return decoded.__INFORMATION;
+	function Args:RefreshConfigList(Path: string?)
+		local Directory = Path or ConfigDirectory;
+		if not FilesystemAvailable() or not isfolder(Directory) then
+			return {};
+		end;
+
+		local Names = {};
+
+		for _, File in next, listfiles(Directory) do
+			if File:sub(-#FileExtension) == FileExtension then
+				local Name = File:match("([^/\\]+)" .. FileExtension .. "$");
+				if Name and Name ~= "options" and Name ~= "autoload" then
+					table.insert(Names, Name);
+				end;
+			end;
+		end;
+
+		return Names;
+	end;
+
+	function Args:GetConfigs()
+		return Args:RefreshConfigList(ConfigDirectory);
+	end;
+
+	function Args:GetFullConfigs()
+		local Full = {};
+
+		for _, Name in next, Args:GetConfigs() do
+			table.insert(Full , {
+				Name = Name,
+				Info = Args:ReadInfo(Name) or {
+					Type = "Information",
+					Author = "Unknown",
+					Name = Name,
+					CreatedDate = "Unknown",
+				},
+			});
+		end;
+
+		return Full;
+	end;
+
+	function Args:DeleteConfig(ConfigName)
+		local _Path, Name = GetConfigPath(ConfigName);
+
+		if Args.EnableNotify then
+			notify.new({
+				Title = "Configs",
+				Icon = Compkiller:_GetIcon('settings'),
+				Content = "Delete config \""..Name.."\""
+			})
+		end
+
+		if isfile(_Path) then
+			delfile(_Path);
+			return true;
 		end;
 
 		return false;
 	end;
 
-	function Args:GetConfigs()
-		local names = {};
-
-		for i,v in next , listfiles(Args.Directory) do
-			local Name = string.sub(v , #Args.Directory + 2);
-
-			table.insert(names , Name);
-		end;
-
-		return names;
+	function Args:GetConfigCount()
+		return #Args:GetConfigs();
 	end;
 
-	function Args:GetFullConfigs()
-		local names = {};
-
-		for i,v in next , listfiles(Args.Directory) do
-			local Name = string.sub(v , #Args.Directory + 2);
-			local Info = Args:ReadInfo(Name);
-
-			table.insert(names , {
-				Name = Name,
-				Info = Info,
-			});
+	function Args:LoadConfig(ConfigName: string, Path: string?)
+		local _Path, Name = GetConfigPath(ConfigName);
+		if Path then
+			_Path = Path .. Name .. FileExtension;
 		end;
 
-		return names;
-	end;
+		local Success, Decoded = DecodeFile(_Path);
+		if not Success then return false, Decoded; end;
 
-	function Args:DeleteConfig(ConfigName)
-		local _path = Compkiller:_Path(Args.Directory,ConfigName);
+		local Flags = Compkiller:GetConfig("KV");
 
 		if Args.EnableNotify then
 			notify.new({
 				Title = "Configs",
 				Icon = Compkiller:_GetIcon('settings'),
-				Content = "Delete config \""..ConfigName.."\""
+				Content = "Load config \""..Name.."\""
 			})
 		end
 
-		if isfile(_path) then
-			delfile(_path);
-		end;
-	end;
-
-	function Args:GetConfigCount()
-		return #listfiles(Args.Directory);
-	end;
-
-	function Args:LoadConfig(ConfigName: string)
-		local _path = Compkiller:_Path(Args.Directory,ConfigName);
-
-		if isfile(_path) then
-			local info = readfile(_path);
-
-			local decoded = HttpService:JSONDecode(info);
-
-			local Flags = Compkiller:GetConfig("KV");
-
-			if Args.EnableNotify then
-				notify.new({
-					Title = "Configs",
-					Icon = Compkiller:_GetIcon('settings'),
-					Content = "Load config \""..ConfigName.."\""
-				})
-			end
-
-			for i,v in next , decoded do
-				if v and v.Flag then
-
-					local Value = Flags[v.Flag];
-
-					if Value then
-
-						if v.Value.Type == "NormalElement" then
-							Value.Functions:SetValue(v.Value.Value);
-
-						elseif v.Value.Type == "ColorPicker" then
-
-							local Color = Color3.new(v.Value.Color3.R,v.Value.Color3.G,v.Value.Color3.B);
-
-							local Transparency = v.Value.Transparency;
-
-							Value.Functions:SetValue(Color , Transparency);
-						end;
-
-						if Value.Functions.AutoKeybind then
-							if v.AutoKeybind then
-								Value.Functions.AutoKeybind:LoadSettings(v.AutoKeybind)
-							end;
-						end;
-					end;
-				end
+		if Decoded.objects then
+			for _, Object in next, Decoded.objects do
+				task.spawn(function()
+					ConfigMethods.Load(Object, Flags);
+				end);
+			end;
+		else
+			for _, Object in next, Decoded do
+				if typeof(Object) == "table" and Object.Flag then
+					task.spawn(function()
+						ConfigMethods.Load(Object, Flags);
+					end);
+				end;
 			end;
 		end;
+
+		return true;
+	end;
+
+	function Args:SetAutoload(ConfigName: string)
+		local Name = NormalizeConfigName(ConfigName);
+		writefile(Compkiller:_Path(OptionsDirectory, "autoload.txt"), Name);
+		return true;
+	end;
+
+	function Args:LoadAutoloadConfig()
+		local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+		if isfile(Path) then
+			return Args:LoadConfig(readfile(Path));
+		end;
+		return false;
+	end;
+
+	function Args:DisableAutoload()
+		local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+		if isfile(Path) then
+			delfile(Path);
+			return true;
+		end;
+		return false;
 	end;
 
 	return Args;
