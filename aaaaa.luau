@@ -6756,7 +6756,6 @@ function Compkiller.new(Config : Window)
 		end);
 
 		Compkiller:_Input(Userinfo,function()
-			-- FIX: Verificação dupla para evitar "attempt to call a nil value" quando :Window ainda não existe
 			if WindowArgs.UserSettings.Root and type(WindowArgs.UserSettings.Window) == "function" then
 				WindowArgs.UserSettings:Window(true);
 			end;
@@ -7061,7 +7060,7 @@ function Compkiller.new(Config : Window)
    CloseButton.ZIndex = 67
   
    local UICorner_Close = Instance.new("UICorner")
-   UICorner_Close.CornerRadius = UDim.new(1, 0) -- Transforma o frame quadrado em uma bola perfeita
+   UICorner_Close.CornerRadius = UDim.new(1, 0) -- Transforma o frame drado em uma bola perfeita
    UICorner_Close.Parent = CloseButton
 
 		function WindowArgs.UserSettings:Create()
@@ -8634,6 +8633,7 @@ function Compkiller.new(Config : Window)
 			local ConfigBlock = Instance.new("Frame")
 			local ConfigText = Instance.new("TextLabel")
 			local AuthorText = Instance.new("TextLabel")
+			local DeleteButton = Instance.new("ImageLabel")
 			local SelectButton = Instance.new("Frame")
 			local SelectFill = Instance.new("Frame")
 			local SelectStroke = Instance.new("UIStroke")
@@ -8742,6 +8742,18 @@ function Compkiller.new(Config : Window)
 			SelectText.TextStrokeTransparency = 1
 			SelectText.TextTransparency = 1
 			table.insert(Compkiller.Elements.SwitchColor,{ Element = SelectText, Property = "TextColor3" })
+			
+			DeleteButton.Name = Compkiller:_RandomString()
+   DeleteButton.Parent = ConfigBlock
+   DeleteButton.AnchorPoint = Vector2.new(1, 0.5)
+   DeleteButton.BackgroundTransparency = 1
+   DeleteButton.BorderSizePixel = 0
+   DeleteButton.Position = UDim2.new(1, -100, 0.5, 15)
+   DeleteButton.Size = UDim2.new(0, 18, 0, 18)
+   DeleteButton.ZIndex = 15
+   DeleteButton.Image = Compkiller:_GetIcon("trash")
+   DeleteButton.ImageColor3 = Color3.fromRGB(255, 90, 90)
+   DeleteButton.ImageTransparency = 1
 
 			UIStroke_3.Transparency = 1
 			UIStroke_3.Color = Compkiller.Colors.StrokeColor
@@ -8774,6 +8786,7 @@ function Compkiller.new(Config : Window)
 					Compkiller:_Animation(SelectFill,Tween,{ BackgroundTransparency = 0.100 });
 					Compkiller:_Animation(SelectStroke,Tween,{ Transparency = 0 });
 					Compkiller:_Animation(SelectText,Tween,{ TextStrokeTransparency = 0.900, TextTransparency = 0 });
+					Compkiller:_Animation(DeleteButton,Tween,{ ImageTransparency = 0.25, Position = UDim2.new(1, -100, 0.5, 0) });
 				else
 					Compkiller:_Animation(ConfigBlock,Tween,{ BackgroundTransparency = 1 });
 					Compkiller:_Animation(UIStroke_3,Tween,{ Transparency = 1 });
@@ -8783,6 +8796,7 @@ function Compkiller.new(Config : Window)
 					Compkiller:_Animation(SelectFill,Tween,{ BackgroundTransparency = 1 });
 					Compkiller:_Animation(SelectStroke,Tween,{ Transparency = 1 });
 					Compkiller:_Animation(SelectText,Tween,{ TextStrokeTransparency = 1, TextTransparency = 1 });
+					Compkiller:_Animation(DeleteButton,Tween,{ ImageTransparency = 1, Position = UDim2.new(1, -100, 0.5, 15) });
 				end;
 			end;
 
@@ -8790,6 +8804,12 @@ function Compkiller.new(Config : Window)
 				if SelectedConfigButton and SelectedConfigButton ~= ConfigButton then
 					SelectedConfigButton:SetSelected(false)
 				end
+				
+				Compkiller:_Input(DeleteButton,function()
+   	if ConfigButton.OnDelete then
+   		ConfigButton.OnDelete();
+   	end;
+   end);
 
 				SelectedConfigName = ConfigButton.Name
 				SelectedConfigAuthor = ConfigButton.Author
@@ -8901,21 +8921,24 @@ function Compkiller.new(Config : Window)
 					end
 
 					Button.OnDelete = function()
+     	WindowArgs.Notify.new({
+     		Title = "Configs",
+     		Icon = Compkiller:CacheImage(Config.Logo),
+     		Content = "Delete config \""..v.Name.."\""
+     	})
+     
+     	Configuration.Config:DeleteConfig(v.Name);
+     
+     	if SelectedConfigName == v.Name then
+     		SelectedConfigName = nil;
+     		SelectedConfigAuthor = nil;
+     		SelectedConfigButton = nil;
+     	end;
+     
+     	task.defer(Refresh);
+     end;
 
-						WindowArgs.Notify.new({
-							Title = "Configs",
-							Icon = Compkiller:CacheImage(Config.Logo),
-							Content = "Delete config \""..v.Name.."\""
-						})
-
-						Configuration.Config:DeleteConfig(v.Name)
-					end
-				end;
-			end;
-
-			Refresh();
-
-			task.defer(function()
+			 task.defer(function()
 				if Configuration.Config and Configuration.Config.LoadAutoloadConfig then
 					Configuration.Config:LoadAutoloadConfig();
 				end
@@ -10098,7 +10121,7 @@ function Compkiller.new(Config : Window)
  	WindowArgs.__Destroyed = true
  
  	-- 1. Executa callbacks registrados
- 	for _, callback in ipairs(Compkiller.DestroyCallbacks) do
+ 	for _, ck in ipairs(Compkiller.DestroyCallbacks) do
  		pcall(callback)
  	end
  	Compkiller.DestroyCallbacks = {}
@@ -10840,84 +10863,94 @@ function Compkiller:ConfigManager(ConfigManager: ConfigManager) : ConfigFunction
 		return #Args:GetConfigs();
 	end;
 
-	function Args:LoadConfig(ConfigName: string, Path: string?)
-		local _Path, Name = GetConfigPath(ConfigName);
-		if Path then
-			_Path = Path .. Name .. FileExtension;
-		end;
-
-		local Success, Decoded = DecodeFile(_Path);
-		if not Success then return false, Decoded; end;
-
-		local Flags = Compkiller:GetConfig("KV");
-
-		if Args.EnableNotify then
-			notify.new({
-				Title = "Configs",
-				Icon = Compkiller:_GetIcon('settings'),
-				Content = "Load config \""..Name.."\""
-			})
-		end
-
-		if Decoded.objects then
-			for _, Object in next, Decoded.objects do
-				task.spawn(function()
-					ConfigMethods.Load(Object, Flags);
-				end);
-			end;
-		else
-			for _, Object in next, Decoded do
-				if typeof(Object) == "table" and Object.Flag then
-					task.spawn(function()
-						ConfigMethods.Load(Object, Flags);
-					end);
-				end;
-			end;
-		end;
-
-		return true;
-	end;
-
-	function Args:SetAutoload(ConfigName: string)
-		local Built = BuildFolderTree();
-		if not Built then return false; end;
-
-		local Name = NormalizeConfigName(ConfigName);
-		local ConfigPath = GetConfigPath(Name);
-		if not isfile(ConfigPath) then return false; end;
-
-		writefile(Compkiller:_Path(OptionsDirectory, "autoload.txt"), Name);
-		return true;
-	end;
-
-	function Args:SetAutoLoad(ConfigName: string)
-		return Args:SetAutoload(ConfigName);
-	end;
-
-	function Args:GetAutoload()
-		local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
-		if isfile(Path) then
-			return NormalizeConfigName(readfile(Path));
-		end;
-		return nil;
-	end;
-
-	function Args:LoadAutoloadConfig()
-		local Name = Args:GetAutoload();
-		if Name and Name ~= "" then
-			return Args:LoadConfig(Name);
-		end;
-		return false;
-	end;
-
-	function Args:DisableAutoload()
-		local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
-		if isfile(Path) then
-			delfile(Path);
-			return true;
-		end;
-		return false;
-	end;
+ function Args:SetAutoload(ConfigName: string)
+ 	local Built, BuildError = BuildFolderTree();
+ 	if not Built then return false, BuildError; end;
+ 
+ 	local Name = NormalizeConfigName(ConfigName);
+ 	if Name == "" then return false, "empty_name"; end;
+ 
+ 	local ConfigPath = GetConfigPath(Name);
+ 	if not isfile(ConfigPath) then
+ 		return false, "config_not_found";
+ 	end;
+ 
+ 	writefile(Compkiller:_Path(OptionsDirectory, "autoload.txt"), Name);
+ 
+ 	Args.AutoloadConfig = Name;
+ 	Compkiller.AutoloadConfig = Name;
+ 
+ 	return true, Name;
+ end;
+ 
+ function Args:SetAutoLoad(ConfigName: string)
+ 	return Args:SetAutoload(ConfigName);
+ end;
+ 
+ function Args:GetAutoload()
+ 	BuildFolderTree();
+ 
+ 	local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+ 
+ 	if isfile(Path) then
+ 		local Name = NormalizeConfigName(readfile(Path));
+ 
+ 		if Name ~= "" then
+ 			Args.AutoloadConfig = Name;
+ 			Compkiller.AutoloadConfig = Name;
+ 			return Name;
+ 		end;
+ 	end;
+ 
+ 	return nil;
+ end;
+ 
+ function Args:LoadAutoloadConfig()
+ 	local Name = Args:GetAutoload();
+ 
+ 	if not Name or Name == "" then
+ 		return false, "no_autoload";
+ 	end;
+ 
+ 	local Success, Result = Args:LoadConfig(Name);
+ 
+ 	if Success then
+ 		notify.new({
+ 			Title = "Configs",
+ 			Icon = Compkiller:_GetIcon("settings"),
+ 			Content = 'Auto Loaded : "' .. Name .. '" successfully.'
+ 		});
+ 
+ 		return true, Name;
+ 	end;
+ 
+ 	return false, Result;
+ end;
+ 
+ function Args:DisableAutoload()
+ 	BuildFolderTree();
+ 
+ 	local Path = Compkiller:_Path(OptionsDirectory, "autoload.txt");
+ 
+ 	if isfile(Path) then
+ 		delfile(Path);
+ 	end;
+ 
+ 	Args.AutoloadConfig = nil;
+ 	Compkiller.AutoloadConfig = nil;
+ 
+ 	return true;
+ end;
+ 
+ Compkiller.RuntimeConfigManager = Args;
+ 
+ function Compkiller:LoadAutoLoadConfig()
+ 	if not Compkiller.RuntimeConfigManager then
+ 		return false, "runtime_config_manager_not_found";
+ 	end;
+ 
+ 	return Compkiller.RuntimeConfigManager:LoadAutoloadConfig();
+ end;
 
 	return Args;
 end;
