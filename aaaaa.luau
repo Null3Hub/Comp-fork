@@ -8804,12 +8804,6 @@ function Compkiller.new(Config : Window)
 				if SelectedConfigButton and SelectedConfigButton ~= ConfigButton then
 					SelectedConfigButton:SetSelected(false)
 				end
-				
-				Compkiller:_Input(DeleteButton,function()
-   	if ConfigButton.OnDelete then
-   		ConfigButton.OnDelete();
-   	end;
-   end);
 
 				SelectedConfigName = ConfigButton.Name
 				SelectedConfigAuthor = ConfigButton.Author
@@ -8817,6 +8811,12 @@ function Compkiller.new(Config : Window)
 				ConfigButton:SetSelected(true)
 				NotifyConfig("Selected config \"" .. tostring(ConfigButton.Name) .. "\"")
 			end);
+			
+   	Compkiller:_Input(DeleteButton,function()
+   	if ConfigButton.OnDelete then
+   		ConfigButton.OnDelete();
+   	end;
+   end);
 
 			return ConfigButton;
 		end;
@@ -10899,11 +10899,44 @@ function Args:GetAutoload()
 	return nil;
 end;
 
+function Args:LoadConfig(ConfigName: string)
+	local _Path, Name = GetConfigPath(ConfigName);
+
+	if not isfile(_Path) then
+		return false, "config_not_found";
+	end;
+
+	local Success, Data = DecodeFile(_Path);
+	if not Success then
+		return false, Data;
+	end;
+
+	local LoadSuccess, LoadResult = Args:LoadConfigFromString(readfile(_Path));
+
+	if not LoadSuccess then
+		return false, LoadResult;
+	end;
+
+	if Args.EnableNotify then
+		notify.new({
+			Title = "Configs",
+			Icon = Compkiller:_GetIcon("settings"),
+			Content = "Load config \"" .. Name .. "\""
+		});
+	end;
+
+	return true, Name;
+end;
+
 function Args:LoadAutoloadConfig()
 	local Name = Args:GetAutoload();
 
 	if not Name or Name == "" then
 		return false, "no_autoload";
+	end;
+
+	if not Args.LoadConfig then
+		return false, "LoadConfig_missing";
 	end;
 
 	local Success, Result = Args:LoadConfig(Name);
