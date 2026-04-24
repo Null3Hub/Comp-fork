@@ -8801,25 +8801,26 @@ function Compkiller.new(Config : Window)
 			end;
 
 			Compkiller:_Input(SelectButton,function()
-				if SelectedConfigButton and SelectedConfigButton ~= ConfigButton then
-					SelectedConfigButton:SetSelected(false)
-				end
-
-				SelectedConfigName = ConfigButton.Name
-				SelectedConfigAuthor = ConfigButton.Author
-				SelectedConfigButton = ConfigButton
-				ConfigButton:SetSelected(true)
-				NotifyConfig("Selected config \"" .. tostring(ConfigButton.Name) .. "\"")
-			end);
-			
-   	Compkiller:_Input(DeleteButton,function()
-   	if ConfigButton.OnDelete then
-   		ConfigButton.OnDelete();
-   	end;
-   end);
-
-			return ConfigButton;
-		end;
+  	if SelectedConfigButton and SelectedConfigButton ~= ConfigButton then
+  		SelectedConfigButton:SetSelected(false)
+  	end
+  
+  	SelectedConfigName = ConfigButton.Name
+  	SelectedConfigAuthor = ConfigButton.Author
+  	SelectedConfigButton = ConfigButton
+  
+  	ConfigButton:SetSelected(true)
+  
+  	NotifyConfig("Selected config \"" .. tostring(ConfigButton.Name) .. "\"")
+  end);
+  
+  Compkiller:_Input(DeleteButton,function()
+  	if ConfigButton.OnDelete then
+  		ConfigButton.OnDelete();
+  	end;
+  end);
+  
+return ConfigButton;
 
 		function TabArgs:Init()
 			local __signals = {};
