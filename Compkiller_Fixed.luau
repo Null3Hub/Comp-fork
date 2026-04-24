@@ -11328,7 +11328,7 @@ function Compkiller:_CreateNotificationUI(properties)
 	notification.BackgroundTransparency = 1
 	notification.BorderSizePixel = 0
 	notification.Size = UDim2.new(1, 0, 0, 0)
-	notification.ClipsDescendants = true
+	notification.ClipsDescendants = false
 	notification.ZIndex = baseZ
 
 	local corner = Instance.new("UICorner")
@@ -11346,29 +11346,24 @@ function Compkiller:_CreateNotificationUI(properties)
 	clipper.Parent = notification
 
 	local clipCorner = Instance.new("UICorner")
-	clipCorner.CornerRadius = UDim.new(0, 12)
+	clipCorner.CornerRadius = UDim.new(0, 13)
 	clipCorner.Parent = clipper
 	
- 	-- SHADOW SUAVE AO REDOR  
-	local shadow = Instance.new("ImageLabel")  
-	shadow.Name = "SoftShadow"  
-	shadow.AnchorPoint = Vector2.new(0.5, 0.5)  
-	shadow.BackgroundTransparency = 1  
-	shadow.Image = "rbxassetid://1316045217"  
-	shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)  
-	shadow.ImageTransparency = 1  
-	shadow.Position = UDim2.fromScale(0.5, 0.5)  
-	shadow.Size = UDim2.new(1, 20, 1, 20)  
-	shadow.ScaleType = Enum.ScaleType.Slice  
-	shadow.SliceCenter = Rect.new(10, 10, 118, 118)  
-	shadow.ZIndex = baseZ - 1  
-	shadow.Parent = notification 
-	
-	local shadowcorner = Instance.new("UICorner")
-	shadowcorner.CornerRadius = UDim.new(0, 13)
-	shadowcorner.Parent = shadow
+ local shadow = Instance.new("ImageLabel")
+ shadow.Name = "SoftShadow"
+ shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+ shadow.BackgroundTransparency = 1
+ shadow.BorderSizePixel = 0
+ shadow.Image = "rbxassetid://1316045217"
+ shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+ shadow.ImageTransparency = 1
+ shadow.Position = UDim2.fromScale(0.5, 0.5)
+ shadow.Size = UDim2.new(1, 26, 1, 26)
+ shadow.ScaleType = Enum.ScaleType.Slice
+ shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+ shadow.ZIndex = baseZ - 1
+ shadow.Parent = notification
 
-	-- ACRYLIC VISUAL
 	local acrylic = Instance.new("Frame")
 	acrylic.Name = "Acrylic"
 	acrylic.BackgroundColor3 = self.Colors.BlockBackground or Color3.fromRGB(28, 29, 34)
@@ -11376,7 +11371,11 @@ function Compkiller:_CreateNotificationUI(properties)
 	acrylic.BorderSizePixel = 0
 	acrylic.Size = UDim2.fromScale(1, 1)
 	acrylic.ZIndex = baseZ
-	acrylic.Parent = clipper
+	acrylic.Parent = clipper[
+	
+	local acrylicCorner = Instance.new("UICorner")
+ acrylicCorner.CornerRadius = UDim.new(0, 13)
+ acrylicCorner.Parent = acrylic
 
 	local tint = Instance.new("Frame")
 	tint.Name = "Tint"
@@ -11386,6 +11385,10 @@ function Compkiller:_CreateNotificationUI(properties)
 	tint.Size = UDim2.fromScale(1, 1)
 	tint.ZIndex = baseZ + 1
 	tint.Parent = clipper
+	
+	local tintCorner = Instance.new("UICorner")
+ tintCorner.CornerRadius = UDim.new(0, 13)
+ tintCorner.Parent = tint
 
 	local noise = Instance.new("ImageLabel")
 	noise.Name = "Noise"
@@ -11398,6 +11401,10 @@ function Compkiller:_CreateNotificationUI(properties)
 	noise.Size = UDim2.fromScale(1, 1)
 	noise.ZIndex = baseZ + 2
 	noise.Parent = clipper
+	
+	local noiseCorner = Instance.new("UICorner")
+ noiseCorner.CornerRadius = UDim.new(0, 13)
+ noiseCorner.Parent = noise
 
 	local stroke = Instance.new("UIStroke")
 	stroke.Name = "UIStroke"
@@ -11548,7 +11555,7 @@ function Compkiller:_CreateNotificationUI(properties)
 		}):Play()
 
 		TweenService:Create(shadow, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
-   ImageTransparency = 0.93,
+   ImageTransparency = 0.82,
   }):Play()
 
 		TweenService:Create(stroke, TweenInfo.new(0.35, Enum.EasingStyle.Exponential), {
