@@ -11371,7 +11371,7 @@ function Compkiller:_CreateNotificationUI(properties)
 	acrylic.BorderSizePixel = 0
 	acrylic.Size = UDim2.fromScale(1, 1)
 	acrylic.ZIndex = baseZ
-	acrylic.Parent = clipper[
+	acrylic.Parent = clipper
 	
 	local acrylicCorner = Instance.new("UICorner")
  acrylicCorner.CornerRadius = UDim.new(0, 13)
