@@ -4476,6 +4476,10 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	local UICorner = Instance.new("UICorner")
 	local ScrollingFrame = Instance.new("ScrollingFrame")
 	local UIListLayout = Instance.new("UIListLayout")
+	local SearchFrame = Instance.new("Frame")
+ local SearchBox = Instance.new("TextBox")
+ local SearchStroke = Instance.new("UIStroke")
+ local SearchCorner = Instance.new("UICorner")
 	local ToggleDb = Compkiller.__SIGNAL(false);
 	local EventOut = Compkiller.__SIGNAL(0);
 
@@ -4525,13 +4529,61 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	ScrollingFrame.BackgroundTransparency = 1.000
 	ScrollingFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	ScrollingFrame.BorderSizePixel = 0
-	ScrollingFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	ScrollingFrame.Size = UDim2.new(1, -5, 1, -5)
+	ScrollingFrame.Position = UDim2.new(0.5, 0, 0.5, 18)
+ ScrollingFrame.Size = UDim2.new(1, -5, 1, -40)
 	ScrollingFrame.ZIndex = BaseZ_Index + 5
 	ScrollingFrame.BottomImage = ""
 	ScrollingFrame.ScrollBarThickness = 0
 	ScrollingFrame.TopImage = ""
+ 
+ SearchFrame.Name = Compkiller:_RandomString()
+ SearchFrame.Parent = DropdownWindow
+ SearchFrame.AnchorPoint = Vector2.new(0.5, 0)
+ SearchFrame.BackgroundColor3 = Compkiller.Colors.DropColor
+ SearchFrame.BackgroundTransparency = 0.1
+ SearchFrame.BorderSizePixel = 0
+ SearchFrame.Position = UDim2.new(0.5, 0, 0, 6)
+ SearchFrame.Size = UDim2.new(1, -12, 0, 28)
+ SearchFrame.ZIndex = BaseZ_Index + 8
 
+ table.insert(Compkiller.Elements.DropColor,{
+ 	Element = SearchFrame,
+ 	Property = "BackgroundColor3"
+ });
+ 
+ SearchStroke.Color = Compkiller.Colors.StrokeColor
+ SearchStroke.Transparency = 0.15
+ SearchStroke.Parent = SearchFrame
+ 
+ table.insert(Compkiller.Elements.StrokeColor,{
+ 	Element = SearchStroke,
+ 	Property = "Color"
+ });
+ 
+ SearchCorner.CornerRadius = UDim.new(0, 5)
+ SearchCorner.Parent = SearchFrame
+ 
+ SearchBox.Name = Compkiller:_RandomString()
+ SearchBox.Parent = SearchFrame
+ SearchBox.BackgroundTransparency = 1
+ SearchBox.BorderSizePixel = 0
+ SearchBox.ClearTextOnFocus = false
+ SearchBox.PlaceholderText = "Search..."
+ SearchBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+ SearchBox.Text = ""
+ SearchBox.TextColor3 = Compkiller.Colors.SwitchColor
+ SearchBox.TextSize = 12
+ SearchBox.Font = Enum.Font.GothamMedium
+ SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+ SearchBox.Position = UDim2.new(0, 8, 0, 0)
+ SearchBox.Size = UDim2.new(1, -16, 1, 0)
+ SearchBox.ZIndex = BaseZ_Index + 9
+ 
+ table.insert(Compkiller.Elements.SwitchColor,{
+ 	Element = SearchBox,
+ 	Property = "TextColor3"
+ });
+ 
 	UIListLayout.Parent = ScrollingFrame
 	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -4569,7 +4621,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 			Compkiller:_Animation(DropdownWindow,TweenInfo.new(0.2),{
 				BackgroundTransparency = 0,
 				Position = MainPosition,
-				Size = UDim2.new(0, BaseParent.AbsoluteSize.X - 1, 0, math.clamp(UIListLayout.AbsoluteContentSize.Y + 10,10 , 200))
+				Size = UDim2.new(0, BaseParent.AbsoluteSize.X - 1, 0, math.clamp(UIListLayout.AbsoluteContentSize.Y + 45, 45, 200))
 			})
 
 			Compkiller:_Animation(UIStroke,TweenInfo.new(0.2),{
@@ -4579,7 +4631,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 			Compkiller:_Animation(DropdownWindow,TweenInfo.new(0.2),{
 				BackgroundTransparency = 1,
 				Position = DropPosition,
-				Size = UDim2.new(0, BaseParent.AbsoluteSize.X - 1, 0, math.clamp(UIListLayout.AbsoluteContentSize.Y / 1.5, 10 , 200))
+				Size = UDim2.new(0, BaseParent.AbsoluteSize.X - 1, 0, math.clamp((UIListLayout.AbsoluteContentSize.Y + 45) / 1.5, 10, 200))
 			})
 
 			Compkiller:_Animation(UIStroke,TweenInfo.new(0.2),{
@@ -4700,6 +4752,20 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	local MatchDefault = function(v,DataFrame)
 		return (typeof(DataFrame) == 'table' and (DataFrame[v] or table.find(DataFrame,v))) or DataFrame == v;
 	end;
+	
+ 	local function ApplySearchFilter()
+ 	local Query = string.lower(SearchBox.Text or "")
+ 
+ 	for _, Item in next, ScrollingFrame:GetChildren() do
+ 		if Item:IsA("Frame") and Item:GetAttribute("DropdownValue") then
+ 			local Value = string.lower(tostring(Item:GetAttribute("DropdownValue")))
+ 
+ 			Item.Visible = Query == "" or string.find(Value, Query, 1, true) ~= nil
+ 		end
+ 	end
+ end
+ 
+ SearchBox:GetPropertyChangedSignal("Text"):Connect(ApplySearchFilter)
 
 	local UpdateDropdown = function()
 		local DataFrame;
@@ -4716,6 +4782,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 			bth.DropdownItem.Parent = ScrollingFrame;
 
 			bth.Value = v;
+			bth.DropdownItem:SetAttribute("DropdownValue", tostring(v));
 
 			table.insert(__signals , ToggleDb:Connect(function(bool)
 				if bool then
@@ -4793,6 +4860,7 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 				end);
 			end;
 		end;
+		ApplySearchFilter()
 	end;
 
 	BaseParent.MouseButton1Click:Connect(function()
