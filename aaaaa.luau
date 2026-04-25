@@ -693,7 +693,7 @@ end;
  local Workspace = cloneref(game:GetService("Workspace"))
  local RunService = game:GetService("RunService")
  
- function Compkiller:lurFolder()
+ function Compkiller:_GetBlurFolder()
  	local camera = Workspace.CurrentCamera
  	if not camera then
  		return nil
