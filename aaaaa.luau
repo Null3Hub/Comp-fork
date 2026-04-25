@@ -4864,17 +4864,20 @@ function Compkiller:_LoadDropdown(BaseParent: TextButton , Callback: () -> any)
 	end;
 
 	BaseParent.MouseButton1Click:Connect(function()
-		if SpamUpdate then
-			ClearDropdown();
-			UpdateDropdown();
-		end;
-
-		ToggleUI(true);
-
-		if not ToggleDb:GetValue() then
-			ToggleUI(false);
-		end
-	end);
+ 	SearchBox.Text = ""
+ 	ApplySearchFilter()
+ 
+ 	if SpamUpdate then
+ 		ClearDropdown();
+ 		UpdateDropdown();
+ 	end;
+ 
+ 	ToggleUI(true);
+ 
+ 	if not ToggleDb:GetValue() then
+ 		ToggleUI(false);
+ 	end
+ end);
 
 	UserInputService.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
