@@ -8937,6 +8937,10 @@ function Compkiller.new(Config : Window)
      
      	task.defer(Refresh);
      end;
+					end;
+				end;
+
+				Refresh();
 
 			Init.THREAD = task.spawn(function()
 				local OldIndex = Configuration.Config:GetConfigCount();
